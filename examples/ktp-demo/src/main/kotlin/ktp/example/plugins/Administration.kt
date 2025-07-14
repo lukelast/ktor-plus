@@ -1,4 +1,4 @@
-package com.mgl.plugins
+package ktp.example.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.engine.*

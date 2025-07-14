@@ -7,7 +7,8 @@ dependencies {
 
     api(platform(libs.ktorBom))
     api(libs.ktorServerCore)
-    api(libs.ktorServerMetrics)
+    api(libs.ktorServerNetty)
+//    api(libs.ktorServerMetrics)
 
     api(platform(libs.koinBom))
     api(libs.koinAnnotations)
