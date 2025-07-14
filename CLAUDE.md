@@ -14,6 +14,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `./gradlew clean check` includes validation of the ktp-gradle-plugin
 - `./gradlew validatePlugins` - Validate the Gradle plugins specifically
 
+### Gradle Wrapper Updates
+- `./gradlew wrapper --gradle-version latest` - Update to latest Gradle version
+
 ### Single Test Execution
 - Use standard Gradle test task patterns: `./gradlew :libs:ktp-config:test`
 - For specific test classes: `./gradlew :libs:ktp-config:test --tests "KtpConfigTest"`
@@ -71,6 +74,8 @@ Uses a sophisticated file naming convention for config layering:
 - Local development configs use priority `local`
 - Never commit local development configs to version control
 - Use `KTP_DEV_ENV` environment variable for custom dev environment names
+- Environment variables can override config values using `CONFIG_FORCE_` prefix
+- Config files support HOCON format with optional substitutions using `${?VAR_NAME}`
 
 ### Testing
 - Unit tests should not pick up `local.conf` files
@@ -80,3 +85,5 @@ Uses a sophisticated file naming convention for config layering:
 ### Releases
 - Automated releases trigger on commits to main branch
 - No manual version management required
+- Project version determined by `VERSION` environment variable or defaults to `0-SNAPSHOT`
+- JitPack integration available for consuming libraries and plugins
