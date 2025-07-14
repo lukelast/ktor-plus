@@ -17,9 +17,7 @@ data class KtpConfigData(val app: App) {
                     .joinToString(separator = "") { it[0].toString() }
                     .lowercase()
             }
-        data class Server(
-            val port: Int,
-            val host: String,
-        )
+
+        data class Server(val port: Int, val host: String)
     }
 }
