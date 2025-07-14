@@ -1,4 +1,4 @@
-plugins { id("net.ghue.ktp.gradle") }
+plugins { id("com.github.lukelast.ktor-plus") }
 
 dependencies {
     api(project(":libs:ktp-core"))

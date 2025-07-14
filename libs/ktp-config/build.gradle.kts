@@ -1,5 +1,5 @@
 plugins {
-    id("net.ghue.ktp.gradle")
+    id("com.github.lukelast.ktor-plus")
 }
 
 dependencies {

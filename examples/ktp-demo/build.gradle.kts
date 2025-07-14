@@ -1,4 +1,4 @@
-plugins { id("net.ghue.ktp.gradle") }
+plugins { id("com.github.lukelast.ktor-plus") }
 
 group = "ktp.example"
 

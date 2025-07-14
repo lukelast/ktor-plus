@@ -11,7 +11,7 @@ println("Gradle build is using Kotlin Version: $embeddedKotlinVersion")
 
 tasks.validatePlugins { enableStricterValidation.set(true) }
 
-group = "net.ghue.ktp.gradle"
+group = "com.github.lukelast.ktor-plus"
 
 version = System.getenv("VERSION") ?: "0-SNAPSHOT"
 
@@ -35,11 +35,11 @@ java { withSourcesJar() }
 gradlePlugin {
     plugins {
         create("ktpGradleProjectPlugin") {
-            id = "net.ghue.ktp.gradle"
+            id = group.toString()
             implementationClass = "net.ghue.ktp.gradle.project.ProjectPlugin"
         }
         create("ktpGradleSettingsPlugin") {
-            id = "net.ghue.ktp.gradle.settings"
+            id = "$group.settings"
             implementationClass = "net.ghue.ktp.gradle.settings.SettingsPlugin"
         }
     }
