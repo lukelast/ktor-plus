@@ -17,15 +17,9 @@ A microservice framework built on ktor.
 
 The `ktp-gradle-plugins` composite child project builds a Gradle plugin Jar with two plugins.
 
-### KTP Gradle Settings Plugin
-
-Plugin ID: `net.ghue.ktp.gradle.settings`
-
-This is a Gradle settings plugin and runs first.
-
 ### KTP Gradle Project Plugin
 
-Plugin ID: `net.ghue.ktp.gradle`
+Plugin ID: `com.github.lukelast.ktor-plus`
 
 This is a normal Gradle plugin and configures a project to follow the KTP Framework conventions.
 
@@ -49,14 +43,8 @@ KTP libraries and Gradle plugins are available via JitPack:
 
 ```kotlin
 // In your build.gradle.kts
-repositories {
-    maven("https://jitpack.io")
-}
-
 dependencies {
-    implementation("com.github.yourusername.ktp:ktp-config:TAG")
-    implementation("com.github.yourusername.ktp:ktp-core:TAG")
-    implementation("com.github.yourusername.ktp:ktp-ktor:TAG")
+    implementation("com.github.lukelast.ktor-plus:ktp-ktor:VERSION")
 }
 ```
 
@@ -67,17 +55,15 @@ dependencies {
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven("https://jitpack.io")
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
 // In your build.gradle.kts
-plugins {
-    id("com.github.yourusername.ktp.ktp-gradle-plugin") version "TAG"
-}
+plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
-Replace `yourusername` with your GitHub username and `TAG` with a git tag, commit hash, or branch name.
 
 ## Releases
 
