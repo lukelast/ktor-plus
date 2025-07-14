@@ -7,7 +7,7 @@ enum class ProjectMode {
     KTOR,
 }
 
-private val PROJECT_TYPE_DEFAULT = ProjectMode.LIBRARY
+private val PROJECT_TYPE_DEFAULT = ProjectMode.KTOR
 private const val MODE_KEY = "ktp.mode"
 
 fun Project.findProjectMode(): ProjectMode {
