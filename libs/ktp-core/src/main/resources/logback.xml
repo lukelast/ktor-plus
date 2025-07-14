@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="false" debug="false">
+    <include resource="logback-ktp.xml"/>
+    <include optional="true" file="../logback-dev.xml"/>
+    <include optional="true" file="logback/logback-deploy.xml"/>
+</configuration>

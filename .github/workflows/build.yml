@@ -1,0 +1,49 @@
+on: [ push, workflow_dispatch ]
+
+env:
+  VERSION: 0.0.${{ github.run_number }}.${{ github.run_attempt }}
+
+
+permissions:
+  # softprops/action-gh-release plugin needs write.
+  # EnricoMi/publish-unit-test-result-action requires 'read'.
+  contents: write
+  issues: read # EnricoMi/publish-unit-test-result-action
+  # EnricoMi/publish-unit-test-result-action
+  checks: write
+  pull-requests: write # EnricoMi/publish-unit-test-result-action
+
+jobs:
+  gradle:
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ github.ref_name != github.event.repository.default_branch }}
+        run: echo "VERSION=${{ env.VERSION }}-SNAPSHOT" >> $GITHUB_ENV
+
+      - run: |
+          echo "## Version" >> $GITHUB_STEP_SUMMARY
+          echo "\`${{ env.VERSION }}\`" >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Perform Gradle Build
+        run: |
+          ./gradlew check
+
+      - uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Unit Test Results
+          junit_files: "**/build/test-results/**/TEST-*.xml"
+
+      - if: ${{ github.ref_name == github.event.repository.default_branch }}
+        name: GitHub Tag and Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          generate_release_notes: true
