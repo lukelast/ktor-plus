@@ -25,7 +25,7 @@ tasks.register("check") {
     dependsOn(gradle.includedBuild("ktp-gradle-plugin").task(":validatePlugins"))
 }
 
-tasks.register("publishToMavenLocal").configure {
+tasks.register("publishToMavenLocal") {
     dependsOn(gradle.includedBuild("ktp-gradle-plugin").task(":publishToMavenLocal"))
     subprojects.forEach { subproject ->
         if (subproject.projectDir.parentFile.name == "libs") {
@@ -34,7 +34,7 @@ tasks.register("publishToMavenLocal").configure {
     }
 }
 
-tasks.register("publish").configure {
+tasks.register("publish") {
     description = "Publishes libraries and plugins to Nexus"
     dependsOn(gradle.includedBuild("ktp-gradle-plugin").task(":publish"))
 }

@@ -12,6 +12,7 @@ class ProjectPlugin : Plugin<Project> {
             "Applying KTP gradle project plugin to ${project.name}, " +
                 "mode: $mode, " +
                 "Kotlin: ${project.getKotlinPluginVersion()}")
+        @Suppress("UNUSED_VARIABLE")
         val ktpExt: KtpGradlePluginExtension = project.extensions.create("ktp")
 
         project.repositories.mavenCentral()

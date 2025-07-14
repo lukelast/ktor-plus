@@ -51,8 +51,9 @@ val sourceGenDir = "generated/version"
 val versionGenTask =
     tasks.register("generateVersionFile") {
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
+        val projectVersion = project.version.toString()
 
-        inputs.property("version", project.version)
+        inputs.property("version", projectVersion)
         outputs.file(outputFile)
 
         doLast {
@@ -74,7 +75,7 @@ val versionGenTask =
             package net.ghue.ktp.lib
 
             object KtpVersion {
-                const val VERSION = "${project.version}"
+                const val VERSION = "$projectVersion"
                 val libs = listOf(${libs.joinToString { "\"$it\"" }})
             }
         """
