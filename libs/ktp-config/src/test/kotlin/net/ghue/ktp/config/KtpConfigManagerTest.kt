@@ -15,6 +15,8 @@ class KtpConfigManagerTest {
                     "app.secret" to "",
                     "app.version" to "",
                     "app.hostname" to "",
+                    "app.server.port" to 0,
+                    "app.server.host" to "",
                 )
             ),
             findEnvironment(),
@@ -70,6 +72,8 @@ class KtpConfigManagerTest {
                 "app.secret" to "0 chars",
                 "app.version" to "",
                 "app.hostname" to "",
+                "app.server.port" to "0",
+                "app.server.host" to "",
             ),
             allConfig,
         )
