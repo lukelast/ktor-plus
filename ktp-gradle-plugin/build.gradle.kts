@@ -7,8 +7,6 @@ plugins {
     `maven-publish`
 }
 
-println("Gradle build is using Kotlin Version: $embeddedKotlinVersion")
-
 tasks.validatePlugins { enableStricterValidation.set(true) }
 
 group = "com.github.lukelast.ktor-plus"

@@ -12,7 +12,7 @@ class ProjectPlugin : Plugin<Project> {
         project.logger.lifecycle(
             "Applying KTP gradle project plugin to ${project.name}, " +
                 "mode: $mode, " +
-                "KTP: ${KtpVersion.VERSION}" +
+                "KTP: ${KtpVersion.VERSION} " +
                 "Kotlin: ${project.getKotlinPluginVersion()}"
         )
         @Suppress("UNUSED_VARIABLE")

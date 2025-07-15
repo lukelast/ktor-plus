@@ -27,6 +27,7 @@
             <option value="$PROJECT_DIR$/libs/ktp-config" />
             <option value="$PROJECT_DIR$/libs/ktp-core" />
             <option value="$PROJECT_DIR$/libs/ktp-ktor" />
+            <option value="$PROJECT_DIR$/libs/ktp-test" />
           </set>
         </option>
       </GradleProjectSettings>
