@@ -1,5 +1,6 @@
 package net.ghue.ktp.gradle.project
 
+import net.ghue.ktp.lib.KtpVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
@@ -11,6 +12,7 @@ class ProjectPlugin : Plugin<Project> {
         project.logger.lifecycle(
             "Applying KTP gradle project plugin to ${project.name}, " +
                 "mode: $mode, " +
+                "KTP: ${KtpVersion.VERSION}" +
                 "Kotlin: ${project.getKotlinPluginVersion()}"
         )
         @Suppress("UNUSED_VARIABLE")
