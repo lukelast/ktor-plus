@@ -5,7 +5,7 @@ A microservice framework built on ktor.
 ## Running stuff
 
 * Test everything
-    * `./gradlew clean check`
+    * `./gradlew clean check test`
 * Publish to your local maven repository for testing locally in another project.
     * `./gradlew clean publishToMavenLocal`
 * Publish

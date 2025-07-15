@@ -20,4 +20,24 @@ class EnvTest {
         val env = findEnvironment()
         assertEquals("123", env.name)
     }
+
+    @Test
+    fun `local dev env `() {
+        val env = Env(DEFAULT_ENV)
+        assertEquals(true, env.isLocalDev)
+    }
+
+    @Test
+    fun `local dev env is detected`() {
+        val env = Env("$DEFAULT_ENV-xyz")
+        assertEquals(true, env.isLocalDev)
+    }
+
+    @Test
+    fun `unit test env`() {
+        val env = Env.TEST_UNIT
+        assertEquals(true, env.isCiTest)
+        assertEquals(false, env.isLocalDev)
+        assertEquals(false, env.isDefault)
+    }
 }

@@ -25,7 +25,7 @@ object KtpConfig {
     }
 
     fun createManagerForTest(overrideMap: Map<String, Any> = emptyMap()): KtpConfigManager =
-        createManagerForEnv(Env("test"), overrideMap)
+        createManagerForEnv(Env.TEST_UNIT, overrideMap)
 
     fun createManagerForEnv(
         env: Env,

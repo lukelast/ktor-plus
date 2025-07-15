@@ -59,9 +59,16 @@ data class ConfigFile(
 
     /** Does this [ConfigFile] belong in the given [env]? */
     fun filterForEnv(env: Env): Boolean {
+        // Prevent unit tests from picking up local dev override configs.
+        if (env.isCiTest && envName.isEmpty() && (name == "local" || name.isEmpty())) {
+            return false
+        }
         if (envName.isEmpty()) {
             return true // No specific environment, so it applies to all.
         }
-        return envName == env.name
+        if (envName == env.name) {
+            return true // Exact match
+        }
+        return false
     }
 }

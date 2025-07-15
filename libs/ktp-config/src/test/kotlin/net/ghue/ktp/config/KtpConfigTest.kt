@@ -8,7 +8,7 @@ class KtpConfigTest {
 
     @Test
     fun `check env`() {
-        assertEquals(Env("test"), KtpConfig.createManagerForTest().env)
+        assertEquals(Env.TEST_UNIT, KtpConfig.createManagerForTest().env)
     }
 
     @Test
@@ -25,7 +25,7 @@ class KtpConfigTest {
         val files =
             listOf(fakeConfig(9, text = """v=default"""), fakeConfig(5, text = """v=app"""))
                 .shuffled()
-        val config = buildConfig(Env("test"), files)
+        val config = buildConfig(Env.TEST_UNIT, files)
         val value = config.getValue("v")
         assertEquals("app", value.unwrapped())
         assertEquals("5.conf: 1", value.origin().description())
