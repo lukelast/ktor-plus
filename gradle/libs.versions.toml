@@ -39,10 +39,13 @@ kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", v
 
 # Ktor
 ktorBom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
-ktorServerCore = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
-ktorServerNetty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
-ktorServerMetrics = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
-ktorTest = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktorServerCore = { module = "io.ktor:ktor-server-core"}
+ktorServerNetty = { module = "io.ktor:ktor-server-netty-jvm" }
+ktorServerMetrics = { module = "io.ktor:ktor-server-metrics-micrometer" }
+ktorTest = { module = "io.ktor:ktor-server-test-host" }
+
+ktorClientCore = { module = "io.ktor:ktor-client-core" }
+ktorClientApache = { module = "io.ktor:ktor-client-apache" }
 
 # Config dependencies
 typesafeConfig = { module = "com.typesafe:config", version.ref = "typesafeConfig" }

@@ -7,10 +7,4 @@ class KtpLogTest {
     fun log() {
         log {}.info { "Hi" }
     }
-
-    @Test
-    fun `test maybeAdjustLoggerForDevelopment`() {
-        maybeAdjustLoggerForDevelopment()
-        log {}.info { "yo" }
-    }
 }

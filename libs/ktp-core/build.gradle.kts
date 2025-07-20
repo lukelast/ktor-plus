@@ -9,6 +9,6 @@ dependencies {
     // https://github.com/oshai/kotlin-logging
     api(libs.kotlinLogging)
 
-    implementation(libs.slf4jJcl)
-    implementation(libs.slf4jJul)
+    api(libs.slf4jJcl)
+    api(libs.slf4jJul)
 }

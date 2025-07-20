@@ -3,18 +3,9 @@ package net.ghue.ktp.log
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.core.ConsoleAppender
-import java.lang.System.getenv
 import org.slf4j.LoggerFactory
-import org.slf4j.bridge.SLF4JBridgeHandler
 
-private fun runningInKubernetes(): Boolean {
-    return getenv("KUBERNETES_NAMESPACE") != null
-}
-
-fun maybeAdjustLoggerForDevelopment() {
-    SLF4JBridgeHandler.removeHandlersForRootLogger()
-    SLF4JBridgeHandler.install()
-    if (runningInKubernetes()) return
+fun installLocalDevConsoleLogger() {
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 
     // Assuming at most 1 console appender.
