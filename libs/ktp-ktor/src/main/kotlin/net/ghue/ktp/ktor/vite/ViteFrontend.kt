@@ -95,10 +95,10 @@ private class ServeViteDev(val viteConfig: ViteConfig) : Closeable {
     fun init(app: Application) {
         app.routing {
             get("/") { call.serveDevRoute(viteConfig.indexFilePath) }
-            get("/${viteConfig.browserUriPathPrefix}/{...}") {
+            get(viteConfig.frontendRoute) {
                 call.serveDevRoute(viteConfig.indexFilePath)
             }
-            get(viteConfig.frontendRoute) { call.serveDevRoute(Path(call.request.path())) }
+            get("/${viteConfig.staticUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
         }
     }
 
