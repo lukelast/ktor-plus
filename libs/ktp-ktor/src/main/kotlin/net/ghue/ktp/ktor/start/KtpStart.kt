@@ -74,6 +74,12 @@ fun KtpAppBuilder.start() {
     ktpStart(this)
 }
 
+fun KtpAppBuilder.update(updateBlock: KtpApp.() -> Unit): KtpAppBuilder {
+    val ktpApp = this()
+    ktpApp.updateBlock()
+    return { ktpApp }
+}
+
 fun ktpStart(buildConfig: () -> KtpApp) {
     val appInstance = buildConfig().build()
     SLF4JBridgeHandler.removeHandlersForRootLogger()
