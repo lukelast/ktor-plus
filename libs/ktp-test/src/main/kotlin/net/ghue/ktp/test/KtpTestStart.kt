@@ -1,37 +1,23 @@
 package net.ghue.ktp.test
 
-import io.ktor.server.application.*
 import io.ktor.server.testing.*
-import kotlin.String
 import net.ghue.ktp.config.KtpConfig
-import org.koin.core.module.Module
-import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
+import net.ghue.ktp.ktor.start.KtpAppBuilder
+import net.ghue.ktp.ktor.start.ktpAppCreate
 
 fun testKtpStart(
-    koinModule: Module.() -> Unit = {},
+    ktp: KtpAppBuilder = ktpAppCreate {},
     overrideMap: Map<String, Any> = emptyMap(),
     test: suspend ApplicationTestBuilder.() -> Unit,
 ) {
     testApplication {
-        val config = KtpConfig.createManagerForTest(overrideMap)
-
+        val ktpApp = ktp()
+        ktpApp.createConfigManager = { KtpConfig.createManagerForTest(overrideMap) }
+        val ktpInstance = ktpApp.build()
         application {
-            install(Koin) {
-                modules(
-                    module {
-                        single { config }
-                        single { this@application }
-                    },
-                    createKoinModule(koinModule),
-                )
-            }
+            ktpInstance.installKoin(this)
+            ktpInstance.appInit(this)
         }
-
         test()
     }
-}
-
-private fun createKoinModule(koinModule: Module.() -> Unit): Module {
-    return module { koinModule() }
 }

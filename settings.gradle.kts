@@ -1,6 +1,8 @@
 /*
  * https://docs.gradle.org/current/userguide/intro_multi_project_builds.html
  */
+
+enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 pluginManagement { repositories { gradlePluginPortal() } }
 
 rootProject.name = "ktp"

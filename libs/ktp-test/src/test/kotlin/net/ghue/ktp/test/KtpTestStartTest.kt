@@ -11,6 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import net.ghue.ktp.config.KtpConfigManager
+import net.ghue.ktp.ktor.start.ktpAppCreate
 import org.junit.jupiter.api.Test
 import org.koin.core.component.inject
 import org.koin.test.KoinTest
@@ -78,7 +79,7 @@ class KtpTestStartTest : KoinTest {
             override fun getMessage() = "Hello from test service"
         }
 
-        testKtpStart(koinModule = { single<TestService> { TestServiceImpl() } }) {
+        testKtpStart(ktpAppCreate { createModule { single<TestService> { TestServiceImpl() } } }) {
             application {
                 routing {
                     get("/service") {
