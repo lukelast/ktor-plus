@@ -1,23 +1,25 @@
 [versions]
 kotlin = "2.2.0"
 ksp = "2.2.0-2.0.2"
+koin = "4.1.0"
 # This needs to match Version.KOIN_KSP
 koinAnnotations = "2.1.0"
-ktor = "3.2.1"
-detekt = "1.23.7"
+ktor = "3.2.3"
+#detekt = "1.23.7"
 versionCheck = "0.51.0"
-kotlinCoroutines = "1.9.0"
+#kotlinCoroutines = "1.9.0"
 typesafeConfig = "1.4.3"
 config4k = "0.7.0"
-classgraph = "4.8.180"
-logback = "1.5.6"
-kotlinLogging = "7.0.7"
+classgraph = "4.8.181"
+logback = "1.5.18"
+kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
+junit = "5.13.4"
 
 [plugins]
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+#detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+#kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
 
 [libraries]
@@ -25,23 +27,23 @@ versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionChe
 gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
-gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.20.1" }
+gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.23.0" }
 gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 
 # Testing
-junit = "org.junit:junit-bom:5.13.3"
-mockitoKotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "5.4.0" }
+junitBom = { module = "org.junit:junit-bom", version.ref = "junit" }
+mockitoKotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.0.0" }
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.7.3" }
-kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
+kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
+#kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 
 # Ktor
 ktorBom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 ktorServerCore = { module = "io.ktor:ktor-server-core"}
 ktorServerNetty = { module = "io.ktor:ktor-server-netty-jvm" }
-ktorServerMetrics = { module = "io.ktor:ktor-server-metrics-micrometer" }
+#ktorServerMetrics = { module = "io.ktor:ktor-server-metrics-micrometer" }
 ktorTest = { module = "io.ktor:ktor-server-test-host" }
 
 ktorClientCore = { module = "io.ktor:ktor-client-core" }
@@ -52,8 +54,8 @@ typesafeConfig = { module = "com.typesafe:config", version.ref = "typesafeConfig
 config4k = { module = "io.github.config4k:config4k", version.ref = "config4k" }
 classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
 
-# Koin dependencies
-koinBom = { module = "io.insert-koin:koin-bom", version = "4.0.0" }
+## Koin dependencies
+koinBom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koinCore = { module = "io.insert-koin:koin-core" }
 koinAnnotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations"}
 koinKtor = { module = "io.insert-koin:koin-ktor" }
