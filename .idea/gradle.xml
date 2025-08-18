@@ -21,7 +21,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/examples" />
-            <option value="$PROJECT_DIR$/examples/ktp-demo" />
+            <option value="$PROJECT_DIR$/examples/ktp-example" />
             <option value="$PROJECT_DIR$/ktp-gradle-plugin" />
             <option value="$PROJECT_DIR$/libs" />
             <option value="$PROJECT_DIR$/libs/ktp-config" />

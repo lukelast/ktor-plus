@@ -18,4 +18,4 @@ rootDir
     ?.filter { it.isDirectory }
     ?.forEach { include("$libsDir:${it.name}") }
 
-include("examples:ktp-demo")
+include("examples:ktp-example")

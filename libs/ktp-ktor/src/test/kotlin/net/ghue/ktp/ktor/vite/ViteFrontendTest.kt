@@ -7,6 +7,8 @@ import io.ktor.server.testing.*
 import java.nio.file.Path
 import kotlin.io.path.Path
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.plugin.ViteConfig
+import net.ghue.ktp.ktor.plugin.installViteFrontend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

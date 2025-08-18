@@ -1,4 +1,4 @@
-package net.ghue.ktp.ktor.vite
+package net.ghue.ktp.ktor.plugin
 
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*

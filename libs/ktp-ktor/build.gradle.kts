@@ -5,12 +5,20 @@ dependencies {
     api(project(":libs:ktp-config"))
 
     // Ktor
-    api(platform(libs.ktorBom))
-    api(libs.ktorServerCore)
-    api(libs.ktorServerNetty)
+    api(platform(libs.ktor.bom))
+    api(libs.ktor.core)
+    api(libs.ktor.netty)
+    api(libs.ktor.serializationJson)
+    api(libs.ktor.callLogging)
+    api(libs.ktor.statusPages)
+    api(libs.ktor.contentNegotiation)
+    api(libs.ktor.compression)
+    api(libs.ktor.forwardedHeader)
+    api(libs.ktor.resources)
+
     // Ktor Client
-    api(libs.ktorClientCore)
-    api(libs.ktorClientApache)
+    api(libs.ktor.client.core)
+    api(libs.ktor.client.apache)
 
     // Koin
     api(platform(libs.koinBom))
@@ -20,7 +28,7 @@ dependencies {
     implementation(libs.koinLoggerSlf4j)
 
     // Testing
-    testImplementation(libs.ktorTest)
+    testImplementation(libs.ktor.test)
     testImplementation(libs.koinTest)
     testImplementation(libs.koinTestJunit5)
 }
