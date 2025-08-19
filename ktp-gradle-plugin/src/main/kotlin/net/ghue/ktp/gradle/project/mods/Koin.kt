@@ -1,7 +1,8 @@
 package net.ghue.ktp.gradle.project.mods
 
-import net.ghue.ktp.gradle.common.Version
+import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
+import net.ghue.ktp.gradle.common.Version
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
@@ -16,6 +17,8 @@ fun Project.applyKoinKspCompiler(configName: String = "ksp") {
     // https://kotlinlang.org/docs/ksp-quickstart.html
     // https://insert-koin.io/docs/setup/annotations
     dependencies { add(configName, "io.insert-koin:koin-ksp-compiler:${Version.KOIN_KSP}") }
+    // Disable generation of the default Koin module. This avoids a warning.
+    extensions.configure<KspExtension> { arg("KOIN_DEFAULT_MODULE", "false") }
 }
 
 fun Project.applyKoinKspMultiplatform() {
