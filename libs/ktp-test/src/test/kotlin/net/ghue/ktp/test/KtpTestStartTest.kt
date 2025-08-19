@@ -14,9 +14,9 @@ import net.ghue.ktp.config.KtpConfigManager
 import net.ghue.ktp.ktor.start.ktpAppCreate
 import org.junit.jupiter.api.Test
 import org.koin.core.component.inject
-import org.koin.test.KoinTest
+import org.koin.ktor.ext.inject
 
-class KtpTestStartTest : KoinTest {
+class KtpTestStartTest {
 
     @Test
     fun `testKtpStart should set up basic application context`() {

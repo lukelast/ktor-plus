@@ -8,7 +8,7 @@ import net.ghue.ktp.config.KtpConfigManager
 import net.ghue.ktp.log.installLocalDevConsoleLogger
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
+import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
 import org.slf4j.bridge.SLF4JBridgeHandler
 
@@ -50,7 +50,7 @@ data class KtpAppInstance(
 ) {
 
     fun installKoin(app: Application) {
-        app.install(Koin) {
+        app.install(KoinIsolated) {
             slf4jLogger()
             modules(module { single { app } })
             modules(modules)
