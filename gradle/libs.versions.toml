@@ -15,6 +15,7 @@ logback = "1.5.18"
 kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
 junit = "5.13.4"
+stripe = "29.5.0"
 
 [plugins]
 #detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
@@ -68,6 +69,9 @@ koinKtor = { module = "io.insert-koin:koin-ktor" }
 koinLoggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 koinTest = { module = "io.insert-koin:koin-test" }
 koinTestJunit5 = { module = "io.insert-koin:koin-test-junit5" }
+
+# Stripe dependencies
+stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }
 
 # Logging dependencies
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

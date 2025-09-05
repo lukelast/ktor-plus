@@ -19,7 +19,7 @@ class KtpConfigManager(val config: Config, val env: Env) {
      * match the name of the configuration. For example, if your class name is `Blah` it will read
      * the configuration object under "blah".
      */
-    inline fun <reified T> extract(): T {
+    inline fun <reified T> extractChild(): T {
         val path = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
         return try {
             config.extract<T>(path)
