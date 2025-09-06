@@ -82,6 +82,7 @@ class KtpConfigManager(val config: Config, val env: Env) {
     fun genTemplate(): String {
         val options =
             ConfigRenderOptions.defaults()
+                .setJson(false)
                 .setFormatted(true)
                 .setComments(true)
                 .setOriginComments(true)
@@ -91,7 +92,9 @@ class KtpConfigManager(val config: Config, val env: Env) {
                     value.origin().description() != "env variables" &&
                     path != "env"
             } ?: error("No config")
-        val renderedConfig = filteredConfig.render(options)
+        // These comment lines don't seem useful.
+        val extraComments = Regex("^.*# hardcoded value.*\\R?", RegexOption.MULTILINE)
+        val renderedConfig = filteredConfig.render(options).replace(extraComments, "")
         return renderedConfig
     }
 }
