@@ -78,9 +78,7 @@ class KtpConfigManager(val config: Config, val env: Env) {
         Logger.getLogger(this::class.java.name).info("All config values: $txt")
     }
 
-    /**
-     * Create a config file containing all possible values.
-     */
+    /** Create a config file containing all possible values. */
     fun genTemplate(): String {
         val options =
             ConfigRenderOptions.defaults()
