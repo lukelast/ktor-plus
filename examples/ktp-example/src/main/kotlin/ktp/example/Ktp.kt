@@ -1,7 +1,6 @@
 package ktp.example
 
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import ktp.example.api.installApiHello
 import ktp.example.plugins.configureAdministration
 import net.ghue.ktp.ktor.app.debug.installConfigDebugInfo
 import net.ghue.ktp.ktor.plugin.installDefaultPlugins
@@ -21,7 +20,7 @@ val ktpApp = ktpAppCreate {
         installDefaultPlugins()
         configureAdministration()
         installConfigDebugInfo(config)
-        routing { get("/") { call.respondText("KTP is running!") } }
+        installApiHello()
     }
 }
 

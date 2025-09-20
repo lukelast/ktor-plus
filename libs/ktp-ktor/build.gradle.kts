@@ -30,5 +30,4 @@ dependencies {
     // Testing
     testImplementation(libs.ktor.test)
     testImplementation(libs.koinTest)
-    testImplementation(libs.koinTestJunit5)
 }

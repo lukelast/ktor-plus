@@ -14,7 +14,6 @@ class SettingsPlugin : Plugin<Settings> {
             versionCatalogs {
                 create("libs") {
                     library("koin.bom", "io.insert-koin", "koin-bom").version(Version.KOIN)
-                    library("junit.bom", "org.junit", "junit-bom").version(Version.JUNIT)
 
                     val ktpVersion = version("ktp", KtpVersion.VERSION)
                     KtpVersion.libs.forEach {

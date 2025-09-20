@@ -14,13 +14,12 @@ classgraph = "4.8.181"
 logback = "1.5.18"
 kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
-junit = "5.13.4"
+mockk = "1.14.5"
 stripe = "29.5.0"
 
 [plugins]
 #detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-#kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
 
 [libraries]
@@ -32,8 +31,7 @@ gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.23.0" }
 gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 
 # Testing
-junitBom = { module = "org.junit:junit-bom", version.ref = "junit" }
-mockitoKotlin = { module = "org.mockito.kotlin:mockito-kotlin", version = "6.0.0" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -51,7 +49,6 @@ ktor-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation" }
 ktor-compression = { module = "io.ktor:ktor-server-compression" }
 ktor-forwardedHeader = { module = "io.ktor:ktor-server-forwarded-header" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
-#ktorServerMetrics = { module = "io.ktor:ktor-server-metrics-micrometer" }
 ktor-test = { module = "io.ktor:ktor-server-test-host" }
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
 ktor-client-apache = { module = "io.ktor:ktor-client-apache" }
@@ -68,7 +65,6 @@ koinAnnotations = { module = "io.insert-koin:koin-annotations", version.ref = "k
 koinKtor = { module = "io.insert-koin:koin-ktor" }
 koinLoggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 koinTest = { module = "io.insert-koin:koin-test" }
-koinTestJunit5 = { module = "io.insert-koin:koin-test-junit5" }
 
 # Stripe dependencies
 stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }

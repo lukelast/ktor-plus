@@ -1,18 +1,14 @@
 package net.ghue.ktp.core.string
 
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 
-class StringKtTest {
+class StringKtTest :
+    StringSpec({
+        "decodeUrlEncoded replaces plus with spaces" { "a+b+c".decodeUrlEncoded() shouldBe "a b c" }
 
-    @Test
-    fun decodeUrlEncoded() {
-        assertEquals("a b c", "a+b+c".decodeUrlEncoded())
-    }
-
-    @Test
-    fun remove() {
-        assertEquals("abc", "a-b-c".remove('-'))
-        assertEquals("ac", "a-b-c".remove('-', 'b'))
-    }
-}
+        "remove drops characters from a string" {
+            "a-b-c".remove('-') shouldBe "abc"
+            "a-b-c".remove('-', 'b') shouldBe "ac"
+        }
+    })

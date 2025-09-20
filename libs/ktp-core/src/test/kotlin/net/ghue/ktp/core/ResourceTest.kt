@@ -1,31 +1,29 @@
 package net.ghue.ktp.core
 
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 
-class ResourceTest {
-    private val file = "file.txt"
-    private val fileNotExist = "does-not-exist.txt"
+class ResourceTest :
+    StringSpec({
+        val file = "file.txt"
+        val fileNotExist = "does-not-exist.txt"
 
-    @Test
-    fun `the resource file does not exist`() {
-        val ex = assertThrows<IllegalStateException> { Resource.read(fileNotExist) }
-        assertEquals("Unable to find resource file named: $fileNotExist", ex.message)
-    }
+        "read throws when the resource file does not exist" {
+            val ex = shouldThrow<IllegalStateException> { Resource.read(fileNotExist) }
+            ex.message shouldBe "Unable to find resource file named: $fileNotExist"
+        }
 
-    @Test
-    fun `readOrNull and is null`() {
-        assertEquals(null, Resource.readOrNull(fileNotExist))
-    }
+        "readOrNull returns null when the resource is missing" {
+            Resource.readOrNull(fileNotExist).shouldBeNull()
+        }
 
-    @Test
-    fun `readOrNull and is not null`() {
-        assertNotNull(Resource.readOrNull(file))
-    }
+        "readOrNull returns content when the resource exists" {
+            Resource.readOrNull(file).shouldNotBeNull()
+        }
 
-    @Test
-    fun `read a resource file`() {
-        assertTrue(Resource.read(file).isNotBlank())
-    }
-}
+        "read loads a resource file" { Resource.read(file).isNotBlank().shouldBeTrue() }
+    })

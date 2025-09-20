@@ -6,4 +6,7 @@ version = "0.0.1"
 
 application { mainClass.set("ktp.example.KtpKt") }
 
-dependencies { implementation(project(":libs:ktp-ktor")) }
+dependencies {
+    implementation(project(":libs:ktp-ktor"))
+    testImplementation(project(":libs:ktp-test"))
+}

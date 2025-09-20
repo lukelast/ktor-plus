@@ -2,8 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="17">
-      <module name="ktor-plus.ktp.examples.ktp-example.main~1" target="21" />
-      <module name="ktor-plus.ktp.examples.ktp-example.test~1" target="21" />
+      <module name="ktor-plus.ktp.examples.ktp-example.main" target="21" />
+      <module name="ktor-plus.ktp.examples.ktp-example.test" target="21" />
       <module name="ktp.examples.ktp-demo.main" target="21" />
       <module name="ktp.examples.ktp-demo.test" target="21" />
       <module name="ktp.examples.ktp-example" target="21" />

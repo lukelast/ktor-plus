@@ -14,11 +14,11 @@ fun Project.applyKtor() {
     applyKtfmt()
     applyKspGradlePlugin()
     applyKoinKspCompiler()
-    installJunit()
+    installKotest()
 
     dependencies {
         //        add("implementation", "net.ghue.ktp.lib:ktp-ktor:${KtpVersion.VERSION}")
 
-        add("testImplementation", "io.ktor:ktor-server-test-host-jvm")
+//        add("testImplementation", project(":libs:ktp-test"))
     }
 }

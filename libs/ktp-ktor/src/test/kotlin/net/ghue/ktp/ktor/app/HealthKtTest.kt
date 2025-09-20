@@ -1,44 +1,48 @@
 package net.ghue.ktp.ktor.app
 
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 
-class HealthKtTest {
-
-    @Test
-    fun healthOk() = testApplication {
-        application { installK8sHealthCheck() }
-        with(client.get(K8S_LIVENESS)) {
-            assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Alive", bodyAsText())
+class HealthKtTest :
+    StringSpec({
+        "health endpoint returns Alive when healthy" {
+            testApplication {
+                application { installK8sHealthCheck() }
+                with(client.get(K8S_LIVENESS)) {
+                    status shouldBe HttpStatusCode.OK
+                    bodyAsText() shouldBe "Alive"
+                }
+            }
         }
-    }
 
-    @Test
-    fun readinessOk() = testApplication {
-        application { installK8sHealthCheck() }
-        val response = client.get(K8S_READINESS)
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals("Ready", response.bodyAsText())
-    }
+        "readiness endpoint returns Ready when healthy" {
+            testApplication {
+                application { installK8sHealthCheck() }
+                val response = client.get(K8S_READINESS)
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe "Ready"
+            }
+        }
 
-    @Test
-    fun healthNotOk() = testApplication {
-        application { installK8sHealthCheck(healthCheck = { false }) }
-        val response = client.get(K8S_LIVENESS)
-        assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
-        assertEquals("Not Alive", response.bodyAsText())
-    }
+        "health endpoint returns ServiceUnavailable when unhealthy" {
+            testApplication {
+                application { installK8sHealthCheck(healthCheck = { false }) }
+                val response = client.get(K8S_LIVENESS)
+                response.status shouldBe HttpStatusCode.ServiceUnavailable
+                response.bodyAsText() shouldBe "Not Alive"
+            }
+        }
 
-    @Test
-    fun readinessNotOk() = testApplication {
-        application { installK8sHealthCheck(readinessCheck = { false }) }
-        val response = client.get(K8S_READINESS)
-        assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
-        assertEquals("Not Ready", response.bodyAsText())
-    }
-}
+        "readiness endpoint returns ServiceUnavailable when not ready" {
+            testApplication {
+                application { installK8sHealthCheck(readinessCheck = { false }) }
+                val response = client.get(K8S_READINESS)
+                response.status shouldBe HttpStatusCode.ServiceUnavailable
+                response.bodyAsText() shouldBe "Not Ready"
+            }
+        }
+    })

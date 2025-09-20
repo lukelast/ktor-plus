@@ -6,11 +6,11 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.withType
 
-fun Project.installJunit() {
+fun Project.installKotest() {
     project.dependencies {
-        add("testImplementation", platform("org.junit:junit-bom:${Version.JUNIT}"))
-        add("testImplementation", "org.junit.jupiter:junit-jupiter")
-        add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
+        add("testImplementation", platform("io.kotest:kotest-bom:${Version.KOTEST}"))
+        add("testImplementation", "io.kotest:kotest-runner-junit5")
+        add("testImplementation", "io.kotest:kotest-assertions-core")
     }
-    project.tasks.withType<Test> { useJUnitPlatform() }
+    project.tasks.withType<Test> { useJUnitPlatform { includeEngines("kotest") } }
 }

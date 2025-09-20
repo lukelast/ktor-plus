@@ -1,115 +1,109 @@
 package net.ghue.ktp.ktor.start
 
-import kotlin.test.assertEquals
-import kotlin.test.assertNotSame
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import net.ghue.ktp.config.KtpConfig
-import org.junit.jupiter.api.Test
 import org.koin.dsl.module
 
-class KtpStartTest {
-
-    @Test
-    fun `update should create new KtpAppBuilder with modifications applied`() {
-        val originalBuilder = ktpAppCreate {
-            addModule(module {})
-            createConfigManager = { KtpConfig.createManagerForTest() }
-        }
-
-        val updatedBuilder =
-            originalBuilder.update {
+class KtpStartTest :
+    StringSpec({
+        "update creates a new builder with additional modules and inits" {
+            val originalBuilder = ktpAppCreate {
                 addModule(module {})
-                init { _ -> }
+                createConfigManager = { KtpConfig.createManagerForTest() }
             }
 
-        val originalApp = originalBuilder()
-        val updatedApp = updatedBuilder()
+            val updatedBuilder =
+                originalBuilder.update {
+                    addModule(module {})
+                    init { _ -> }
+                }
 
-        assertEquals(1, originalApp.modules.size)
-        assertEquals(0, originalApp.appInits.size)
-        assertEquals(2, updatedApp.modules.size)
-        assertEquals(1, updatedApp.appInits.size)
+            val originalApp = originalBuilder()
+            val updatedApp = updatedBuilder()
 
-        assertNotSame(originalBuilder, updatedBuilder)
-    }
-
-    @Test
-    fun `update should preserve existing configuration`() {
-        var customConfigCalled = false
-        val customConfigManager = {
-            customConfigCalled = true
-            KtpConfig.createManagerForTest()
+            originalApp.modules.size shouldBe 1
+            originalApp.appInits.size shouldBe 0
+            updatedApp.modules.size shouldBe 2
+            updatedApp.appInits.size shouldBe 1
+            updatedBuilder shouldNotBeSameInstanceAs originalBuilder
         }
 
-        val originalBuilder = ktpAppCreate {
-            createConfigManager = customConfigManager
-            addModule(module {})
-        }
-
-        val updatedBuilder = originalBuilder.update { addModule(module {}) }
-
-        val updatedApp = updatedBuilder()
-        updatedApp.createConfigManager()
-
-        assert(customConfigCalled) { "Custom config manager should be preserved" }
-        assertEquals(2, updatedApp.modules.size)
-    }
-
-    @Test
-    fun `update should allow chaining multiple updates`() {
-        val originalBuilder = ktpAppCreate {
-            createConfigManager = { KtpConfig.createManagerForTest() }
-        }
-
-        val firstUpdate = originalBuilder.update { addModule(module {}) }
-
-        val secondUpdate =
-            firstUpdate.update {
-                addModule(module {})
-                init { _ -> }
+        "update preserves custom configuration manager" {
+            var customConfigCalled = false
+            val customConfigManager = {
+                customConfigCalled = true
+                KtpConfig.createManagerForTest()
             }
 
-        val finalApp = secondUpdate()
-
-        assertEquals(2, finalApp.modules.size)
-        assertEquals(1, finalApp.appInits.size)
-    }
-
-    @Test
-    fun `update should work with empty update block`() {
-        val originalBuilder = ktpAppCreate {
-            addModule(module {})
-            createConfigManager = { KtpConfig.createManagerForTest() }
-        }
-
-        val originalApp = originalBuilder()
-        val originalModulesCount = originalApp.modules.size
-
-        val updatedBuilder = originalBuilder.update {}
-
-        val updatedApp = updatedBuilder()
-
-        assertEquals(originalModulesCount, updatedApp.modules.size)
-        assertNotSame(originalBuilder, updatedBuilder)
-    }
-
-    @Test
-    fun `update should return a new KtpAppBuilder that preserves modifications`() {
-        val originalBuilder = ktpAppCreate {
-            createConfigManager = { KtpConfig.createManagerForTest() }
-        }
-
-        val updatedBuilder =
-            originalBuilder.update {
+            val originalBuilder = ktpAppCreate {
+                createConfigManager = customConfigManager
                 addModule(module {})
-                init { _ -> }
             }
 
-        val firstCall = updatedBuilder()
-        val secondCall = updatedBuilder()
+            val updatedBuilder = originalBuilder.update { addModule(module {}) }
 
-        assertEquals(firstCall.modules.size, secondCall.modules.size)
-        assertEquals(firstCall.appInits.size, secondCall.appInits.size)
-        assertEquals(1, firstCall.modules.size)
-        assertEquals(1, firstCall.appInits.size)
-    }
-}
+            val updatedApp = updatedBuilder()
+            updatedApp.createConfigManager()
+
+            customConfigCalled.shouldBeTrue()
+            updatedApp.modules.size shouldBe 2
+        }
+
+        "update supports chaining additional changes" {
+            val originalBuilder = ktpAppCreate {
+                createConfigManager = { KtpConfig.createManagerForTest() }
+            }
+
+            val firstUpdate = originalBuilder.update { addModule(module {}) }
+
+            val secondUpdate =
+                firstUpdate.update {
+                    addModule(module {})
+                    init { _ -> }
+                }
+
+            val finalApp = secondUpdate()
+
+            finalApp.modules.size shouldBe 2
+            finalApp.appInits.size shouldBe 1
+        }
+
+        "update with empty block still produces new builder" {
+            val originalBuilder = ktpAppCreate {
+                addModule(module {})
+                createConfigManager = { KtpConfig.createManagerForTest() }
+            }
+
+            val originalModulesCount = originalBuilder().modules.size
+
+            val updatedBuilder = originalBuilder.update {}
+
+            val updatedApp = updatedBuilder()
+
+            updatedApp.modules.size shouldBe originalModulesCount
+            updatedBuilder shouldNotBeSameInstanceAs originalBuilder
+        }
+
+        "update returns idempotent builder with preserved changes" {
+            val originalBuilder = ktpAppCreate {
+                createConfigManager = { KtpConfig.createManagerForTest() }
+            }
+
+            val updatedBuilder =
+                originalBuilder.update {
+                    addModule(module {})
+                    init { _ -> }
+                }
+
+            val firstCall = updatedBuilder()
+            val secondCall = updatedBuilder()
+
+            firstCall.modules.size shouldBe secondCall.modules.size
+            firstCall.appInits.size shouldBe secondCall.appInits.size
+            firstCall.modules.size shouldBe 1
+            firstCall.appInits.size shouldBe 1
+        }
+    })

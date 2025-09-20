@@ -1,16 +1,15 @@
 package net.ghue.ktp.core
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 
-class EnumKtTest {
-
-    @Test
-    fun enumToCamelCase() {
-        Assertions.assertEquals("testEnum01", TestEnum.TEST_ENUM_01.enumToCamelCase())
-        Assertions.assertEquals("abc202211Frank", TestEnum.ABC2022_11_FRANK.enumToCamelCase())
-    }
-}
+class EnumKtTest :
+    StringSpec({
+        "enumToCamelCase converts enum constants" {
+            TestEnum.TEST_ENUM_01.enumToCamelCase() shouldBe "testEnum01"
+            TestEnum.ABC2022_11_FRANK.enumToCamelCase() shouldBe "abc202211Frank"
+        }
+    })
 
 private enum class TestEnum {
     TEST_ENUM_01,

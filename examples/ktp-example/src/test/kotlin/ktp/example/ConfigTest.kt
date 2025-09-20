@@ -1,16 +1,14 @@
 package ktp.example
 
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 import net.ghue.ktp.config.scanConfigFiles
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 
-class ConfigTest {
-
-    @Test
-    fun `scanConfigFiles should read all config files`() {
-        val files = scanConfigFiles()
-        // Filter to only files from the demo resources
-        val demoFiles = files.filter { it.fileName.contains("example") }
-        assertEquals(listOf("9.example.conf"), demoFiles.map { it.fileName })
-    }
-}
+class ConfigTest :
+    StringSpec({
+        "scanConfigFiles reads all example config files" {
+            val files = scanConfigFiles()
+            val demoFiles = files.filter { it.fileName.contains("example") }
+            demoFiles.map { it.fileName } shouldBe listOf("9.example.conf")
+        }
+    })

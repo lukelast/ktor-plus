@@ -35,7 +35,7 @@ fun Project.applyLibrary() {
 
     configPublishJava()
 
-    installJunit()
+    installKotest()
 }
 
 fun Project.configPublishJava() {

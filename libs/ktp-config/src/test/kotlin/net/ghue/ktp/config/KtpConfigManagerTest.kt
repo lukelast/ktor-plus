@@ -1,87 +1,82 @@
 package net.ghue.ktp.config
 
 import com.typesafe.config.ConfigFactory
-import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Test
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 
-class KtpConfigManagerTest {
+class KtpConfigManagerTest :
+    StringSpec({
+        class CorrectTestConfig(private val config: KtpConfigManager) {
+            val msg = "hi"
+        }
 
-    private fun create() =
-        KtpConfigManager(
-            ConfigFactory.parseMap(
+        "get provides sub-config instances" {
+            val config = newConfigManager()
+            config.get<CorrectTestConfig>().msg shouldBe "hi"
+        }
+
+        "sub-config lookup caches instances" {
+            val config = newConfigManager()
+            val result1 = config.get<CorrectTestConfig>()
+            val result2 = config.get<CorrectTestConfig>()
+            result1 shouldBeSameInstanceAs result2
+        }
+
+        "get fails when constructor parameter has wrong type" {
+            class TestConfig(private val config: String)
+            assertBadConstructor<TestConfig> { newConfigManager() }
+        }
+
+        "get fails when constructor has additional parameters" {
+            class TestConfig(private val config: KtpConfigManager, val yo: String)
+            assertBadConstructor<TestConfig> { newConfigManager() }
+        }
+
+        "getAllConfig renders masked values" {
+            val ktp = newConfigManager()
+            val allConfig = ktp.getAllConfig()
+            allConfig shouldBe
                 mapOf(
                     "app.name" to "",
                     "app.nameShort" to "",
-                    "app.secret" to "",
+                    "app.secret" to "0 chars",
                     "app.version" to "",
                     "app.hostname" to "",
-                    "app.server.port" to 0,
+                    "app.server.port" to "0",
                     "app.server.host" to "",
                 )
-            ),
-            findEnvironment(),
-        )
+        }
 
-    private inline fun <reified T : Any> doSubConfigBadConstructor() {
-        val ktp = create()
+        "logAllConfig prints without throwing" {
+            val config = newConfigManager()
+            shouldNotThrowAny { config.logAllConfig() }
+        }
+    })
 
-        val exceptionMsg = assertThrows(Exception::class.java) { ktp.get<T>() }.message!!
-
-        assertTrue(exceptionMsg.contains("class must have a primary constructor"))
-        assertTrue(exceptionMsg.contains("KtpConfig"))
-    }
-
-    class CorrectTestConfig(private val config: KtpConfigManager) {
-        val msg = "hi"
-    }
-
-    @Test
-    fun subConfig() {
-        val config = create()
-        assertEquals("hi", config.get<CorrectTestConfig>().msg)
-    }
-
-    @Test
-    fun subConfigCache() {
-        val config = create()
-        val result1 = config.get<CorrectTestConfig>()
-        val result2 = config.get<CorrectTestConfig>()
-        assertSame(result1, result2)
-    }
-
-    @Test
-    fun subConfigBadConstructorWrongType() {
-        class TestConfig(private val config: String)
-        doSubConfigBadConstructor<TestConfig>()
-    }
-
-    @Test
-    fun subConfigBadConstructorTooMany() {
-        class TestConfig(private val config: KtpConfigManager, val yo: String)
-        doSubConfigBadConstructor<TestConfig>()
-    }
-
-    @Test
-    fun getAllConfig() {
-        val ktp = create()
-        val allConfig = ktp.getAllConfig()
-        assertEquals(
+private fun newConfigManager(): KtpConfigManager =
+    KtpConfigManager(
+        ConfigFactory.parseMap(
             mapOf(
                 "app.name" to "",
                 "app.nameShort" to "",
-                "app.secret" to "0 chars",
+                "app.secret" to "",
                 "app.version" to "",
                 "app.hostname" to "",
-                "app.server.port" to "0",
+                "app.server.port" to 0,
                 "app.server.host" to "",
-            ),
-            allConfig,
-        )
-    }
+            )
+        ),
+        findEnvironment(),
+    )
 
-    @Test
-    fun `logAllConfig test`() {
-        val config = create()
-        config.logAllConfig()
-    }
+private inline fun <reified T : Any> assertBadConstructor(creator: () -> KtpConfigManager) {
+    val ktp = creator()
+
+    val exception = shouldThrow<Exception> { ktp.get<T>() }
+    exception.message.shouldContain("class must have a primary constructor")
+    exception.message.shouldContain("KtpConfig")
 }
