@@ -3,9 +3,11 @@ package net.ghue.ktp.ktor.start
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.KtpConfigManager
 import net.ghue.ktp.log.installLocalDevConsoleLogger
+import net.ghue.ktp.log.log
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
@@ -97,5 +99,12 @@ fun ktpStart(buildConfig: () -> KtpApp) {
             appInstance.installKoin(this)
             appInstance.appInit(this)
         }
+    Runtime.getRuntime()
+        .addShutdownHook(
+            Thread {
+                log {}.info { "Received shutdown signal. Shutting down" }
+                server.stop(2.seconds.inWholeMilliseconds, 5.seconds.inWholeMilliseconds)
+            }
+        )
     server.start(true)
 }
