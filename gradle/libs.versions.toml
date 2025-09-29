@@ -16,6 +16,8 @@ kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
 mockk = "1.14.5"
 stripe = "29.5.0"
+# Should match Version.KOTEST
+kotest = "6.0.3"
 
 [plugins]
 #detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
@@ -32,6 +34,7 @@ gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin"
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotest-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -40,7 +43,7 @@ kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", vers
 
 # Ktor
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
-ktor-core = { module = "io.ktor:ktor-server-core"}
+ktor-core = { module = "io.ktor:ktor-server-core" }
 ktor-netty = { module = "io.ktor:ktor-server-netty-jvm" }
 ktor-serializationJson = { module = "io.ktor:ktor-serialization-kotlinx-json" }
 ktor-callLogging = { module = "io.ktor:ktor-server-call-logging" }
@@ -61,7 +64,7 @@ classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classg
 ## Koin dependencies
 koinBom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koinCore = { module = "io.insert-koin:koin-core" }
-koinAnnotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations"}
+koinAnnotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
 koinKtor = { module = "io.insert-koin:koin-ktor" }
 koinLoggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 koinTest = { module = "io.insert-koin:koin-test" }
