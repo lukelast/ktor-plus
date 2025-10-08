@@ -2,7 +2,7 @@ package net.ghue.ktp.stripe
 
 import com.stripe.model.Subscription
 
-/** @see https://docs.stripe.com/api/subscriptions/object#subscription_object-status */
+/** [Docs](https://docs.stripe.com/api/subscriptions/object#subscription_object-status) */
 enum class SubscriptionStatus {
     INCOMPLETE,
     INCOMPLETE_EXPIRED,
