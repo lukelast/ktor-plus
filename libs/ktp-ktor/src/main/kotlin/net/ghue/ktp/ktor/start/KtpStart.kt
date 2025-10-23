@@ -5,7 +5,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.config.KtpConfigManager
 import net.ghue.ktp.log.installLocalDevConsoleLogger
 import net.ghue.ktp.log.log
 import org.koin.core.module.Module
@@ -18,9 +17,8 @@ typealias KtpAppBuilder = () -> KtpApp
 
 class KtpApp {
     internal val modules = mutableListOf<Module>()
-    internal val appInits: MutableList<suspend Application.(KtpConfigManager) -> Unit> =
-        mutableListOf()
-    var createConfigManager: () -> KtpConfigManager = { KtpConfig.createManager() }
+    internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
+    var createConfigManager: () -> KtpConfig = { KtpConfig.create() }
 
     fun addModule(module: Module) {
         modules.add(module)
@@ -30,7 +28,7 @@ class KtpApp {
         addModule(module { configModule() })
     }
 
-    fun init(appInit: suspend Application.(KtpConfigManager) -> Unit) {
+    fun init(appInit: suspend Application.(KtpConfig) -> Unit) {
         appInits.add(appInit)
     }
 
@@ -46,9 +44,9 @@ class KtpApp {
 }
 
 data class KtpAppInstance(
-    val config: KtpConfigManager,
+    val config: KtpConfig,
     val modules: List<Module>,
-    val appInits: List<suspend Application.(KtpConfigManager) -> Unit>,
+    val appInits: List<suspend Application.(KtpConfig) -> Unit>,
 ) {
 
     fun installKoin(app: Application) {

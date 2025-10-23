@@ -7,7 +7,7 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import net.ghue.ktp.config.KtpConfigManager
+import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
@@ -18,7 +18,7 @@ interface StripeWebhookHandler {
 }
 
 fun Routing.installStripeWebhook() {
-    val config: KtpConfigManager by inject()
+    val config: KtpConfig by inject()
     val handler: StripeWebhookHandler by inject()
     val webhookSecret = config.stripe.webhookSecret
     post("/api/stripe/event") {

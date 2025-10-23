@@ -17,7 +17,7 @@ import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.isReadable
 import kotlin.io.path.notExists
-import net.ghue.ktp.config.KtpConfigManager
+import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.removePrefix
 import net.ghue.ktp.log.log
 
@@ -40,10 +40,7 @@ data class ViteConfig(
     val frontendRoute: String = "/${browserUriPathPrefix}/{...}"
 }
 
-fun Application.installViteFrontend(
-    config: KtpConfigManager,
-    viteConfig: ViteConfig = ViteConfig(),
-) {
+fun Application.installViteFrontend(config: KtpConfig, viteConfig: ViteConfig = ViteConfig()) {
     if (config.env.isLocalDev) {
         val viteDev = ServeViteDev(viteConfig)
         monitor.subscribe(ApplicationStopPreparing) { viteDev.close() }

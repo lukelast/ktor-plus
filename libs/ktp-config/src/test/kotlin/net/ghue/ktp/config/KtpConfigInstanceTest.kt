@@ -8,9 +8,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 
-class KtpConfigManagerTest :
+class KtpConfigInstanceTest :
     StringSpec({
-        class CorrectTestConfig(private val config: KtpConfigManager) {
+        class CorrectTestConfig(private val config: KtpConfig) {
             val msg = "hi"
         }
 
@@ -32,7 +32,7 @@ class KtpConfigManagerTest :
         }
 
         "get fails when constructor has additional parameters" {
-            class TestConfig(private val config: KtpConfigManager, val yo: String)
+            class TestConfig(private val config: KtpConfig, val yo: String)
             assertBadConstructor<TestConfig> { newConfigManager() }
         }
 
@@ -57,8 +57,8 @@ class KtpConfigManagerTest :
         }
     })
 
-private fun newConfigManager(): KtpConfigManager =
-    KtpConfigManager(
+private fun newConfigManager(): KtpConfig =
+    KtpConfig(
         ConfigFactory.parseMap(
             mapOf(
                 "app.name" to "",
@@ -73,7 +73,7 @@ private fun newConfigManager(): KtpConfigManager =
         findEnvironment(),
     )
 
-private inline fun <reified T : Any> assertBadConstructor(creator: () -> KtpConfigManager) {
+private inline fun <reified T : Any> assertBadConstructor(creator: () -> KtpConfig) {
     val ktp = creator()
 
     val exception = shouldThrow<Exception> { ktp.get<T>() }

@@ -1,75 +1,226 @@
 package net.ghue.ktp.config
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigResolveOptions
+import com.typesafe.config.*
+import io.github.config4k.extract
+import java.lang.reflect.InvocationTargetException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Logger
+import kotlin.reflect.KClass
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.jvm.jvmErasure
 
-object KtpConfig {
-    const val CONF_FILE_EXT = "conf"
-    const val CONF_FILE_DIR = "ktp"
-    const val ENV_PATH = "env"
-    const val SYS_ENV_PREFIX = "sysenv"
+class KtpConfig(val config: Config, val env: Env) {
+    companion object {
+        const val CONF_FILE_EXT = "conf"
+        const val CONF_FILE_DIR = "ktp"
+        const val ENV_PATH = "env"
+        const val SYS_ENV_PREFIX = "sysenv"
 
-    init {
-        // https://github.com/lightbend/config#optional-system-or-env-variable-overrides
-        // Tell the config library to allow environment variables to override config values.
-        // Is this needed if we add the overrides explicitly below?
-        System.setProperty("config.override_with_env_vars", "true")
-    }
-
-    fun createManager(): KtpConfigManager {
-        val env = findEnvironment()
-        return createManagerForEnv(env)
-    }
-
-    fun createManagerForTest(overrideMap: Map<String, Any> = emptyMap()): KtpConfigManager =
-        createManagerForEnv(Env.TEST_UNIT, overrideMap)
-
-    fun createManagerForEnv(
-        env: Env,
-        overrideMap: Map<String, Any> = emptyMap(),
-    ): KtpConfigManager {
-        val config = createConfigForEnv(env, overrideMap)
-        return KtpConfigManager(config, env)
-    }
-
-    fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): Config {
-        val allConfigFiles = scanConfigFiles()
-        val usedConfigFiles = allConfigFiles.filter { it.filterForEnv(env) }
-        val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
-        Logger.getLogger(this::class.java.name)
-            .info(
-                "Building config using: ${usedConfigFiles.map { it.fileName }}. " +
-                    "Files ignored because env=(${env.name}): ${ignoredFiles.map { it.fileName }}."
-            )
-        return buildConfig(env, usedConfigFiles, overrideMap)
-    }
-
-    fun buildConfig(
-        env: Env,
-        configFiles: List<ConfigFile>,
-        /** These values have the highest precedence. */
-        overrideMap: Map<String, Any> = emptyMap(),
-    ): Config {
-        val configs = buildList {
-            add(ConfigFactory.parseMap(mapOf(ENV_PATH to env.name), "current environment"))
-            add(ConfigFactory.parseMap(overrideMap, "overrides"))
-            add(ConfigFactory.systemEnvironmentOverrides())
-            add(ConfigFactory.systemEnvironment().atPath(SYS_ENV_PREFIX))
-            add(ConfigFactory.systemProperties())
-            configFiles.sorted().forEach { file ->
-                add(
-                    ConfigFactory.parseString(
-                        file.text,
-                        ConfigParseOptions.defaults().setOriginDescription(file.fileName),
-                    )
-                )
-            }
+        init {
+            // https://github.com/lightbend/config#optional-system-or-env-variable-overrides
+            // Tell the config library to allow environment variables to override config values.
+            // Is this needed if we add the overrides explicitly below?
+            System.setProperty("config.override_with_env_vars", "true")
         }
-        return configs
-            .fold(ConfigFactory.empty()) { left, right -> left.withFallback(right) }
-            .resolve(ConfigResolveOptions.defaults())
+
+        fun create(): KtpConfig {
+            val env = findEnvironment()
+            return createManagerForEnv(env)
+        }
+
+        fun createManagerForTest(overrideMap: Map<String, Any> = emptyMap()): KtpConfig =
+            createManagerForEnv(Env.TEST_UNIT, overrideMap)
+
+        fun createManagerForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): KtpConfig {
+            val config = createConfigForEnv(env, overrideMap)
+            return KtpConfig(config, env)
+        }
+
+        fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): Config {
+            val allConfigFiles = scanConfigFiles()
+            val usedConfigFiles = allConfigFiles.filter { it.filterForEnv(env) }
+            val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
+            Logger.getLogger(KtpConfig::class.java.name)
+                .info(
+                    "Building config using: ${usedConfigFiles.map { it.fileName }}. " +
+                        "Files ignored because env=(${env.name}): ${ignoredFiles.map { it.fileName }}."
+                )
+            return buildConfig(env, usedConfigFiles, overrideMap)
+        }
+
+        fun buildConfig(
+            env: Env,
+            configFiles: List<ConfigFile>,
+            /** These values have the highest precedence. */
+            overrideMap: Map<String, Any> = emptyMap(),
+        ): Config {
+            val configs = buildList {
+                add(ConfigFactory.parseMap(mapOf(ENV_PATH to env.name), "current environment"))
+                add(ConfigFactory.parseMap(overrideMap, "overrides"))
+                add(ConfigFactory.systemEnvironmentOverrides())
+                add(ConfigFactory.systemEnvironment().atPath(SYS_ENV_PREFIX))
+                add(ConfigFactory.systemProperties())
+                configFiles.sorted().forEach { file ->
+                    add(
+                        ConfigFactory.parseString(
+                            file.text,
+                            ConfigParseOptions.defaults().setOriginDescription(file.fileName),
+                        )
+                    )
+                }
+            }
+            return configs
+                .fold(ConfigFactory.empty()) { left, right -> left.withFallback(right) }
+                .resolve(ConfigResolveOptions.defaults())
+        }
+    }
+
+    val data: KtpConfigData = config.extract()
+    private val cache = ConcurrentHashMap<KClass<*>, Any>()
+
+    /**
+     * Deserialize part of the configuration into a data class. The name of the data class must
+     * match the name of the configuration. For example, if your class name is `Blah` it will read
+     * the configuration object under "blah".
+     */
+    inline fun <reified T> extractChild(): T {
+        val path = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
+        return try {
+            config.extract<T>(path)
+        } catch (ex: Exception) {
+            // The Config4K library just throws an NPE when a data class field has no default value
+            // and no value in the config.
+            // Here we attempt to detect which field is missing to give a better error message.
+            val allPaths = getLeafPaths(T::class).map { "$path.$it" }
+            for (fieldPath in allPaths) {
+                if (!config.hasPath(fieldPath)) {
+                    throw IllegalStateException(
+                        "Unable to construct config data class: ${T::class.qualifiedName}. Missing field: $fieldPath",
+                        ex,
+                    )
+                }
+            }
+            throw ex
+        }
+    }
+
+    /**
+     * Get an instance of a sub configuration. A sub configuration class must have a single public
+     * constructor which has one parameter of type [KtpConfig].
+     */
+    inline fun <reified T : Any> get(): T = get(T::class)
+
+    /** Internal method but has to be public for inline reified to use it. */
+    fun <T : Any> get(klass: KClass<T>): T {
+        try {
+            @Suppress("UNCHECKED_CAST")
+            return cache.getOrPut(klass) { klass.primaryConstructor!!.call(this) } as T
+        } catch (ex: InvocationTargetException) {
+            // Unwrap exceptions thrown in the constructor.
+            throw ex.targetException
+        } catch (ex: Exception) {
+            throw RuntimeException(
+                "Your config class must have a primary constructor " +
+                    "which takes one parameter '${this::class.simpleName}'.",
+                ex,
+            )
+        }
+    }
+
+    fun getAllConfig(): Map<String, String> =
+        config
+            .toRecords()
+            .filter {
+                !it.path.startsWith("java.") &&
+                    !it.path.startsWith("os.") &&
+                    !it.path.startsWith("${SYS_ENV_PREFIX}.")
+            }
+            .associate { it.path to it.value }
+
+    fun logAllConfig() {
+        val txt = getAllConfig().entries.joinToString(", ") { "${it.key} = ${it.value}" }
+        Logger.getLogger(this::class.java.name).info("All config values: $txt")
+    }
+
+    /** Create a config file containing all possible values. */
+    fun genTemplate(): String {
+        val options =
+            ConfigRenderOptions.defaults()
+                .setJson(false)
+                .setFormatted(true)
+                .setComments(true)
+                .setOriginComments(true)
+        val filteredConfig =
+            filterConfig(config.root()) { path, value ->
+                value.origin().description() != "system properties" &&
+                    value.origin().description() != "env variables" &&
+                    path != "env"
+            } ?: error("No config")
+        // These comment lines don't seem useful.
+        val extraComments = Regex("^.*# hardcoded value.*\\R?", RegexOption.MULTILINE)
+        val renderedConfig = filteredConfig.render(options).replace(extraComments, "")
+        return renderedConfig
+    }
+}
+
+/** Turn a tree of data classes into a list of field paths. */
+fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> = buildList {
+    for (property in kClass.memberProperties) {
+        val propertyName = if (prefix.isNotEmpty()) "$prefix.${property.name}" else property.name
+        val propertyType = property.returnType.jvmErasure
+        if (propertyType.qualifiedName?.startsWith("kotlin") == true) {
+            // This is a kotlin library type so must be a primitive leaf node.
+            add(propertyName)
+        } else {
+            addAll(getLeafPaths(propertyType, propertyName))
+        }
+    }
+}
+
+/**
+ * Recursively filters a ConfigValue, providing the full path to the predicate.
+ *
+ * @param value The ConfigValue to process.
+ * @param path The path to the current value.
+ * @param predicate The filter condition, which accepts both path and value.
+ * @return A new, filtered ConfigValue, or null if the branch is pruned.
+ */
+private fun filterConfig(
+    value: ConfigValue,
+    path: String = "",
+    predicate: (path: String, value: ConfigValue) -> Boolean,
+): ConfigValue? {
+    return when (value.valueType()) {
+        ConfigValueType.OBJECT -> {
+            val originalObject = value as ConfigObject
+            val filteredMap = mutableMapOf<String, ConfigValue>()
+
+            for ((key, childValue) in originalObject) {
+                // Construct the path for the child element
+                val childPath = if (path.isEmpty()) key else "$path.$key"
+                val filteredChild = filterConfig(childValue, childPath, predicate)
+                if (filteredChild != null) {
+                    filteredMap[key] = filteredChild
+                }
+            }
+
+            if (filteredMap.isNotEmpty()) ConfigValueFactory.fromMap(filteredMap) else null
+        }
+        ConfigValueType.LIST -> {
+            val originalList = value as ConfigList
+            val filteredList =
+                originalList.mapIndexedNotNull { index, item ->
+                    // Construct the path for the list item
+                    val itemPath = "$path[$index]"
+                    filterConfig(item, itemPath, predicate)
+                }
+
+            if (filteredList.isNotEmpty()) ConfigValueFactory.fromIterable(filteredList) else null
+        }
+        else -> {
+            // Base case: Apply the path-aware predicate to the primitive value
+            if (predicate(path, value)) value else null
+        }
     }
 }

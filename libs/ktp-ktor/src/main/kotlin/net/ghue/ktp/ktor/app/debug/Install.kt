@@ -8,10 +8,10 @@ import java.nio.file.Paths
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readText
 import net.ghue.ktp.config.ConfigRecord
-import net.ghue.ktp.config.KtpConfigManager
+import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.toRecords
 
-fun Application.installConfigDebugInfo(config: KtpConfigManager) {
+fun Application.installConfigDebugInfo(config: KtpConfig) {
     routing {
         route("/debug") {
             get("/config") {
