@@ -12,7 +12,7 @@ class KtpStartTest :
         "update creates a new builder with additional modules and inits" {
             val originalBuilder = ktpAppCreate {
                 addModule(module {})
-                createConfigManager = { KtpConfig.createManagerForTest() }
+                createConfigManager = { KtpConfig.create { setUnitTestEnv() } }
             }
 
             val updatedBuilder =
@@ -35,7 +35,7 @@ class KtpStartTest :
             var customConfigCalled = false
             val customConfigManager = {
                 customConfigCalled = true
-                KtpConfig.createManagerForTest()
+                KtpConfig.create { setUnitTestEnv() }
             }
 
             val originalBuilder = ktpAppCreate {
@@ -54,7 +54,7 @@ class KtpStartTest :
 
         "update supports chaining additional changes" {
             val originalBuilder = ktpAppCreate {
-                createConfigManager = { KtpConfig.createManagerForTest() }
+                createConfigManager = { KtpConfig.create { setUnitTestEnv() } }
             }
 
             val firstUpdate = originalBuilder.update { addModule(module {}) }
@@ -74,7 +74,7 @@ class KtpStartTest :
         "update with empty block still produces new builder" {
             val originalBuilder = ktpAppCreate {
                 addModule(module {})
-                createConfigManager = { KtpConfig.createManagerForTest() }
+                createConfigManager = { KtpConfig.create { setUnitTestEnv() } }
             }
 
             val originalModulesCount = originalBuilder().modules.size
@@ -89,7 +89,7 @@ class KtpStartTest :
 
         "update returns idempotent builder with preserved changes" {
             val originalBuilder = ktpAppCreate {
-                createConfigManager = { KtpConfig.createManagerForTest() }
+                createConfigManager = { KtpConfig.create { setUnitTestEnv() } }
             }
 
             val updatedBuilder =

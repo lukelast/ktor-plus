@@ -15,7 +15,10 @@ class DebugEndpointsTest :
             testApplication {
                 application {
                     installConfigDebugInfo(
-                        KtpConfig.createManagerForTest(mapOf("app.version" to "69"))
+                        KtpConfig.create {
+                            setUnitTestEnv()
+                            configValue("app.version", "69")
+                        }
                     )
                 }
                 with(client.get("/debug/version")) {

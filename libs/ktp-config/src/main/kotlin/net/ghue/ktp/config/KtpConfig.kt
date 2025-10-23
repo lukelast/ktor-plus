@@ -24,55 +24,10 @@ class KtpConfig(val config: Config, val env: Env) {
             System.setProperty("config.override_with_env_vars", "true")
         }
 
-        fun create(): KtpConfig {
-            val env = findEnvironment()
-            return createManagerForEnv(env)
-        }
-
-        fun createManagerForTest(overrideMap: Map<String, Any> = emptyMap()): KtpConfig =
-            createManagerForEnv(Env.TEST_UNIT, overrideMap)
-
-        fun createManagerForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): KtpConfig {
-            val config = createConfigForEnv(env, overrideMap)
-            return KtpConfig(config, env)
-        }
-
-        fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): Config {
-            val allConfigFiles = scanConfigFiles()
-            val usedConfigFiles = allConfigFiles.filter { it.filterForEnv(env) }
-            val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
-            Logger.getLogger(KtpConfig::class.java.name)
-                .info(
-                    "Building config using: ${usedConfigFiles.map { it.fileName }}. " +
-                        "Files ignored because env=(${env.name}): ${ignoredFiles.map { it.fileName }}."
-                )
-            return buildConfig(env, usedConfigFiles, overrideMap)
-        }
-
-        fun buildConfig(
-            env: Env,
-            configFiles: List<ConfigFile>,
-            /** These values have the highest precedence. */
-            overrideMap: Map<String, Any> = emptyMap(),
-        ): Config {
-            val configs = buildList {
-                add(ConfigFactory.parseMap(mapOf(ENV_PATH to env.name), "current environment"))
-                add(ConfigFactory.parseMap(overrideMap, "overrides"))
-                add(ConfigFactory.systemEnvironmentOverrides())
-                add(ConfigFactory.systemEnvironment().atPath(SYS_ENV_PREFIX))
-                add(ConfigFactory.systemProperties())
-                configFiles.sorted().forEach { file ->
-                    add(
-                        ConfigFactory.parseString(
-                            file.text,
-                            ConfigParseOptions.defaults().setOriginDescription(file.fileName),
-                        )
-                    )
-                }
-            }
-            return configs
-                .fold(ConfigFactory.empty()) { left, right -> left.withFallback(right) }
-                .resolve(ConfigResolveOptions.defaults())
+        fun create(buildConfig: KtpConfigBuilder.() -> Unit = {}): KtpConfig {
+            val builder = KtpConfigBuilder()
+            builder.buildConfig()
+            return builder.build()
         }
     }
 
@@ -109,10 +64,9 @@ class KtpConfig(val config: Config, val env: Env) {
      * Get an instance of a sub configuration. A sub configuration class must have a single public
      * constructor which has one parameter of type [KtpConfig].
      */
-    inline fun <reified T : Any> get(): T = get(T::class)
+    inline fun <reified T : Any> get(): T = createInstance(T::class)
 
-    /** Internal method but has to be public for inline reified to use it. */
-    fun <T : Any> get(klass: KClass<T>): T {
+    fun <T : Any> createInstance(klass: KClass<T>): T {
         try {
             @Suppress("UNCHECKED_CAST")
             return cache.getOrPut(klass) { klass.primaryConstructor!!.call(this) } as T

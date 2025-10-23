@@ -17,7 +17,11 @@ class ViteFrontendTest :
         "production mode serves index for missing specific resource" {
             testApplication {
                 val viteConfig = ViteConfig(indexFile = Path("nonexistent.html"))
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 
@@ -29,7 +33,11 @@ class ViteFrontendTest :
         "production mode serves non-existent static resources as 404" {
             testApplication {
                 val viteConfig = ViteConfig()
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 
@@ -73,7 +81,11 @@ class ViteFrontendTest :
 
         "dev mode proxies to Vite when localDev is true" {
             testApplication {
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "true"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "true")
+                    }
                 val viteConfig = ViteConfig()
 
                 application { installViteFrontend(config, viteConfig) }
@@ -93,7 +105,11 @@ class ViteFrontendTest :
         "production mode serves static resources correctly" {
             testApplication {
                 val viteConfig = ViteConfig()
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 
@@ -109,7 +125,11 @@ class ViteFrontendTest :
         "production mode serves index HTML correctly" {
             testApplication {
                 val viteConfig = ViteConfig()
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 
@@ -128,7 +148,11 @@ class ViteFrontendTest :
         "custom static URI routes are configured correctly" {
             testApplication {
                 val viteConfig = ViteConfig(staticUri = "assets")
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 
@@ -139,7 +163,11 @@ class ViteFrontendTest :
         "custom browser URI path prefix routes are configured correctly" {
             testApplication {
                 val viteConfig = ViteConfig(browserUriPathPrefix = "app")
-                val config = KtpConfig.createManagerForTest(mapOf("env.localDev" to "false"))
+                val config =
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        configValue("env.localDev", "false")
+                    }
 
                 application { installViteFrontend(config, viteConfig) }
 

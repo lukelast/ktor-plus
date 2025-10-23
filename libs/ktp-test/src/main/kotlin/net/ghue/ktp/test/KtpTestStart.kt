@@ -12,7 +12,12 @@ fun testKtpStart(
 ) {
     testApplication {
         val ktpApp = ktp()
-        ktpApp.createConfigManager = { KtpConfig.createManagerForTest(overrideMap) }
+        ktpApp.createConfigManager = {
+            KtpConfig.create {
+                setUnitTestEnv()
+                overrideMap.forEach { (key, value) -> configValue(key, value) }
+            }
+        }
         val ktpInstance = ktpApp.build()
         application {
             ktpInstance.installKoin(this)
