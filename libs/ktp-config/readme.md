@@ -111,13 +111,6 @@ val appVersion = configManager.data.app.version
 val shortName = configManager.data.app.shortName()
 ```
 
-Required fields in `app` configuration:
-- `name`: Application name
-- `nameShort`: Short name (optional, auto-generated if empty)
-- `secret`: Application secret
-- `version`: Application version (defaults to "local", overridden by `KUBE_APP_VERSION`)
-- `hostname`: Hostname (defaults to "unknown", overridden by `USER`, `USERNAME`, or `HOSTNAME`)
-
 #### Extracting Custom Data Classes
 
 ```kotlin
@@ -150,19 +143,6 @@ val serviceConfig = configManager.get<MyServiceConfig>()
 ```
 
 ### System Environment Variables
-
-#### Direct Access to Environment Variables
-
-All system environment variables are available under the `sysenv` prefix:
-
-```hocon
-myapp {
-  apiKey = ${sysenv.MY_API_KEY}
-  database {
-    url = ${sysenv.DATABASE_URL}
-  }
-}
-```
 
 #### Environment Variable Overrides with CONFIG_FORCE_
 
@@ -197,13 +177,6 @@ export CONFIG_FORCE_servers_0="server1"
 export CONFIG_FORCE_servers_1="server2"
 export CONFIG_FORCE_servers_2="server3"
 ```
-
-##### Precedence
-
-`CONFIG_FORCE_` environment variables have very high precedence and will override:
-- Values in config files
-- System properties
-- Any other configuration source except programmatic overrides
 
 #### Optional Environment Variable Substitutions
 
