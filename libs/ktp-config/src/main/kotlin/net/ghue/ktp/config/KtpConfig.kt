@@ -16,6 +16,7 @@ class KtpConfig(val config: Config, val env: Env) {
         const val CONF_FILE_DIR = "ktp"
         const val ENV_PATH = "env"
         const val SYS_ENV_PREFIX = "sysenv"
+        const val ENV_CONFIG_KEY = "KTP_CONFIG"
 
         init {
             // https://github.com/lightbend/config#optional-system-or-env-variable-overrides

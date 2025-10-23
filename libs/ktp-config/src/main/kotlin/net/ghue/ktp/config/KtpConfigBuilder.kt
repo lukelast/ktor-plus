@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigResolveOptions
 import java.util.logging.Logger
 import net.ghue.ktp.config.KtpConfig.Companion.ENV_PATH
 import net.ghue.ktp.config.KtpConfig.Companion.SYS_ENV_PREFIX
+import net.ghue.ktp.log.log
 
 class KtpConfigBuilder() {
     var env: Env = findEnvironment()
@@ -52,6 +53,7 @@ fun buildConfig(
         add(ConfigFactory.systemEnvironmentOverrides())
         add(ConfigFactory.systemEnvironment().atPath(SYS_ENV_PREFIX))
         add(ConfigFactory.systemProperties())
+        buildConfigFromEnvText()?.let { add(it) }
         configFiles.sorted().forEach { file ->
             add(
                 ConfigFactory.parseString(
@@ -64,4 +66,21 @@ fun buildConfig(
     return configs
         .fold(ConfigFactory.empty()) { left, right -> left.withFallback(right) }
         .resolve(ConfigResolveOptions.defaults())
+}
+
+fun buildConfigFromEnvText(
+    configText: String = System.getenv(KtpConfig.ENV_CONFIG_KEY) ?: ""
+): Config? {
+    if (configText.isBlank()) {
+        return null
+    }
+    return try {
+        ConfigFactory.parseString(
+            configText,
+            ConfigParseOptions.defaults().setOriginDescription(KtpConfig.ENV_CONFIG_KEY),
+        )
+    } catch (ex: Exception) {
+        log {}.warn(ex) { "Failed to parse config from ENV var: ${KtpConfig.ENV_CONFIG_KEY}" }
+        null
+    }
 }
