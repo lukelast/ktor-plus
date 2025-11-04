@@ -5,7 +5,7 @@ plugins {
 
 subprojects {
     if (projectDir.parentFile.name == "libs") {
-        group = "net.ghue.ktp.lib"
+        group = "com.github.lukelast.ktor-plus"
         ext["ktp.mode"] = "library"
     }
 }

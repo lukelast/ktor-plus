@@ -17,7 +17,7 @@ class SettingsPlugin : Plugin<Settings> {
 
                     val ktpVersion = version("ktp", KtpVersion.VERSION)
                     KtpVersion.libs.forEach {
-                        library(it.replace("-", "."), "net.ghue.ktp.lib", it).versionRef(ktpVersion)
+                        library(it.replace("-", "."), "com.github.lukelast.ktor-plus", it).versionRef(ktpVersion)
                     }
                 }
             }

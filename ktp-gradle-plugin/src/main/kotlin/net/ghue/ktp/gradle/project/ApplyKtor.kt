@@ -17,7 +17,7 @@ fun Project.applyKtor() {
     installKotest()
 
     dependencies {
-        //        add("implementation", "net.ghue.ktp.lib:ktp-ktor:${KtpVersion.VERSION}")
+        //        add("implementation", "com.github.lukelast.ktor-plus:ktp-ktor:${KtpVersion.VERSION}")
 
 //        add("testImplementation", project(":libs:ktp-test"))
     }

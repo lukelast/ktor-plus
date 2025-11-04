@@ -56,7 +56,7 @@ Uses a sophisticated file naming convention for config layering:
 - **JUnit 5**: Testing framework
 
 ### Project Conventions
-- Group ID for libraries: `net.ghue.ktp.lib`
+- Group ID for libraries: `com.github.lukelast.ktor-plus`
 - Uses Kotlin DSL for all Gradle files
 - Ktfmt for code formatting
 - Detekt for static analysis
