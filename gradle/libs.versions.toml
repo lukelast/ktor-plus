@@ -11,7 +11,7 @@ versionCheck = "0.51.0"
 typesafeConfig = "1.4.3"
 config4k = "0.7.0"
 classgraph = "4.8.181"
-logback = "1.5.18"
+logback = "1.5.20"
 kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
 mockk = "1.14.5"
@@ -29,7 +29,7 @@ versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionChe
 gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
-gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.23.0" }
+gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.25.0" }
 gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 
 # Testing
@@ -52,6 +52,7 @@ ktor-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation" }
 ktor-compression = { module = "io.ktor:ktor-server-compression" }
 ktor-forwardedHeader = { module = "io.ktor:ktor-server-forwarded-header" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
+ktor-sessions = { module = "io.ktor:ktor-server-sessions" }
 ktor-test = { module = "io.ktor:ktor-server-test-host" }
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
 ktor-client-apache = { module = "io.ktor:ktor-client-apache" }
@@ -71,6 +72,9 @@ koinTest = { module = "io.insert-koin:koin-test" }
 
 # Stripe dependencies
 stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }
+
+# Google cloud dependencies
+firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.7.0" }
 
 # Logging dependencies
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
