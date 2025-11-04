@@ -4,7 +4,6 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigResolveOptions
-import java.util.logging.Logger
 import net.ghue.ktp.config.KtpConfig.Companion.ENV_PATH
 import net.ghue.ktp.config.KtpConfig.Companion.SYS_ENV_PREFIX
 import net.ghue.ktp.log.log
@@ -33,11 +32,11 @@ private fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMa
     val allConfigFiles = scanConfigFiles()
     val usedConfigFiles = allConfigFiles.filter { it.filterForEnv(env) }
     val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
-    Logger.getLogger(KtpConfig::class.java.name)
-        .info(
+    log {}
+        .info {
             "Building config using: ${usedConfigFiles.map { it.fileName }}. " +
                 "Files ignored because env=(${env.name}): ${ignoredFiles.map { it.fileName }}."
-        )
+        }
     return buildConfig(env, usedConfigFiles, overrideMap)
 }
 
