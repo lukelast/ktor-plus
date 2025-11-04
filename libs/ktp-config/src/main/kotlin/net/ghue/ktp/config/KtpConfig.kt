@@ -33,32 +33,36 @@ class KtpConfig(val config: Config, val env: Env) {
     }
 
     val data: KtpConfigData = config.extract()
-    private val cache = ConcurrentHashMap<KClass<*>, Any>()
+
+    @PublishedApi internal val cache = ConcurrentHashMap<KClass<*>, Any>()
 
     /**
      * Deserialize part of the configuration into a data class. The name of the data class must
      * match the name of the configuration. For example, if your class name is `Blah` it will read
      * the configuration object under "blah".
+     *
+     * Results are cached to avoid expensive reflection and parsing operations.
      */
     inline fun <reified T> extractChild(): T {
-        val path = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
-        return try {
-            config.extract<T>(path)
-        } catch (ex: Exception) {
-            // The Config4K library just throws an NPE when a data class field has no default value
-            // and no value in the config.
-            // Here we attempt to detect which field is missing to give a better error message.
-            val allPaths = getLeafPaths(T::class).map { "$path.$it" }
-            for (fieldPath in allPaths) {
-                if (!config.hasPath(fieldPath)) {
+        @Suppress("UNCHECKED_CAST")
+        return cache.getOrPut(T::class) {
+            val configPathRoot = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
+            try {
+                config.extract<T>(configPathRoot)
+            } catch (ex: Exception) {
+                // The Config4K library just throws an NPE when a data class field has no default
+                // value and no value in the config.
+                // Here we attempt to detect which field is missing to give a better error message.
+                val missingField = findMissingConfigField(config, T::class, configPathRoot)
+                if (missingField != null) {
                     throw IllegalStateException(
-                        "Unable to construct config data class: ${T::class.qualifiedName}. Missing field: $fieldPath",
+                        "Unable to construct config data class: ${T::class.qualifiedName}. Missing field: $missingField",
                         ex,
                     )
                 }
+                throw ex
             }
-            throw ex
-        }
+        } as T
     }
 
     /**
@@ -120,7 +124,8 @@ class KtpConfig(val config: Config, val env: Env) {
 }
 
 /** Turn a tree of data classes into a list of field paths. */
-fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> = buildList {
+@PublishedApi
+internal fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> = buildList {
     for (property in kClass.memberProperties) {
         val propertyName = if (prefix.isNotEmpty()) "$prefix.${property.name}" else property.name
         val propertyType = property.returnType.jvmErasure
@@ -131,6 +136,24 @@ fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> = buildLi
             addAll(getLeafPaths(propertyType, propertyName))
         }
     }
+}
+
+/**
+ * Finds the first missing configuration field for a given data class.
+ *
+ * @param config The configuration to check against
+ * @param kClass The class to check for missing fields
+ * @param pathPrefix The configuration path prefix for the class
+ * @return The full path to the first missing field, or null if all fields are present
+ */
+@PublishedApi
+internal fun findMissingConfigField(
+    config: Config,
+    kClass: KClass<*>,
+    pathPrefix: String,
+): String? {
+    val allPaths = getLeafPaths(kClass).map { "$pathPrefix.$it" }
+    return allPaths.firstOrNull { fieldPath -> !config.hasPath(fieldPath) }
 }
 
 /**

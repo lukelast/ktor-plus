@@ -35,7 +35,7 @@ class BuildConfigFromEnvTextTest :
                         port = 8080
                     }
                 }
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -51,7 +51,7 @@ class BuildConfigFromEnvTextTest :
                 """
                 baseUrl = "https://example.com"
                 apiUrl = ${'$'}{baseUrl}"/api"
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -151,7 +151,7 @@ class BuildConfigFromEnvTextTest :
             val configText =
                 """
                 items = ["item1", "item2", "item3"]
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -175,7 +175,7 @@ class BuildConfigFromEnvTextTest :
                         password = "secret"
                     }
                 }
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -194,7 +194,7 @@ class BuildConfigFromEnvTextTest :
                 longValue = 9999999999
                 doubleValue = 3.14
                 boolValue = true
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -213,7 +213,7 @@ class BuildConfigFromEnvTextTest :
                 key1 = "value1"  // inline comment
                 # Another comment
                 key2 = "value2"
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -245,7 +245,7 @@ class BuildConfigFromEnvTextTest :
                         "feature3"
                     ]
                 }
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -260,7 +260,7 @@ class BuildConfigFromEnvTextTest :
                 """
                 emptySection {}
                 nonEmptySection { key = "value" }
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
@@ -276,7 +276,7 @@ class BuildConfigFromEnvTextTest :
                 url = "https://example.com/path?param=value&other=123"
                 regex = "\\d+\\.\\w+"
                 json = "{\"key\": \"value\"}"
-            """
+                """
                     .trimIndent()
 
             val result = buildConfigFromEnvText(configText)
