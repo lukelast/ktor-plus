@@ -5,15 +5,22 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseToken
 import io.ktor.http.*
+import io.ktor.http.ContentType.Application.Json
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 
 class FirebaseAuthService(
+    private val ktpConfig: KtpConfig,
     private val firebaseAuth: FirebaseAuth,
     private val lifecycle: AuthLifecycleHandler,
 ) {
@@ -23,102 +30,122 @@ class FirebaseAuthService(
         try {
             val loginRequest: LoginRequest = json.decodeFromString(call.receiveText())
             if (loginRequest.idToken.isBlank()) {
-                log {}.info { "login request token is empty" }
-                call.respondText(
-                    json.encodeToString(LoginResponse(error = "Unable to process login request")),
-                    ContentType.Application.Json,
-                    HttpStatusCode.BadRequest,
+                throw AuthEx(
+                    message = "Login request token is empty",
+                    status = BadRequest,
+                    userError = true,
                 )
-                return
             }
 
-            // Parse the token and verify it is valid.
-            val firebaseToken =
-                firebaseAuth.verifyIdToken(loginRequest.idToken, true)
-                    ?: error("lib should not return null")
+            val firebaseToken = verifyToken(loginRequest.idToken)
+            val userRoles = lifecycle.fetchRoles(firebaseToken)
 
-            // Create user session from verified token
             val userSession =
                 UserSession(
                     userId = firebaseToken.uid,
                     email = firebaseToken.email,
                     nameFull = firebaseToken.name ?: firebaseToken.email,
-                    nameFirst = firebaseToken.name?.split(" ")?.firstOrNull() ?: firebaseToken.email,
+                    nameFirst =
+                        firebaseToken.name?.split(" ")?.firstOrNull() ?: firebaseToken.email,
+                    roles = userRoles,
                 )
 
             call.sessions.set(userSession)
             lifecycle.onLogin(userSession, firebaseToken)
 
             val response = LoginResponse(user = userSession)
+            call.respondText(json.encodeToString(response), Json, HttpStatusCode.OK)
+        } catch (ex: AuthEx) {
+            if (ex.userError) {
+                log {}.info(ex) {}
+            } else {
+                log {}.warn(ex) {}
+            }
             call.respondText(
-                json.encodeToString(response),
-                ContentType.Application.Json,
-                HttpStatusCode.OK,
+                text = json.encodeToString(LoginResponse()),
+                contentType = Json,
+                status = ex.status,
             )
-        } catch (ex: IllegalArgumentException) {
-            log {}.warn(ex) { "Invalid login request, possibly Firebase app has no project ID" }
-            call.respondText(
-                json.encodeToString(LoginResponse(error = "Unable to process login request")),
-                ContentType.Application.Json,
-                HttpStatusCode.InternalServerError,
-            )
-        } catch (ex: FirebaseAuthException) {
-            // https://firebase.google.com/docs/reference/admin/java/reference/com/google/firebase/ErrorCode
-            val (statusCode, errorMessage, expectedError) =
+        } catch (ex: Exception) {
+            log {}.warn(ex) { "Unexpected login error" }
+            call.respondText(json.encodeToString(LoginResponse()), Json, InternalServerError)
+        }
+    }
+
+    suspend fun RoutingContext.handleLogout() {
+        val userSession = call.sessions.get<UserSession>()
+        call.sessions.clear<UserSession>()
+        call.respondRedirect(ktpConfig.auth.redirectAfterLogout)
+        if (userSession != null) {
+            lifecycle.onLogout(userSession)
+        }
+    }
+
+    @Throws(AuthEx::class)
+    private suspend fun verifyToken(firebaseIdToken: String): FirebaseToken =
+        withContext(Dispatchers.IO) {
+            try {
+                firebaseAuth.verifyIdToken(firebaseIdToken, true)
+                    ?: throw AuthEx(message = "Should not return null", userError = false)
+            } catch (ex: IllegalArgumentException) {
+                throw AuthEx(
+                    message = "Invalid login request, possibly Firebase app has no project ID",
+                    userError = false,
+                    cause = ex,
+                )
+            } catch (ex: FirebaseAuthException) {
+                // https://firebase.google.com/docs/reference/admin/java/reference/com/google/firebase/ErrorCode
                 when (ex.errorCode) {
                     ErrorCode.UNAUTHENTICATED,
                     ErrorCode.NOT_FOUND ->
-                        Triple(HttpStatusCode.Unauthorized, "Authentication failed", true)
-
-                    ErrorCode.PERMISSION_DENIED ->
-                        Triple(HttpStatusCode.Forbidden, "Authentication failed", true)
-
-                    ErrorCode.INVALID_ARGUMENT ->
-                        Triple(HttpStatusCode.BadRequest, "Unable to process login request", true)
-
-                    ErrorCode.DEADLINE_EXCEEDED ->
-                        Triple(
-                            HttpStatusCode.RequestTimeout,
-                            "Unable to process login request",
-                            false,
+                        throw AuthEx(
+                            status = HttpStatusCode.Unauthorized,
+                            userError = true,
+                            cause = ex,
                         )
-
+                    ErrorCode.PERMISSION_DENIED ->
+                        throw AuthEx(
+                            status = HttpStatusCode.Forbidden,
+                            userError = true,
+                            cause = ex,
+                        )
+                    ErrorCode.INVALID_ARGUMENT ->
+                        throw AuthEx(status = BadRequest, userError = true, cause = ex)
+                    ErrorCode.DEADLINE_EXCEEDED ->
+                        throw AuthEx(
+                            status = HttpStatusCode.RequestTimeout,
+                            userError = false,
+                            cause = ex,
+                        )
                     else -> {
-                        Triple(HttpStatusCode.Unauthorized, "Authentication failed", false)
+                        throw AuthEx(
+                            status = HttpStatusCode.Unauthorized,
+                            userError = false,
+                            cause = ex,
+                        )
                     }
                 }
-
-            if (expectedError) {
-                log {}
-                    .info(ex) { "Firebase authentication failure: ${ex.errorCode} - ${ex.message}" }
-            } else {
-                log {}
-                    .error(ex) { "Unexpected Firebase auth error: ${ex.errorCode} - ${ex.message}" }
+            } catch (ex: Exception) {
+                throw AuthEx(userError = false, cause = ex)
             }
-            call.respondText(
-                json.encodeToString(LoginResponse(error = errorMessage)),
-                ContentType.Application.Json,
-                statusCode,
-            )
-        } catch (ex: Exception) {
-            // Catch any other unexpected errors
-            log {}.error(ex) { "Unexpected login error" }
-            call.respondText(
-                json.encodeToString(LoginResponse(error = "Internal server error")),
-                ContentType.Application.Json,
-                HttpStatusCode.InternalServerError,
-            )
         }
-    }
 }
 
+class AuthEx(
+    message: String = "",
+    val status: HttpStatusCode = InternalServerError,
+    val userError: Boolean = true,
+    cause: Throwable? = null,
+) : Exception(message.ifBlank { cause?.message }, cause)
+
 interface AuthLifecycleHandler {
-    suspend fun onLogin(userSession: UserSession, firebaseToken: FirebaseToken) {}
+    suspend fun fetchRoles(firebaseToken: FirebaseToken): Set<String>
+
+    suspend fun onLogin(userSession: UserSession, firebaseToken: FirebaseToken)
 
     suspend fun onLogout(userSession: UserSession) {}
 }
 
 @Serializable private data class LoginRequest(val idToken: String)
 
-@Serializable
-private data class LoginResponse(val user: UserSession? = null, val error: String? = null)
+@Serializable private data class LoginResponse(val user: UserSession? = null)

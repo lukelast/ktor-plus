@@ -9,4 +9,13 @@ data class UserSession(
     val email: String,
     val nameFull: String,
     val nameFirst: String,
-)
+    val roles: Set<String>,
+) {
+    fun hasRole(role: String): Boolean = role in roles
+
+    fun requireRole(role: String) {
+        if (!hasRole(role)) {
+            error("User $userId does not have role $role")
+        }
+    }
+}
