@@ -1,8 +1,9 @@
 package ktp.example
 
+import io.ktor.server.application.*
 import ktp.example.api.installApiHello
 import ktp.example.plugins.configureAdministration
-import net.ghue.ktp.ktor.app.debug.installConfigDebugInfo
+import net.ghue.ktp.ktor.app.debug.ConfigDebugInfoPlugin
 import net.ghue.ktp.ktor.plugin.installDefaultPlugins
 import net.ghue.ktp.ktor.start.ktpAppCreate
 import net.ghue.ktp.ktor.start.start
@@ -16,10 +17,16 @@ fun main() {
 
 val ktpApp = ktpAppCreate {
     addModule(DemoAppModule().module)
-    init { config ->
+    init {
         installDefaultPlugins()
         configureAdministration()
-        installConfigDebugInfo(config)
+
+        // Install debug info plugin with modern API and access control
+        install(ConfigDebugInfoPlugin) {
+            // Example: Restrict access to localhost only (uncomment to enable)
+            // accessControl = { request.local.remoteHost == "127.0.0.1" }
+        }
+
         installApiHello()
     }
 }
