@@ -2,7 +2,9 @@ package net.ghue.ktp.gcp.auth
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.sha256
@@ -26,4 +28,9 @@ suspend fun ApplicationCall.userOrError(): UserSession {
             respond(HttpStatusCode.Unauthorized)
             error("User session not found, redirected to login")
         }
+}
+
+
+fun Route.authenticateFirebase(build: Route.() -> Unit): Route {
+    return authenticate(AuthProviderName.FIREBASE_SESSION, build = build)
 }

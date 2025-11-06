@@ -3,8 +3,9 @@ plugins { id("com.github.lukelast.ktor-plus") }
 dependencies {
     api(project(":libs:ktp-ktor"))
 
-    // Ktor Sessions
+    // Ktor
     api(libs.ktor.sessions)
+    api(libs.ktor.auth)
 
     // Firebase Admin SDK
     api(libs.firebaseAdmin)

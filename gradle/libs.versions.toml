@@ -53,6 +53,7 @@ ktor-compression = { module = "io.ktor:ktor-server-compression" }
 ktor-forwardedHeader = { module = "io.ktor:ktor-server-forwarded-header" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
 ktor-sessions = { module = "io.ktor:ktor-server-sessions" }
+ktor-auth = { module = "io.ktor:ktor-server-auth" }
 ktor-test = { module = "io.ktor:ktor-server-test-host" }
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
 ktor-client-apache = { module = "io.ktor:ktor-client-apache" }

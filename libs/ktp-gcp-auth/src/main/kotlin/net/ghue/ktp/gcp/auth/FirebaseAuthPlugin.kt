@@ -1,11 +1,16 @@
 package net.ghue.ktp.gcp.auth
 
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import org.koin.ktor.ext.inject
+
+object AuthProviderName {
+    const val FIREBASE_SESSION: String = "firebase-session"
+}
 
 class FirebaseAuthPluginConfig {
     var secureCookies: (ktpConfig: KtpConfig, env: Env) -> Boolean = { ktpConfig, env ->
@@ -39,6 +44,12 @@ val FirebaseAuthPlugin =
                     cookie.maxAge = authConfig.sessionTimeoutDuration
                     transform(ktpConfig.createSessionTransportTransformer())
                 }
+            }
+        }
+
+        application.authentication {
+            session<UserSession>(AuthProviderName.FIREBASE_SESSION) {
+                validate { session -> session }
             }
         }
 
