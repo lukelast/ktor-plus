@@ -1,7 +1,9 @@
 package net.ghue.ktp.gcp.auth
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.Env
@@ -38,7 +40,7 @@ val FirebaseAuthPlugin =
             application.install(Sessions) {
                 cookie<UserSession>(ktpConfig.data.app.name.replace('.', '_').uppercase()) {
                     cookie.path = "/"
-                    cookie.extensions["SameSite"] = "lax"
+                    cookie.sameSite = "lax"
                     cookie.httpOnly = true
                     cookie.secure = useSecureCookies
                     cookie.maxAge = authConfig.sessionTimeoutDuration
@@ -49,12 +51,23 @@ val FirebaseAuthPlugin =
 
         application.authentication {
             session<UserSession>(AuthProviderName.FIREBASE_SESSION) {
-                validate { session -> session }
+                validate { session ->
+                    // TODO Refresh the cookie if it's close to expiring?
+                    session
+                }
+                challenge {
+                    call.sessions.clear<UserSession>()
+                    // API endpoints need an error response.
+                    // Browser requests would be better served with a redirect.
+                    // Maybe attempt to detect browser requests some day.
+                    call.respond(HttpStatusCode.Unauthorized)
+                    // call.respondRedirect(authConfig.loginUrl)
+                }
             }
         }
 
         application.routing {
             post(authConfig.loginUrl) { with(authService) { handleLogin() } }
-            get(authConfig.logoutUrl) { with(authService) { handleLogout() } }
+            post(authConfig.logoutUrl) { with(authService) { handleLogout() } }
         }
     }

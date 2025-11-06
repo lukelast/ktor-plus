@@ -95,7 +95,7 @@ private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@get
             }
-            respondConfigHtml()
+            call.respondConfigHtml()
         }
     }
 

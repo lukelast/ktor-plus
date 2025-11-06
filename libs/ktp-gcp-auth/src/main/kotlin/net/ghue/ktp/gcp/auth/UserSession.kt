@@ -5,17 +5,22 @@ import kotlinx.serialization.Serializable
 /** Note that everything here is stored in the session cookie so keep it small. */
 @Serializable
 data class UserSession(
-    val userId: String,
-    val email: String,
-    val nameFull: String,
-    val nameFirst: String,
-    val roles: Set<String>,
-) {
-    fun hasRole(role: String): Boolean = role in roles
+    override val userId: String,
+    override val email: String,
+    override val nameFull: String,
+    override val nameFirst: String,
+    override val roles: Set<String>,
+) : UserPrincipal, HasRoles
 
-    fun requireRole(role: String) {
-        if (!hasRole(role)) {
-            error("User $userId does not have role $role")
-        }
-    }
+interface HasRoles {
+    val userId: String
+    val roles: Set<String>
+
+    fun hasRole(role: Role): Boolean = role.name in roles
+}
+
+interface UserPrincipal : HasRoles {
+    val email: String
+    val nameFull: String
+    val nameFirst: String
 }

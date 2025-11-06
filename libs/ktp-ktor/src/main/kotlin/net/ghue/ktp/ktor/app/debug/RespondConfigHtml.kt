@@ -9,8 +9,8 @@ import net.ghue.ktp.config.toRecords
 import org.koin.ktor.ext.inject
 
 /** Creates an HTML table with all the configuration values. */
-suspend fun RoutingContext.respondConfigHtml() {
-    val ktpConfig: KtpConfig by call.inject()
+suspend fun RoutingCall.respondConfigHtml() {
+    val ktpConfig: KtpConfig by inject()
 
     val records = ktpConfig.config.toRecords().toMutableList()
     records.add(collectGcInfo())
@@ -33,7 +33,7 @@ suspend fun RoutingContext.respondConfigHtml() {
                 // language=HTML
                 "<tr></tr><td>${it.path}</td><td>${it.value}</td><td>${it.source}</td></tr>"
             }
-    call.respondText(
+    respondText(
         CONFIG_TEMPLATE.trimIndent().replace("{{TABLE}}", tableContents),
         ContentType.Text.Html.withCharset(Charsets.UTF_8),
     )

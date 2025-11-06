@@ -22,15 +22,17 @@ fun ApplicationCall.currentUser(): UserSession? {
     return sessions.get<UserSession>()
 }
 
-suspend fun ApplicationCall.userOrError(): UserSession {
-    return currentUser()
+fun ApplicationCall.userOrNull(): UserPrincipal? {
+    return principal()
+}
+
+suspend fun ApplicationCall.userOrError(): UserPrincipal {
+    return userOrNull()
         ?: run {
             respond(HttpStatusCode.Unauthorized)
             error("User session not found, redirected to login")
         }
 }
 
-
-fun Route.authenticateFirebase(build: Route.() -> Unit): Route {
-    return authenticate(AuthProviderName.FIREBASE_SESSION, build = build)
-}
+fun Route.authenticateFirebase(build: Route.() -> Unit): Route =
+    authenticate(AuthProviderName.FIREBASE_SESSION, build = build)
