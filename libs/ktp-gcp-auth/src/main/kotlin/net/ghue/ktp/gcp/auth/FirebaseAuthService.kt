@@ -57,9 +57,9 @@ class FirebaseAuthService(
             call.respondText(json.encodeToString(response), Json, HttpStatusCode.OK)
         } catch (ex: AuthEx) {
             if (ex.userError) {
-                log {}.info(ex) {}
+                log {}.info(ex) { ex.message }
             } else {
-                log {}.warn(ex) {}
+                log {}.warn(ex) { ex.message }
             }
             call.respondText(
                 text = json.encodeToString(LoginResponse()),
