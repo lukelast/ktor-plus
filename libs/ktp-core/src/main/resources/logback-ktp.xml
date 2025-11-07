@@ -1,9 +1,37 @@
 <included>
-  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <Pattern>[%-5level]\t%date{ISO8601}\t%logger [%thread %mdc] (%file\) - %message%n</Pattern>
-    </encoder>
-  </appender>
+  <!-- Detect if running in Google Cloud Run (K_SERVICE is set) -->
+  <if>
+    <condition>
+      <isDefined>K_SERVICE</isDefined>
+    </condition>
+    <then>
+      <!-- Google Cloud Run: Use JSON structured logging for proper multiline support -->
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+          <!-- Use severity instead of level for GCP compatibility -->
+          <fieldNames>
+            <level>severity</level>
+          </fieldNames>
+          <!-- Add service context for GCP -->
+          <customFields>{"service":"${K_SERVICE:-unknown}"}</customFields>
+          <!-- Include stack traces in the message field for proper grouping -->
+          <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+            <maxDepthPerThrowable>30</maxDepthPerThrowable>
+            <maxLength>8192</maxLength>
+          </throwableConverter>
+        </encoder>
+      </appender>
+    </then>
+    <else>
+      <!-- Local/default: Use human-readable pattern -->
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <Pattern>[%-5level]\t%date{ISO8601}\t%logger [%thread %mdc] (%file\) - %message%n</Pattern>
+        </encoder>
+      </appender>
+    </else>
+  </if>
+
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
   </root>

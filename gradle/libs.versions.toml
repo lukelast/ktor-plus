@@ -11,8 +11,6 @@ versionCheck = "0.51.0"
 typesafeConfig = "1.4.3"
 config4k = "0.7.0"
 classgraph = "4.8.181"
-logback = "1.5.20"
-kotlinLogging = "7.0.12"
 slf4j = "2.0.17"
 mockk = "1.14.5"
 stripe = "29.5.0"
@@ -78,7 +76,9 @@ stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }
 firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.7.0" }
 
 # Logging dependencies
-logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.20" }
+logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
+janino = { module = "org.codehaus.janino:janino", version = "3.1.12" }
+kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version = "7.0.12" }
 slf4jJcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 slf4jJul = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }

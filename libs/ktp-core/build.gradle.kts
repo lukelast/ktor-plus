@@ -5,6 +5,8 @@ dependencies {
     api(libs.kotlinJson)
 
     api(libs.logbackClassic)
+    api(libs.logstashLogbackEncoder)
+    api(libs.janino)
 
     // https://github.com/oshai/kotlin-logging
     api(libs.kotlinLogging)
