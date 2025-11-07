@@ -1,9 +1,6 @@
 <included>
-  <!-- Detect if running in Google Cloud Run (K_SERVICE is set) -->
+  <condition class="net.ghue.ktp.log.IsGcloudRun"/>
   <if>
-    <condition>
-      <expression>isDefined("K_SERVICE")</expression>
-    </condition>
     <then>
       <!-- Google Cloud Run: Use JSON structured logging for proper multiline support -->
       <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
