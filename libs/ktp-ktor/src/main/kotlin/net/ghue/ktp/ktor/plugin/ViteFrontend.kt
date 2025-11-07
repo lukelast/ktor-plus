@@ -5,8 +5,10 @@ import io.ktor.client.engine.apache.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
+import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -17,45 +19,60 @@ import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.isReadable
 import kotlin.io.path.notExists
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.removePrefix
 import net.ghue.ktp.log.log
+import org.koin.ktor.ext.inject
 
-data class ViteConfig(
-    val vitePort: Int = 5173,
-    val indexFile: Path = Path("src", "index.html"),
+class ViteFrontendConfig {
+    var vitePort: Int = 5173
+    var indexFile: Path = Path("src", "index.html")
     /**
      * The URI path under which all static files are served. Should match the `base` setting in
      * vite.config.ts. No leading or trailing slashes.
      */
-    val staticUri: String = "static",
+    var staticUri: String = "static"
     /** The directory on the production backend where static files are stored. */
-    val staticDir: Path = Path(staticUri),
-    val frontEndDist: Path = Path("frontend", "dist"),
-    val browserUriPathPrefix: String = "p",
-) {
-    val indexFilePath: Path = staticDir.resolve(indexFile)
+    var staticDir: Path = Path(staticUri)
+    var frontEndDist: Path = Path("frontend", "dist")
+    var browserUriPathPrefix: String = "p"
+
+    val indexFilePath: Path
+        get() = staticDir.resolve(indexFile)
 
     /** The Ktor route that serves the frontend React pages. */
-    val frontendRoute: String = "/${browserUriPathPrefix}/{...}"
+    val frontendRoute: String
+        get() = "/${browserUriPathPrefix}/{...}"
 }
 
-fun Application.installViteFrontend(config: KtpConfig, viteConfig: ViteConfig = ViteConfig()) {
-    if (config.env.isLocalDev) {
-        val viteDev = ServeViteDev(viteConfig)
-        monitor.subscribe(ApplicationStopPreparing) { viteDev.close() }
-        viteDev.init(this)
-    } else {
-        routing {
-            staticResources("/${viteConfig.staticUri}", viteConfig.staticDir.toString())
-            get("/") { call.serveIndexHtml(viteConfig.indexFilePath) }
-            get(viteConfig.frontendRoute) { call.serveIndexHtml(viteConfig.indexFilePath) }
+val ViteFrontendPlugin =
+    createApplicationPlugin(
+        name = "ViteFrontendPlugin",
+        createConfiguration = ::ViteFrontendConfig,
+    ) {
+        val config = pluginConfig
+        val ktpConfig: KtpConfig by application.inject()
+
+        if (ktpConfig.env.isLocalDev) {
+            val viteDev = ServeViteDev(config)
+            application.monitor.subscribe(ApplicationStopPreparing) { viteDev.close() }
+            viteDev.init(application)
+        } else {
+            application.routing {
+                staticResources("/${config.staticUri}", config.staticDir.toString()) {
+                    cacheControl { listOf(cacheControlMaxAge(1.days)) }
+                }
+                get("/") { call.serveIndexHtml(config.indexFilePath) }
+                get(config.frontendRoute) { call.serveIndexHtml(config.indexFilePath) }
+            }
         }
     }
-}
 
 private suspend fun ApplicationCall.serveIndexHtml(path: Path) {
     try {
+        caching = CachingOptions(cacheControl = cacheControlMaxAge(1.hours))
         resolveResource(path.toString())?.let { resource -> respond(resource) }
             ?: respond(HttpStatusCode.NotFound)
     } catch (e: Exception) {
@@ -63,10 +80,10 @@ private suspend fun ApplicationCall.serveIndexHtml(path: Path) {
     }
 }
 
-private class ServeViteDev(val viteConfig: ViteConfig) : Closeable {
+private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
 
     val frontEndFiles: Path =
-        viteConfig.frontEndDist
+        config.frontEndDist
             .let {
                 if (it.notExists()) {
                     Path("..").resolve(it)
@@ -91,9 +108,9 @@ private class ServeViteDev(val viteConfig: ViteConfig) : Closeable {
 
     fun init(app: Application) {
         app.routing {
-            get("/") { call.serveDevRoute(viteConfig.indexFilePath) }
-            get(viteConfig.frontendRoute) { call.serveDevRoute(viteConfig.indexFilePath) }
-            get("/${viteConfig.staticUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
+            get("/") { call.serveDevRoute(config.indexFilePath) }
+            get(config.frontendRoute) { call.serveDevRoute(config.indexFilePath) }
+            get("/${config.staticUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
         }
     }
 
@@ -111,7 +128,7 @@ private class ServeViteDev(val viteConfig: ViteConfig) : Closeable {
     }
 
     private suspend fun ApplicationCall.serveFromFrontendFiles(path: Path) {
-        val file = frontEndFiles.resolve(path.removePrefix(viteConfig.staticUri))
+        val file = frontEndFiles.resolve(path.removePrefix(config.staticUri))
         if (file.isReadable()) {
             log {}.info { "Serving: $file" }
             respondPath(file)
@@ -128,7 +145,7 @@ private class ServeViteDev(val viteConfig: ViteConfig) : Closeable {
                     .apply {
                         protocol = URLProtocol.HTTP
                         host = "localhost"
-                        port = viteConfig.vitePort
+                        port = config.vitePort
                         pathSegments = path.toList().map { it.toString() }
                         parameters.appendAll(request.queryParameters)
                     }

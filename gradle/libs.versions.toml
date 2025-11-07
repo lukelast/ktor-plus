@@ -4,7 +4,7 @@ ksp = "2.2.0-2.0.2"
 koin = "4.1.0"
 # This needs to match Version.KOIN_KSP
 koinAnnotations = "2.1.0"
-ktor = "3.2.3"
+ktor = "3.3.2"
 #detekt = "1.23.7"
 versionCheck = "0.51.0"
 kotlinCoroutines = "1.10.2"
@@ -49,6 +49,9 @@ ktor-statusPages = { module = "io.ktor:ktor-server-status-pages" }
 ktor-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation" }
 ktor-compression = { module = "io.ktor:ktor-server-compression" }
 ktor-forwardedHeader = { module = "io.ktor:ktor-server-forwarded-header" }
+ktor-cachingHeaders = { module = "io.ktor:ktor-server-caching-headers" }
+ktor-conditionalHeaders = { module = "io.ktor:ktor-server-conditional-headers" }
+ktor-hsts = { module = "io.ktor:ktor-server-hsts" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
 ktor-sessions = { module = "io.ktor:ktor-server-sessions" }
 ktor-auth = { module = "io.ktor:ktor-server-auth" }

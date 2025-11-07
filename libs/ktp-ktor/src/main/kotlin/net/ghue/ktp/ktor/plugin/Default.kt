@@ -5,8 +5,10 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.compression.*
+import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.forwardedheaders.*
+import io.ktor.server.plugins.hsts.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
@@ -31,6 +33,10 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
     }
     install(XForwardedHeaders)
     install(ForwardedHeaders)
+    install(ConditionalHeaders)
+    if (!config.env.isLocalDev) {
+        install(HSTS)
+    }
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("favicon").not() }

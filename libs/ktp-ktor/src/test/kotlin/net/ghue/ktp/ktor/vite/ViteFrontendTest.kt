@@ -6,24 +6,29 @@ import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlin.io.path.Path
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.plugin.ViteConfig
-import net.ghue.ktp.ktor.plugin.installViteFrontend
+import net.ghue.ktp.ktor.plugin.ViteFrontendConfig
+import net.ghue.ktp.ktor.plugin.ViteFrontendPlugin
+import org.koin.dsl.module
+import org.koin.ktor.plugin.Koin
 
 class ViteFrontendTest :
     StringSpec({
         "production mode serves index for missing specific resource" {
             testApplication {
-                val viteConfig = ViteConfig(indexFile = Path("nonexistent.html"))
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin) { indexFile = Path("nonexistent.html") }
+                }
 
                 client.get("/").status shouldBe HttpStatusCode.NotFound
                 client.get("/p/some/page").status shouldBe HttpStatusCode.NotFound
@@ -32,21 +37,23 @@ class ViteFrontendTest :
 
         "production mode serves non-existent static resources as 404" {
             testApplication {
-                val viteConfig = ViteConfig()
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
 
                 client.get("/static/nonexistent.css").status shouldBe HttpStatusCode.NotFound
             }
         }
 
-        "ViteConfig has correct default values" {
-            val config = ViteConfig()
+        "ViteFrontendConfig has correct default values" {
+            val config = ViteFrontendConfig()
 
             config.vitePort shouldBe 5173
             config.indexFile shouldBe Path("src", "index.html")
@@ -58,16 +65,14 @@ class ViteFrontendTest :
             config.indexFilePath shouldBe Path("static").resolve(Path("src", "index.html"))
         }
 
-        "ViteConfig custom values work correctly" {
-            val config =
-                ViteConfig(
-                    vitePort = 3000,
-                    indexFile = Path("custom.html"),
-                    staticUri = "assets",
-                    staticDir = Path("public"),
-                    frontEndDist = Path("build"),
-                    browserUriPathPrefix = "app",
-                )
+        "ViteFrontendConfig custom values work correctly" {
+            val config = ViteFrontendConfig()
+            config.vitePort = 3000
+            config.indexFile = Path("custom.html")
+            config.staticUri = "assets"
+            config.staticDir = Path("public")
+            config.frontEndDist = Path("build")
+            config.browserUriPathPrefix = "app"
 
             config.vitePort shouldBe 3000
             config.indexFile shouldBe Path("custom.html")
@@ -86,9 +91,11 @@ class ViteFrontendTest :
                         setUnitTestEnv()
                         configValue("env.localDev", "true")
                     }
-                val viteConfig = ViteConfig()
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
 
                 client.get("/").apply {
                     status shouldBe HttpStatusCode.OK
@@ -104,14 +111,16 @@ class ViteFrontendTest :
 
         "production mode serves static resources correctly" {
             testApplication {
-                val viteConfig = ViteConfig()
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
 
                 client.get("/static/app.css").apply {
                     status shouldBe HttpStatusCode.OK
@@ -124,14 +133,16 @@ class ViteFrontendTest :
 
         "production mode serves index HTML correctly" {
             testApplication {
-                val viteConfig = ViteConfig()
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
 
                 client.get("/").apply {
                     status shouldBe HttpStatusCode.OK
@@ -147,14 +158,16 @@ class ViteFrontendTest :
 
         "custom static URI routes are configured correctly" {
             testApplication {
-                val viteConfig = ViteConfig(staticUri = "assets")
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin) { staticUri = "assets" }
+                }
 
                 client.get("/assets/nonexistent.js").status shouldBe HttpStatusCode.NotFound
             }
@@ -162,14 +175,16 @@ class ViteFrontendTest :
 
         "custom browser URI path prefix routes are configured correctly" {
             testApplication {
-                val viteConfig = ViteConfig(browserUriPathPrefix = "app")
                 val config =
                     KtpConfig.create {
                         setUnitTestEnv()
                         configValue("env.localDev", "false")
                     }
 
-                application { installViteFrontend(config, viteConfig) }
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin) { browserUriPathPrefix = "app" }
+                }
 
                 client.get("/app/dashboard").apply {
                     status shouldBe HttpStatusCode.OK

@@ -16,6 +16,9 @@ dependencies {
     api(libs.ktor.contentNegotiation)
     api(libs.ktor.compression)
     api(libs.ktor.forwardedHeader)
+    api(libs.ktor.cachingHeaders)
+    api(libs.ktor.conditionalHeaders)
+    api(libs.ktor.hsts)
     api(libs.ktor.resources)
 
     // Ktor Client
