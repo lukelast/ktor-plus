@@ -2,7 +2,7 @@
   <!-- Detect if running in Google Cloud Run (K_SERVICE is set) -->
   <if>
     <condition>
-      <isDefined>K_SERVICE</isDefined>
+      <expression>isDefined("K_SERVICE")</expression>
     </condition>
     <then>
       <!-- Google Cloud Run: Use JSON structured logging for proper multiline support -->
@@ -11,6 +11,11 @@
           <!-- Use severity instead of level for GCP compatibility -->
           <fieldNames>
             <level>severity</level>
+            <!-- Ignore unnecessary fields to reduce clutter in GCP logs -->
+            <timestamp>[ignore]</timestamp>
+            <version>[ignore]</version>
+            <thread>[ignore]</thread>
+            <levelValue>[ignore]</levelValue>
           </fieldNames>
           <!-- Add service context for GCP -->
           <customFields>{"service":"${K_SERVICE:-unknown}"}</customFields>
