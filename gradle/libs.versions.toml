@@ -7,7 +7,7 @@ koinAnnotations = "2.1.0"
 ktor = "3.2.3"
 #detekt = "1.23.7"
 versionCheck = "0.51.0"
-#kotlinCoroutines = "1.9.0"
+kotlinCoroutines = "1.10.2"
 typesafeConfig = "1.4.3"
 config4k = "0.7.0"
 classgraph = "4.8.181"
@@ -37,7 +37,7 @@ kotest-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "k
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
-#kotlinCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
+kotlinCoroutinesSlf4j = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-slf4j", version.ref = "kotlinCoroutines" }
 
 # Ktor
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }

@@ -11,5 +11,6 @@ dependencies {
     api(libs.firebaseAdmin)
 
     // Testing
+    testImplementation(libs.ktor.test)
     testImplementation(libs.koinTest)
 }

@@ -8,7 +8,9 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.plugin.MdcClearPlugin
 import org.koin.ktor.ext.inject
+import org.slf4j.MDC
 
 object AuthProviderName {
     const val FIREBASE_SESSION: String = "firebase-session"
@@ -49,9 +51,14 @@ val FirebaseAuthPlugin =
             }
         }
 
+        if (application.pluginOrNull(MdcClearPlugin) == null) {
+            application.install(MdcClearPlugin)
+        }
+
         application.authentication {
             session<UserSession>(AuthProviderName.FIREBASE_SESSION) {
                 validate { session ->
+                    MDC.put("email", session.email)
                     // TODO Refresh the cookie if it's close to expiring?
                     session
                 }

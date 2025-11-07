@@ -17,8 +17,8 @@ fun main() {
 
 val ktpApp = ktpAppCreate {
     addModule(DemoAppModule().module)
-    init {
-        installDefaultPlugins()
+    init { config ->
+        installDefaultPlugins(config)
         configureAdministration()
 
         // Install debug info plugin with modern API and access control

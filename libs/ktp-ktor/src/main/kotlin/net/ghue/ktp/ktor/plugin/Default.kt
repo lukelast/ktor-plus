@@ -16,6 +16,7 @@ import net.ghue.ktp.log.log
 import org.slf4j.event.Level
 
 fun Application.installDefaultPlugins(config: KtpConfig) {
+    install(MdcClearPlugin)
     install(ContentNegotiation) { json() }
     install(Compression) {
         minimumSize(512)
