@@ -11,10 +11,11 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.response.*
+import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 import org.slf4j.event.Level
 
-fun Application.installDefaultPlugins() {
+fun Application.installDefaultPlugins(config: KtpConfig) {
     install(ContentNegotiation) { json() }
     install(Compression) {
         minimumSize(512)
@@ -32,6 +33,9 @@ fun Application.installDefaultPlugins() {
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("favicon").not() }
+        if (!config.env.isLocalDev) {
+            disableDefaultColors()
+        }
     }
     install(StatusPages) {
         exception<Throwable> { call, cause ->
