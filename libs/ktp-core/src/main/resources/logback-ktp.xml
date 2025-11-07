@@ -5,8 +5,10 @@
       <!-- Google Cloud Run: Use JSON structured logging for proper multiline support -->
       <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-          <!-- Use severity instead of level for GCP compatibility -->
+          <!-- Add file and line number -->
+          <includeCallerData>true</includeCallerData>
           <fieldNames>
+            <!-- Use severity instead of level for GCP compatibility -->
             <level>severity</level>
             <!-- Ignore unnecessary fields to reduce clutter in GCP logs -->
             <timestamp>[ignore]</timestamp>
@@ -14,8 +16,6 @@
             <thread>[ignore]</thread>
             <levelValue>[ignore]</levelValue>
           </fieldNames>
-          <!-- Add service context for GCP -->
-          <customFields>{"service":"${K_SERVICE:-unknown}"}</customFields>
           <!-- Include stack traces in the message field for proper grouping -->
           <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
             <maxDepthPerThrowable>30</maxDepthPerThrowable>
