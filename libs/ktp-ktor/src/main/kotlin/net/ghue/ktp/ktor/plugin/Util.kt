@@ -3,15 +3,14 @@ package net.ghue.ktp.ktor.plugin
 import io.ktor.http.*
 import io.ktor.server.plugins.origin
 import io.ktor.server.routing.RoutingCall
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.slf4j.MDCContext
-import kotlinx.coroutines.withContext
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.time.Duration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
 
 fun cacheControlMaxAge(
     maxAge: Duration,
@@ -35,6 +34,3 @@ suspend inline fun <T> withIoContext(noinline block: suspend CoroutineScope.() -
     contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
     return withContext(context = Dispatchers.IO + MDCContext(), block = block)
 }
-
-
-
