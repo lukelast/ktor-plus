@@ -33,6 +33,7 @@ gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin"
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotest-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
+kotest-koin = { module = "io.kotest.extensions:kotest-extensions-koin", version = "1.3.0" }
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }

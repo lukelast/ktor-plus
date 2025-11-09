@@ -6,6 +6,7 @@ dependencies {
     api(libs.mockk)
     api(libs.ktor.test)
     api(libs.koinTest)
+    api(libs.kotest.koin)
 
     implementation(libs.kotest.engine)
 }
