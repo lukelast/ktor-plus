@@ -4,7 +4,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseToken
 import io.kotest.core.extensions.install
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.koin.KoinExtension
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.request.*
@@ -24,7 +23,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
 import org.koin.ktor.plugin.KoinIsolated
 
 class FirebaseAuthPluginTest :
@@ -108,10 +106,7 @@ class FirebaseAuthPluginTest :
 
         "creates session cookie with correct attributes" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                    }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
@@ -153,7 +148,8 @@ class FirebaseAuthPluginTest :
                 val cookies = loginResponse.headers.getAll(HttpHeaders.SetCookie)
                 cookies shouldNotBe null
                 cookies?.any { it.contains("HttpOnly") } shouldBe true
-                cookies?.any { it.contains("SameSite=Lax") || it.contains("SameSite=lax") } shouldBe true
+                cookies?.any { it.contains("SameSite=Lax") || it.contains("SameSite=lax") } shouldBe
+                    true
             }
         }
 
