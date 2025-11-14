@@ -18,10 +18,6 @@ fun KtpConfig.createSessionTransportTransformer(): SessionTransportTransformer {
     )
 }
 
-fun ApplicationCall.currentUser(): UserSession? {
-    return sessions.get<UserSession>()
-}
-
 fun ApplicationCall.userOrNull(): UserPrincipal? {
     return principal()
 }

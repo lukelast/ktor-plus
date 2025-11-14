@@ -45,8 +45,6 @@ class FirebaseAuthService(
                     userId = firebaseToken.uid,
                     email = firebaseToken.email,
                     nameFull = firebaseToken.name ?: firebaseToken.email,
-                    nameFirst =
-                        firebaseToken.name?.split(" ")?.firstOrNull() ?: firebaseToken.email,
                     roles = userRoles,
                 )
 

@@ -8,7 +8,6 @@ data class UserSession(
     override val userId: String,
     override val email: String,
     override val nameFull: String,
-    override val nameFirst: String,
     override val roles: Set<String>,
 ) : UserPrincipal, HasRoles
 
@@ -23,4 +22,5 @@ interface UserPrincipal : HasRoles {
     val email: String
     val nameFull: String
     val nameFirst: String
+        get() = nameFull.split(" ").first()
 }

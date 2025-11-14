@@ -24,7 +24,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "admin@example.com",
                                     nameFull = "Admin User",
-                                    nameFirst = "Admin",
                                     roles = setOf("admin"),
                                 )
                         )
@@ -56,7 +55,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "Regular User",
-                                    nameFirst = "Regular",
                                     roles = setOf("user"),
                                 )
                         )
@@ -88,7 +86,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "No Role User",
-                                    nameFirst = "NoRole",
                                     roles = emptySet(),
                                 )
                         )
@@ -155,7 +152,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "Multi Role User",
-                                    nameFirst = "Multi",
                                     roles = setOf("user", "admin", "editor"),
                                 )
                         )
@@ -187,7 +183,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "Limited User",
-                                    nameFirst = "Limited",
                                     roles = setOf("user", "viewer"),
                                 )
                         )
@@ -219,7 +214,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "Test User",
-                                    nameFirst = "Test",
                                     roles = emptySet(),
                                 )
                         )
@@ -251,7 +245,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "admin@example.com",
                                     nameFull = "Admin User",
-                                    nameFirst = "Admin",
                                     roles = setOf("Admin"),
                                 )
                         )
@@ -283,7 +276,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "editor@example.com",
                                     nameFull = "Editor User",
-                                    nameFirst = "Editor",
                                     roles = setOf("editor"),
                                 )
                         )
@@ -321,7 +313,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "manager@example.com",
                                     nameFull = "Manager User",
-                                    nameFirst = "Manager",
                                     roles = setOf("manager"),
                                 )
                         )
@@ -363,7 +354,6 @@ class RbacPluginTest :
                                     userId = "user123",
                                     email = "user@example.com",
                                     nameFull = "Test User",
-                                    nameFirst = "Test",
                                     roles = setOf("user"),
                                 )
                         )
