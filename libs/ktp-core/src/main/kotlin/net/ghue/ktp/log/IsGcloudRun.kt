@@ -7,7 +7,7 @@ class IsGcloudRun : PropertyConditionBase() {
         val isGcloudRun =
             System.getenv("K_SERVICE") != null || System.getProperty("K_SERVICE") != null
         if (isGcloudRun) {
-            log {}.info { "Determined to be running in Google Cloud Run" }
+            log {}.debug { "Determined to be running in Google Cloud Run" }
         }
         return isGcloudRun
     }
