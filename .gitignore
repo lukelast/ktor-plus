@@ -3,3 +3,4 @@ build
 .kotlin
 .claude
 .gradle-linux/
+.idea/
