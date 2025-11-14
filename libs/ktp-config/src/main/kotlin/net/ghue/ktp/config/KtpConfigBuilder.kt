@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigResolveOptions
 import net.ghue.ktp.config.KtpConfig.Companion.ENV_PATH
-import net.ghue.ktp.config.KtpConfig.Companion.SYS_ENV_PREFIX
 import net.ghue.ktp.log.log
 
 class KtpConfigBuilder() {
@@ -50,8 +49,6 @@ fun buildConfig(
         add(ConfigFactory.parseMap(mapOf(ENV_PATH to env.name), "current environment"))
         add(ConfigFactory.parseMap(overrideMap, "overrides"))
         add(ConfigFactory.systemEnvironmentOverrides())
-        add(ConfigFactory.systemEnvironment().atPath(SYS_ENV_PREFIX))
-        add(ConfigFactory.systemProperties())
         buildConfigFromEnvText()?.let { add(it) }
         configFiles.sorted().forEach { file ->
             add(

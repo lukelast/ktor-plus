@@ -40,42 +40,6 @@ fun Config.toRecords(): List<ConfigRecord> =
                 configRecord
             }
         }
-        // Remove uninteresting noise.
-        .filter {
-            it.path !in
-                setOf(
-                    "java.class.path",
-                    "java.class.version",
-                    "java.library.path",
-                    "java.runtime.name",
-                    "java.runtime.version",
-                    "java.specification.name",
-                    "java.specification.vendor",
-                    "java.specification.version",
-                    "java.vendor.url.bug",
-                    "java.vm.specification.name",
-                    "java.vm.specification.vendor",
-                    "java.vm.specification.version",
-                    "jdk.debug",
-                    "stderr.encoding",
-                    "stdout.encoding",
-                    "sun.arch.data.model",
-                    "sun.boot.library.path",
-                    "sun.cpu.endian",
-                    "sun.cpu.isalist",
-                    "sun.io.unicode.encoding",
-                    "sun.java.launcher",
-                    "sun.jnu.encoding",
-                    "sun.management.compiler",
-                    "sun.os.patch.level",
-                    "sun.stderr.encoding",
-                    "sun.stdout.encoding",
-                    "user.country",
-                    "user.language",
-                    "user.script",
-                    "user.variant",
-                )
-        }
         .sortedBy { it.path }
 
-@Serializable data class ConfigRecord(val path: String, val value: String, val source: String)
+@Serializable data class ConfigRecord(val path: String, val value: String, val source: String = "")

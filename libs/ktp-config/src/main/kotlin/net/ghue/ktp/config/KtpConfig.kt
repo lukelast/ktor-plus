@@ -15,7 +15,6 @@ class KtpConfig(val config: Config, val env: Env) {
         const val CONF_FILE_EXT = "conf"
         const val CONF_FILE_DIR = "ktp"
         const val ENV_PATH = "env"
-        const val SYS_ENV_PREFIX = "sysenv"
         const val ENV_CONFIG_KEY = "KTP_CONFIG"
 
         init {
@@ -87,15 +86,7 @@ class KtpConfig(val config: Config, val env: Env) {
         }
     }
 
-    fun getAllConfig(): Map<String, String> =
-        config
-            .toRecords()
-            .filter {
-                !it.path.startsWith("java.") &&
-                    !it.path.startsWith("os.") &&
-                    !it.path.startsWith("${SYS_ENV_PREFIX}.")
-            }
-            .associate { it.path to it.value }
+    fun getAllConfig(): Map<String, String> = config.toRecords().associate { it.path to it.value }
 
     fun logAllConfig() {
         val txt = getAllConfig().entries.joinToString(", ") { "${it.key} = ${it.value}" }
@@ -111,11 +102,7 @@ class KtpConfig(val config: Config, val env: Env) {
                 .setComments(true)
                 .setOriginComments(true)
         val filteredConfig =
-            filterConfig(config.root()) { path, value ->
-                value.origin().description() != "system properties" &&
-                    value.origin().description() != "env variables" &&
-                    path != "env"
-            } ?: error("No config")
+            filterConfig(config.root()) { path, _ -> path != ENV_PATH } ?: error("No config")
         // These comment lines don't seem useful.
         val extraComments = Regex("^.*# hardcoded value.*\\R?", RegexOption.MULTILINE)
         val renderedConfig = filteredConfig.render(options).replace(extraComments, "")
