@@ -3,6 +3,7 @@ package net.ghue.ktp.ktor.plugin
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.conditionalheaders.*
@@ -55,4 +56,5 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         }
     }
     install(Resources)
+    install(CachingHeaders)
 }
