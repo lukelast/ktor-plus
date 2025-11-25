@@ -17,7 +17,6 @@ import io.ktor.utils.io.core.*
 import java.net.ConnectException
 import java.nio.file.Path
 import kotlin.io.path.Path
-import kotlin.io.path.isDirectory
 import kotlin.io.path.isReadable
 import kotlin.io.path.notExists
 import kotlin.time.Duration.Companion.days
@@ -62,13 +61,8 @@ val ViteFrontendPlugin =
             viteDev.init(application)
         } else {
             application.routing {
-                if (config.staticDir.isDirectory()) {
-                    staticResources("/${config.staticUri}", config.staticDir.toString()) {
-                        cacheControl { listOf(cacheControlMaxAge(7.days)) }
-                    }
-                } else {
-                    log {}
-                        .error { "Vite static files directory does not exist: ${config.staticDir}" }
+                staticResources("/${config.staticUri}", config.staticDir.toString()) {
+                    cacheControl { listOf(cacheControlMaxAge(7.days)) }
                 }
                 get("/") { call.serveIndexHtml(config.indexFilePath) }
                 get(config.frontendRoute) { call.serveIndexHtml(config.indexFilePath) }
