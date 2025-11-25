@@ -20,13 +20,7 @@ val ktpApp = ktpAppCreate {
     init { config ->
         installDefaultPlugins(config)
         configureAdministration()
-
-        // Install debug info plugin with modern API and access control
-        install(ConfigDebugInfoPlugin) {
-            // Example: Restrict access to localhost only (uncomment to enable)
-            // accessControl = { request.local.remoteHost == "127.0.0.1" }
-        }
-
+        install(ConfigDebugInfoPlugin)
         installApiHello()
     }
 }

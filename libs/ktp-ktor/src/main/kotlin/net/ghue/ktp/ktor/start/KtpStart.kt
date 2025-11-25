@@ -5,17 +5,22 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.log.Slf4jBridgeInstall
 import net.ghue.ktp.log.installLocalDevConsoleLogger
 import net.ghue.ktp.log.log
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
-import org.slf4j.bridge.SLF4JBridgeHandler
+import org.slf4j.LoggerFactory
 
 typealias KtpAppBuilder = () -> KtpApp
 
 class KtpApp {
+    init {
+        Slf4jBridgeInstall()
+    }
+
     internal val modules = mutableListOf<Module>()
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
     var createConfigManager: () -> KtpConfig = { KtpConfig.create() }
@@ -82,26 +87,39 @@ fun KtpAppBuilder.update(updateBlock: KtpApp.() -> Unit): KtpAppBuilder {
 
 fun ktpStart(buildConfig: () -> KtpApp) {
     val appInstance = buildConfig().build()
-    SLF4JBridgeHandler.removeHandlersForRootLogger()
-    SLF4JBridgeHandler.install()
     if (appInstance.config.env.isLocalDev) {
         installLocalDevConsoleLogger()
-        System.setProperty("io.ktor.development", "true")
     }
+
+    val ktorEnv = applicationEnvironment { this.log = LoggerFactory.getLogger("ktor") }
+    val serverConfig =
+        serverConfig(ktorEnv) {
+            developmentMode = appInstance.config.env.isLocalDev
+            module {
+                appInstance.installKoin(this)
+                appInstance.appInit(this)
+            }
+        }
     val server =
         embeddedServer(
             factory = Netty,
-            port = appInstance.config.data.app.server.port,
-            host = appInstance.config.data.app.server.host,
-        ) {
-            appInstance.installKoin(this)
-            appInstance.appInit(this)
-        }
+            rootConfig = serverConfig,
+            configure = {
+                connector {
+                    port = appInstance.config.data.app.server.port
+                    host = appInstance.config.data.app.server.host
+                }
+                enableHttp2 = true
+                enableH2c = true
+            },
+        )
     Runtime.getRuntime()
         .addShutdownHook(
             Thread {
                 log {}.info { "Received shutdown signal. Shutting down" }
-                server.stop(2.seconds.inWholeMilliseconds, 5.seconds.inWholeMilliseconds)
+                // Grace period is the time ktor waits for in progress requests to finish.
+                server.stop(4.seconds.inWholeMilliseconds, 8.seconds.inWholeMilliseconds)
+                log {}.info { "Server is shut down" }
             }
         )
     server.start(true)
