@@ -16,12 +16,11 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import java.net.ConnectException
 import java.nio.file.Path
-import kotlin.io.path.Path
-import kotlin.io.path.isReadable
-import kotlin.io.path.notExists
+import kotlin.io.path.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.core.Resource
 import net.ghue.ktp.core.removePrefix
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
@@ -36,11 +35,27 @@ class ViteFrontendConfig {
     var staticUri: String = "static"
     /** The directory on the production backend where static files are stored. */
     var staticDir: Path = Path(staticUri)
+
+    /** Where the frontend files are built during development. */
     var frontEndDist: Path = Path("frontend", "dist")
     var browserUriPathPrefix: String = "p"
 
+    val staticRootUri: String = "/${staticUri}"
+
     val indexFilePath: Path
         get() = staticDir.resolve(indexFile)
+
+    val indexFileText: String by lazy {
+        val altPath = staticDir.resolve(indexFile.removePrefix("src"))
+        if (indexFilePath.isReadable()) {
+            return@lazy indexFilePath.readText()
+        } else if (altPath.isReadable()) {
+            return@lazy altPath.readText()
+        }
+        Resource.readOrNull(indexFilePath.toString())
+            ?: Resource.readOrNull(altPath.toString())
+            ?: error("$indexFile not found")
+    }
 
     /** The Ktor route that serves the frontend React pages. */
     val frontendRoute: String
@@ -61,22 +76,28 @@ val ViteFrontendPlugin =
             viteDev.init(application)
         } else {
             application.routing {
-                staticResources("/${config.staticUri}", config.staticDir.toString()) {
+                fun StaticContentConfig<*>.configCache() {
                     cacheControl { listOf(cacheControlMaxAge(7.days)) }
                 }
-                get("/") { call.serveIndexHtml(config.indexFilePath) }
-                get(config.frontendRoute) { call.serveIndexHtml(config.indexFilePath) }
+                if (config.staticDir.isDirectory()) {
+                    staticFiles(config.staticRootUri, config.staticDir.toFile()) { configCache() }
+                } else {
+                    staticResources(config.staticRootUri, config.staticDir.toString()) {
+                        configCache()
+                    }
+                }
+                get("/") { call.serveIndexHtml(config) }
+                get(config.frontendRoute) { call.serveIndexHtml(config) }
             }
         }
     }
 
-private suspend fun ApplicationCall.serveIndexHtml(path: Path) {
+private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
     try {
         caching = CachingOptions(cacheControl = cacheControlMaxAge(1.hours))
-        resolveResource(path.toString())?.let { resource -> respond(resource) }
-            ?: respond(HttpStatusCode.NotFound)
+        respondText(config.indexFileText, contentType = ContentType.Text.Html)
     } catch (ex: Exception) {
-        log {}.warn(ex) { "Serving index html: $path" }
+        log {}.warn(ex) { "Serving index html: ${config.indexFile}" }
         respond(HttpStatusCode.NotFound)
     }
 }
@@ -111,7 +132,7 @@ private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
         app.routing {
             get("/") { call.serveDevRoute(config.indexFilePath) }
             get(config.frontendRoute) { call.serveDevRoute(config.indexFilePath) }
-            get("/${config.staticUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
+            get("${config.staticRootUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
         }
     }
 

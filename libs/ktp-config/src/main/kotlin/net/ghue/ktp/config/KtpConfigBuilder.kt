@@ -33,8 +33,13 @@ private fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMa
     val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
     log {}
         .info {
-            "Building config using: ${usedConfigFiles.map { it.fileName }}. " +
-                "Files ignored because env=(${env.name}): ${ignoredFiles.map { it.fileName }}."
+            val ignored =
+                if (ignoredFiles.isNotEmpty()) {
+                    "Files ignored: ${ignoredFiles.map { it.fileName }}"
+                } else {
+                    "No config files ignored"
+                }
+            "env=(${env.name}) Building config using: ${usedConfigFiles.map { it.fileName }}. $ignored."
         }
     return buildConfig(env, usedConfigFiles, overrideMap)
 }
