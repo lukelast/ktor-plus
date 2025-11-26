@@ -39,6 +39,8 @@ Library for Ktor.
 
 KTP libraries and Gradle plugins are available via JitPack:
 
+[![](https://jitpack.io/v/lukelast/ktor-plus.svg)](https://jitpack.io/#lukelast/ktor-plus)
+
 https://jitpack.io/#lukelast/ktor-plus
 
 ### Libraries
