@@ -6,6 +6,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.ghue.ktp.log.log
 
+/** Default path constants for debug endpoints. */
+object DebugEndpoints {
+    const val BASE = "/debug"
+    const val CONFIG = "/config"
+    const val GCLOG = "/gclog"
+    const val THREADS = "/threads"
+    const val VERSION = "/version"
+}
+
 /**
  * Configuration for the ConfigDebugInfo plugin.
  *
@@ -36,16 +45,19 @@ import net.ghue.ktp.log.log
  */
 class ConfigDebugInfoConfig {
     /** Route prefix for debug endpoints. Default: "/debug" */
-    var routePrefix: String = "/debug"
+    var routePrefix: String = DebugEndpoints.BASE
 
-    /** Whether to enable the /config endpoint. Default: true */
+    /** Whether to enable the configuration info endpoint. Default: true */
     var enableConfigEndpoint: Boolean = true
 
-    /** Whether to enable the /gclog endpoint. Default: true */
+    /** Whether to enable the garbage collection endpoint. Default: true */
     var enableGcLogEndpoint: Boolean = true
 
-    /** Whether to enable the /version endpoint. Default: true */
+    /** Whether to enable the version endpoint. Default: true */
     var enableVersionEndpoint: Boolean = true
+
+    /** Whether to enable the thread dump endpoint. Default: true */
+    var enableThreadDumpEndpoint: Boolean = true
 
     /**
      * Custom access control logic for all debug endpoints. Return true to allow access, false to
@@ -70,11 +82,15 @@ class ConfigDebugInfoConfig {
  * Modern Ktor plugin for exposing debug information endpoints.
  *
  * This plugin provides the following endpoints:
+ * - GET /debug - HTML index page listing all debug endpoints with their status
  * - GET /debug/config - HTML page showing all configuration values, GC info, and system info
  * - GET /debug/gclog - Raw GC log file contents (if available at /tmp/gc.log)
+ * - GET /debug/threads - Comprehensive thread dump with stack traces, locks, and CPU stats
  * - GET /debug/version - Plain text application version
  *
- * All endpoints can be individually disabled and protected with custom access control.
+ * The index page is always enabled when the plugin is installed. Individual endpoints can be
+ * individually disabled via configuration flags. All endpoints are protected with custom access
+ * control if configured.
  *
  * **Security Warning**: These endpoints expose sensitive application information. Always use
  * `accessControl` to restrict access in production environments.
@@ -99,7 +115,7 @@ val ConfigDebugInfoPlugin =
 
 private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
     if (pluginConfig.enableConfigEndpoint) {
-        get("/config") {
+        get(DebugEndpoints.CONFIG) {
             if (pluginConfig.accessControl?.invoke(call) == false) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@get
@@ -109,7 +125,7 @@ private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
     }
 
     if (pluginConfig.enableGcLogEndpoint) {
-        get("/gclog") {
+        get(DebugEndpoints.GCLOG) {
             if (pluginConfig.accessControl?.invoke(call) == false) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@get
@@ -118,13 +134,32 @@ private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
         }
     }
 
+    if (pluginConfig.enableThreadDumpEndpoint) {
+        get(DebugEndpoints.THREADS) {
+            if (pluginConfig.accessControl?.invoke(call) == false) {
+                call.respond(HttpStatusCode.Forbidden)
+                return@get
+            }
+            call.respondThreadDump()
+        }
+    }
+
     if (pluginConfig.enableVersionEndpoint) {
-        get("/version") {
+        get(DebugEndpoints.VERSION) {
             if (pluginConfig.accessControl?.invoke(call) == false) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@get
             }
             call.respondVersion()
         }
+    }
+
+    // Register index route LAST - ensures child routes are matched first
+    get("") {
+        if (pluginConfig.accessControl?.invoke(call) == false) {
+            call.respond(HttpStatusCode.Forbidden)
+            return@get
+        }
+        call.respondDebugIndex(pluginConfig)
     }
 }
