@@ -109,8 +109,8 @@ fun ktpStart(buildConfig: () -> KtpApp) {
                     port = appInstance.config.data.app.server.port
                     host = appInstance.config.data.app.server.host
                 }
-                enableHttp2 = true
-                enableH2c = true
+                enableHttp2 = false
+                enableH2c = false
             },
         )
     Runtime.getRuntime()
