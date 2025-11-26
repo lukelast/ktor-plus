@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import net.ghue.ktp.log.log
 
 /**
  * Configuration for the ConfigDebugInfo plugin.
@@ -83,6 +84,14 @@ val ConfigDebugInfoPlugin =
         name = "ConfigDebugInfo",
         createConfiguration = ::ConfigDebugInfoConfig,
     ) {
+        if (pluginConfig.accessControl == null) {
+            log {}
+                .warn {
+                    "ConfigDebugInfoPlugin installed without access control! " +
+                        "This may expose sensitive information. " +
+                        "It is strongly recommended to set accessControl to restrict access."
+                }
+        }
         application.routing {
             route(pluginConfig.routePrefix) { installDebugEndpoints(pluginConfig) }
         }
