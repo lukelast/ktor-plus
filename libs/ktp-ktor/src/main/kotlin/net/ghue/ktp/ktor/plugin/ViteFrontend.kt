@@ -1,7 +1,7 @@
 package net.ghue.ktp.ktor.plugin
 
 import io.ktor.client.*
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.java.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -19,6 +19,8 @@ import java.nio.file.Path
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.toJavaDuration
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.Resource
 import net.ghue.ktp.core.removePrefix
@@ -117,12 +119,7 @@ private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
 
     // Create HTTP client with short timeout
     val client =
-        HttpClient(Apache) {
-            engine {
-                connectTimeout = 500
-                socketTimeout = 1000
-            }
-        }
+        HttpClient(Java) { engine { config { connectTimeout(500.milliseconds.toJavaDuration()) } } }
 
     override fun close() {
         client.close()

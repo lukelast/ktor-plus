@@ -23,7 +23,7 @@ dependencies {
 
     // Ktor Client
     api(libs.ktor.client.core)
-    api(libs.ktor.client.apache)
+    api(libs.ktor.client.java)
 
     // Koin
     api(platform(libs.koinBom))
