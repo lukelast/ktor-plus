@@ -13,8 +13,8 @@ import net.ghue.ktp.core.sha512
 fun KtpConfig.createSessionTransportTransformer(): SessionTransportTransformer {
     val secret = this.data.app.secret + this.env.name
     return SessionTransportTransformerEncrypt(
-        secret.sha256().take(16).toByteArray(),
-        secret.sha512(),
+        encryptionKey = secret.sha256().take(16).toByteArray(),
+        signKey = secret.sha512(),
     )
 }
 

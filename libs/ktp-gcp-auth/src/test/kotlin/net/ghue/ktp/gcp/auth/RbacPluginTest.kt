@@ -21,9 +21,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "admin@example.com",
-                                    nameFull = "Admin User",
+                                    name = "Admin User",
                                     roles = setOf("admin"),
                                 )
                         )
@@ -52,9 +53,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "Regular User",
+                                    name = "Regular User",
                                     roles = setOf("user"),
                                 )
                         )
@@ -83,9 +85,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "No Role User",
+                                    name = "No Role User",
                                     roles = emptySet(),
                                 )
                         )
@@ -149,9 +152,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "Multi Role User",
+                                    name = "Multi Role User",
                                     roles = setOf("user", "admin", "editor"),
                                 )
                         )
@@ -180,9 +184,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "Limited User",
+                                    name = "Limited User",
                                     roles = setOf("user", "viewer"),
                                 )
                         )
@@ -204,16 +209,17 @@ class RbacPluginTest :
             }
         }
 
-        "allows access when plugin configured with empty role" {
+        "denies access when plugin configured with empty role" {
             testApplication {
                 application {
                     install(Authentication) {
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "Test User",
+                                    name = "Test User",
                                     roles = emptySet(),
                                 )
                         )
@@ -229,8 +235,8 @@ class RbacPluginTest :
                 }
 
                 with(client.get("/protected")) {
-                    status shouldBe HttpStatusCode.OK
-                    bodyAsText() shouldBe "Success"
+                    status shouldBe HttpStatusCode.Forbidden
+                    bodyAsText() shouldBe "Configuration Error"
                 }
             }
         }
@@ -242,9 +248,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "admin@example.com",
-                                    nameFull = "Admin User",
+                                    name = "Admin User",
                                     roles = setOf("Admin"),
                                 )
                         )
@@ -273,9 +280,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "editor@example.com",
-                                    nameFull = "Editor User",
+                                    name = "Editor User",
                                     roles = setOf("editor"),
                                 )
                         )
@@ -310,9 +318,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "manager@example.com",
-                                    nameFull = "Manager User",
+                                    name = "Manager User",
                                     roles = setOf("manager"),
                                 )
                         )
@@ -351,9 +360,10 @@ class RbacPluginTest :
                         dummy(
                             principal =
                                 UserSession(
-                                    userId = "user123",
+                                    userId = UserId("user123"),
+                                    tenId = TenantId("test-tenant"),
                                     email = "user@example.com",
-                                    nameFull = "Test User",
+                                    name = "Test User",
                                     roles = setOf("user"),
                                 )
                         )

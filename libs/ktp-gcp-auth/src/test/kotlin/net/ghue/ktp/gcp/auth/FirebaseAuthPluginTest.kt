@@ -113,8 +113,15 @@ class FirebaseAuthPluginTest :
                 val mockToken = createMockFirebaseToken()
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
-                coEvery { mockLifecycle.fetchRoles(any()) } returns setOf("user")
-                coEvery { mockLifecycle.onLogin(any(), any()) } returns Unit
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserInfo(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                        extra = null,
+                    )
 
                 application {
                     install(KoinIsolated) {
@@ -208,8 +215,15 @@ class FirebaseAuthPluginTest :
                 val mockToken = createMockFirebaseToken()
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
-                coEvery { mockLifecycle.fetchRoles(any()) } returns setOf("user")
-                coEvery { mockLifecycle.onLogin(any(), any()) } returns Unit
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserInfo(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                        extra = null,
+                    )
 
                 application {
                     install(KoinIsolated) {
@@ -263,8 +277,15 @@ class FirebaseAuthPluginTest :
                 val mockToken = createMockFirebaseToken()
 
                 every { mockFirebaseAuth.verifyIdToken(any()) } returns mockToken
-                coEvery { mockLifecycle.fetchRoles(any()) } returns setOf("user")
-                coEvery { mockLifecycle.onLogin(any(), any()) } returns Unit
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserInfo(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                        extra = null,
+                    )
                 coEvery { mockLifecycle.onLogout(any()) } returns Unit
 
                 application {
@@ -359,8 +380,15 @@ class FirebaseAuthPluginTest :
                 val mockToken = createMockFirebaseToken()
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
-                coEvery { mockLifecycle.fetchRoles(any()) } returns setOf("user")
-                coEvery { mockLifecycle.onLogin(any(), any()) } returns Unit
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserInfo(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                        extra = null,
+                    )
                 coEvery { mockLifecycle.onLogout(any()) } returns Unit
 
                 application {
@@ -404,5 +432,7 @@ private fun createMockFirebaseToken(): FirebaseToken {
     every { mockToken.uid } returns "test-user-id"
     every { mockToken.email } returns "test@example.com"
     every { mockToken.name } returns "Test User"
+    every { mockToken.isEmailVerified } returns true
+    every { mockToken.claims } returns emptyMap()
     return mockToken
 }

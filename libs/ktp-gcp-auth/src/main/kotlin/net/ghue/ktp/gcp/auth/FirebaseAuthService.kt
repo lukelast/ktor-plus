@@ -4,6 +4,7 @@ import com.google.firebase.ErrorCode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseToken
+import com.google.gson.Gson
 import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -14,7 +15,6 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
@@ -36,23 +36,41 @@ class FirebaseAuthService(
                     userError = true,
                 )
             }
-
             val firebaseToken = verifyToken(loginRequest.idToken)
-            val userRoles = lifecycle.fetchRoles(firebaseToken)
+
+            if (!firebaseToken.isAnonymous && !firebaseToken.isEmailVerified) {
+                throw AuthEx(
+                    message = "Email not verified: $firebaseToken.email",
+                    status = HttpStatusCode.Unauthorized,
+                    userError = false,
+                )
+            }
+            val userInfo = lifecycle.onLogin(firebaseToken)
 
             val userSession =
                 UserSession(
-                    userId = firebaseToken.uid,
-                    email = firebaseToken.email,
-                    nameFull = firebaseToken.name ?: firebaseToken.email,
-                    roles = userRoles,
+                    userId = firebaseToken.userId,
+                    tenId = userInfo.tenantId,
+                    email = userInfo.email,
+                    name = userInfo.name,
+                    roles = userInfo.roles,
                 )
-
             call.sessions.set(userSession)
-            lifecycle.onLogin(userSession, firebaseToken)
 
-            val response = LoginResponse(user = userSession)
-            call.respondText(json.encodeToString(response), Json, HttpStatusCode.OK)
+            val response =
+                LoginResponse(
+                    user =
+                        LoginResponseUser(
+                            userId = firebaseToken.userId.value,
+                            email = userSession.email,
+                            nameFull = userSession.name,
+                            nameFirst = userSession.nameFirst,
+                            roles = userInfo.roles,
+                            extra = userInfo.extra,
+                        )
+                )
+            val rspText = Gson().toJson(response)
+            call.respondText(rspText, Json, HttpStatusCode.OK)
         } catch (ex: AuthEx) {
             if (ex.userError) {
                 log {}.info(ex) { ex.message }
@@ -129,21 +147,9 @@ class FirebaseAuthService(
         }
 }
 
-class AuthEx(
+private class AuthEx(
     message: String = "",
     val status: HttpStatusCode = InternalServerError,
     val userError: Boolean = true,
     cause: Throwable? = null,
 ) : Exception(message.ifBlank { cause?.message }, cause)
-
-interface AuthLifecycleHandler {
-    suspend fun fetchRoles(firebaseToken: FirebaseToken): Set<String>
-
-    suspend fun onLogin(userSession: UserSession, firebaseToken: FirebaseToken)
-
-    suspend fun onLogout(userSession: UserSession) {}
-}
-
-@Serializable private data class LoginRequest(val idToken: String)
-
-@Serializable private data class LoginResponse(val user: UserSession? = null)

@@ -5,7 +5,14 @@ import io.ktor.server.auth.*
 /** A way to bypass authentication for testing. */
 fun AuthenticationConfig.dummy(
     providerName: String = AuthProviderName.FIREBASE_SESSION,
-    principal: UserSession = UserSession(userId = "", email = "", nameFull = "", roles = emptySet()),
+    principal: UserSession =
+        UserSession(
+            userId = UserId(""),
+            tenId = TenantId(""),
+            email = "",
+            name = "",
+            roles = emptySet(),
+        ),
 ) {
     register(
         object : AuthenticationProvider(object : Config(providerName) {}) {
