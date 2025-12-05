@@ -41,7 +41,9 @@ val RbacPlugin =
 
         on(AuthenticationChecked) { call ->
             if (config.requiredRole.name.isBlank()) {
-                call.application.log.error("RbacPlugin installed with no required role. Denying access.")
+                call.application.log.error(
+                    "RbacPlugin installed with no required role. Denying access."
+                )
                 call.respond(HttpStatusCode.Forbidden, "Configuration Error")
                 return@on
             }
