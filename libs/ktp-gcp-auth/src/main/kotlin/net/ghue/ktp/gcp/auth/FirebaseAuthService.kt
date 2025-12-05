@@ -77,11 +77,7 @@ class FirebaseAuthService(
             } else {
                 log {}.warn(ex) { ex.message }
             }
-            call.respondText(
-                text = "{}",
-                contentType = Json,
-                status = ex.status,
-            )
+            call.respondText(text = "{}", contentType = Json, status = ex.status)
         } catch (ex: Exception) {
             log {}.warn(ex) { "Unexpected login error" }
             call.respondText("{}", Json, InternalServerError)

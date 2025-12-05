@@ -1,6 +1,9 @@
 plugins { id("com.github.lukelast.ktor-plus") }
 
 dependencies {
+    // GCP BOM for version management
+    api(project(":libs:ktp-gcp"))
+
     api(project(":libs:ktp-ktor"))
 
     // Ktor

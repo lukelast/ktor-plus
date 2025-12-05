@@ -100,6 +100,19 @@ Ktor-specific extensions and utilities for building production-ready microservic
 
 **Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-ktor:VERSION")`
 
+### ktp-gcp
+
+Google Cloud Platform BOM and utilities for GCP integration:
+
+- **GCP BOM**: Provides the Google Cloud Platform Bill of Materials for consistent dependency version management
+- **Project ID Detection**: Get GCP project ID from application default credentials
+- **Cloud Run Detection**: Detect if running on Google Cloud Run and access Cloud Run metadata
+- **Environment Detection**: Check if running on any GCP platform
+- **Region Detection**: Get GCP region from environment variables
+- **Metadata Utilities**: Access Cloud Run service name, revision, and configuration
+
+**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp:VERSION")`
+
 ### ktp-gcp-auth
 
 Firebase and Google Cloud Platform authentication for Ktor applications:
