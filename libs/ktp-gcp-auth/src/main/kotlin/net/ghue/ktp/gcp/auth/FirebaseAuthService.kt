@@ -78,13 +78,13 @@ class FirebaseAuthService(
                 log {}.warn(ex) { ex.message }
             }
             call.respondText(
-                text = json.encodeToString(LoginResponse()),
+                text = "{}",
                 contentType = Json,
                 status = ex.status,
             )
         } catch (ex: Exception) {
             log {}.warn(ex) { "Unexpected login error" }
-            call.respondText(json.encodeToString(LoginResponse()), Json, InternalServerError)
+            call.respondText("{}", Json, InternalServerError)
         }
     }
 
