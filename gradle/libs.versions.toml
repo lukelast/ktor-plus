@@ -84,6 +84,7 @@ stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }
 # Google Cloud BOM for version management: https://cloud.google.com/java/docs/bom
 gcpBom = { module = "com.google.cloud:libraries-bom", version.ref = "gcpBom" }
 gcpCore = { module = "com.google.cloud:google-cloud-core" }
+gcpFirestore = { module = "com.google.cloud:google-cloud-firestore" }
 
 # Firebase Admin SDK - manages its own version but uses GCP BOM for transitive deps
 #firebaseBom = { module = "com.google.firebase:firebase-bom", version = "34.6.0" }
