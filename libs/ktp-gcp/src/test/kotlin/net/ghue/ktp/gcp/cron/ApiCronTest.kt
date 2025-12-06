@@ -6,8 +6,9 @@ import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.resources.Resources
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -16,9 +17,6 @@ import io.mockk.mockk
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
-
-import io.ktor.server.resources.Resources
 import org.koin.ktor.plugin.KoinIsolated
 
 class ApiCronTest :
@@ -29,33 +27,27 @@ class ApiCronTest :
 
             testApplication {
                 application {
-                    val config = mockk<KtpConfig> {
-                         coEvery { env } returns Env("localdev")
-                    }
-                    
+                    val config = mockk<KtpConfig> { coEvery { env } returns Env("localdev") }
+
                     install(ContentNegotiation)
                     install(Resources)
-                    
-                     install(KoinIsolated) {
-                        modules(module {
-                            single { cronHandler }
-                            single { config }
-                        })
+
+                    install(KoinIsolated) {
+                        modules(
+                            module {
+                                single { cronHandler }
+                                single { config }
+                            }
+                        )
                     }
 
-                    routing {
-                        installApiCronRoutes()
-                    }
+                    routing { installApiCronRoutes() }
                 }
 
-                val client = createClient {
-                    install(io.ktor.client.plugins.resources.Resources)
-                }
+                val client = createClient { install(io.ktor.client.plugins.resources.Resources) }
 
-                client.get(Api.Cron.Hourly()).apply {
-                    status shouldBe HttpStatusCode.OK
-                }
-                
+                client.get(Api.Cron.Hourly()).apply { status shouldBe HttpStatusCode.OK }
+
                 coVerify(exactly = 1) { cronHandler.hourly() }
             }
         }
@@ -66,24 +58,20 @@ class ApiCronTest :
 
             testApplication {
                 application {
-                    val config = mockk<KtpConfig> {
-                        coEvery { env } returns Env("localdev")
-                    }
+                    val config = mockk<KtpConfig> { coEvery { env } returns Env("localdev") }
                     install(Resources)
                     install(KoinIsolated) {
-                        modules(module { 
-                            single { cronHandler }
-                            single { config }
-                        })
+                        modules(
+                            module {
+                                single { cronHandler }
+                                single { config }
+                            }
+                        )
                     }
-                    routing {
-                        installApiCronRoutes()
-                    }
+                    routing { installApiCronRoutes() }
                 }
 
-                val client = createClient {
-                    install(io.ktor.client.plugins.resources.Resources)
-                }
+                val client = createClient { install(io.ktor.client.plugins.resources.Resources) }
 
                 client.post(Api.Cron.Hourly()).apply {
                     println("Status: $status")
