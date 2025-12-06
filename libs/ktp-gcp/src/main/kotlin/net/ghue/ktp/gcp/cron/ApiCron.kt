@@ -2,9 +2,11 @@ package net.ghue.ktp.gcp.cron
 
 import io.ktor.http.*
 import io.ktor.resources.*
-import io.ktor.server.resources.resource
+import io.ktor.server.resources.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.time.Instant
+import java.time.ZoneOffset
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.getKoin
 
@@ -24,7 +26,8 @@ fun Route.installApiCronRoutes() {
     }
     suspend fun RoutingContext.handle() {
         log {}.info { "Doing hourly cron job" }
-        val result = handler.hourly()
+        val hourNumber = Instant.now().atOffset(ZoneOffset.UTC).hour
+        val result = handler.hourly(hourNumber)
         if (result.runAgain) {
             call.respond(HttpStatusCode.TooManyRequests)
         } else {

@@ -23,7 +23,7 @@ class ApiCronTest :
     StringSpec({
         "authorized request runs cron handler" {
             val cronHandler = mockk<CronHandler>()
-            coEvery { cronHandler.hourly() } returns Result(runAgain = false)
+            coEvery { cronHandler.hourly(any()) } returns Result(runAgain = false)
 
             testApplication {
                 application {
@@ -48,13 +48,13 @@ class ApiCronTest :
 
                 client.get(Api.Cron.Hourly()).apply { status shouldBe HttpStatusCode.OK }
 
-                coVerify(exactly = 1) { cronHandler.hourly() }
+                coVerify(exactly = 1) { cronHandler.hourly(any()) }
             }
         }
 
         "run again returns 429" {
             val cronHandler = mockk<CronHandler>()
-            coEvery { cronHandler.hourly() } returns Result(runAgain = true)
+            coEvery { cronHandler.hourly(any()) } returns Result(runAgain = true)
 
             testApplication {
                 application {
@@ -78,7 +78,7 @@ class ApiCronTest :
                     println("Body: ${bodyAsText()}")
                     status shouldBe HttpStatusCode.TooManyRequests
                 }
-                coVerify(exactly = 1) { cronHandler.hourly() }
+                coVerify(exactly = 1) { cronHandler.hourly(any()) }
             }
         }
     })

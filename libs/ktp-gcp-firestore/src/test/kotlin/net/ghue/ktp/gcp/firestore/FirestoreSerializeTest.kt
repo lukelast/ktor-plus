@@ -10,45 +10,43 @@ import java.util.Date
 
 class FirestoreSerializeTest :
     StringSpec({
-        "primitives serialization" {
-            FirestoreConverter.serialize("hello") shouldBe "hello"
-            FirestoreConverter.serialize(123) shouldBe 123
-            FirestoreConverter.serialize(true) shouldBe true
-            FirestoreConverter.serialize(null) shouldBe null
-        }
+        FirestoreSerializer.serialize("hello") shouldBe "hello"
+        FirestoreSerializer.serialize(123) shouldBe 123
+        FirestoreSerializer.serialize(true) shouldBe true
+        FirestoreSerializer.serialize(null) shouldBe null
 
         "firestore natives serialization" {
             val geo = GeoPoint(1.0, 2.0)
             val ts = Timestamp.now()
             val blob = Blob.fromBytes(byteArrayOf(1, 2, 3))
 
-            FirestoreConverter.serialize(geo) shouldBe geo
-            FirestoreConverter.serialize(ts) shouldBe ts
-            FirestoreConverter.serialize(blob) shouldBe blob
+            FirestoreSerializer.serialize(geo) shouldBe geo
+            FirestoreSerializer.serialize(ts) shouldBe ts
+            FirestoreSerializer.serialize(blob) shouldBe blob
         }
 
         "collections serialization" {
             val list = listOf(1, "two", true)
             val map = mapOf("a" to 1, "b" to listOf(2))
 
-            FirestoreConverter.serialize(list) shouldBe list
-            FirestoreConverter.serialize(map) shouldBe map
+            FirestoreSerializer.serialize(list) shouldBe list
+            FirestoreSerializer.serialize(map) shouldBe map
         }
 
-        "enum serialization" { FirestoreConverter.serialize(TestEnum.A) shouldBe "A" }
+        "enum serialization" { FirestoreSerializer.serialize(TestEnum.A) shouldBe "A" }
 
         "custom serializer serialization (Instant)" {
             val instant = Instant.ofEpochSecond(1234567890L, 123456789)
             val expected = Timestamp.ofTimeSecondsAndNanos(1234567890L, 123456789)
 
-            FirestoreConverter.serialize(instant) shouldBe expected
+            FirestoreSerializer.serialize(instant) shouldBe expected
         }
 
         "custom serializer serialization (Date)" {
             val date = Date(1234567890000L)
             val expected = Timestamp.of(date)
 
-            FirestoreConverter.serialize(date) shouldBe expected
+            FirestoreSerializer.serialize(date) shouldBe expected
         }
 
         "object serialization via reflection" {
@@ -85,11 +83,11 @@ class FirestoreSerializeTest :
             val email = Email("test@example.com")
             val count = Count(42)
 
-            FirestoreConverter.serialize(email) shouldBe "test@example.com"
+            FirestoreSerializer.serialize(email) shouldBe "test@example.com"
             // interpreting "convert to string" as "unwrap", but user said "to string".
             // If I unwrap Count(42), it is 42. If I "convert to string", it is "42".
             // I will assume unwrapping is the goal.
-            FirestoreConverter.serialize(count) shouldBe 42
+            FirestoreSerializer.serialize(count) shouldBe 42
         }
     })
 
