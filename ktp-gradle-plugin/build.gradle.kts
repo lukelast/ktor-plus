@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.gradleKotlinSerialization)
     implementation(libs.gradleKtfmt)
     implementation(libs.gradleKsp)
+    compileOnly(libs.gradleShadow)
 }
 
 kotlin { jvmToolchain(21) }

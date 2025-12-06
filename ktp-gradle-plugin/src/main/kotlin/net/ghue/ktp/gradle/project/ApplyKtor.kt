@@ -14,6 +14,7 @@ fun Project.applyKtor() {
     applyKtfmt()
     applyKspGradlePlugin()
     applyKoinKspCompiler()
+    configureShadow()
     installKotest()
 
     dependencies {
