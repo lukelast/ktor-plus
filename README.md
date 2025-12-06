@@ -124,6 +124,15 @@ Firebase and Google Cloud Platform authentication for Ktor applications:
 
 **Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp-auth:VERSION")`
 
+### ktp-gcp-firestore
+
+Google Cloud Firestore integration utilities:
+
+- **Google Cloud Firestore**: Native Google Cloud Firestore client.
+- **Firebase Admin SDK**: Support for Firebase Admin SDK.
+
+**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp-firestore:VERSION")`
+
 ### ktp-stripe
 
 Stripe payment integration utilities for Ktor applications:

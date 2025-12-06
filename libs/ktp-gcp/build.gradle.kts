@@ -13,4 +13,5 @@ dependencies {
 
     // Testing
     testImplementation(project(":libs:ktp-test"))
+    testImplementation(libs.ktor.client.resources)
 }
