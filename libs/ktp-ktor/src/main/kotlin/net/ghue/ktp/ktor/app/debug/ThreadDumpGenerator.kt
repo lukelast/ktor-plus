@@ -64,6 +64,9 @@ fun generateThreadDump(): String {
     return sb.toString()
 }
 
+private const val MS_PER_SECOND = 1_000_000
+
+@Suppress("complexity")
 private fun formatThreadInfo(
     threadInfo: ThreadInfo,
     threadMXBean: java.lang.management.ThreadMXBean,
@@ -103,7 +106,9 @@ private fun formatThreadInfo(
         val cpuTime = threadMXBean.getThreadCpuTime(threadInfo.threadId)
         val userTime = threadMXBean.getThreadUserTime(threadInfo.threadId)
         if (cpuTime >= 0) {
-            sb.appendLine("   CPU time: ${cpuTime / 1_000_000}ms (user: ${userTime / 1_000_000}ms)")
+            sb.appendLine(
+                "   CPU time: ${cpuTime / MS_PER_SECOND}ms (user: ${userTime / MS_PER_SECOND}ms)"
+            )
         }
     }
 
@@ -138,6 +143,7 @@ private fun formatThreadInfo(
 }
 
 private fun formatLockInfo(lockInfo: LockInfo): String {
+    @Suppress("MagicNumber")
     return "<${lockInfo.identityHashCode.toString(16)}> (a ${lockInfo.className})"
 }
 
@@ -164,7 +170,7 @@ private fun collectCoroutineInfo(): String? {
         val dumpCoroutinesMethod = debugClass.getMethod("dumpCoroutines")
         val coroutineInfo = dumpCoroutinesMethod.invoke(null)
         coroutineInfo?.toString()
-    } catch (e: ClassNotFoundException) {
+    } catch (_: ClassNotFoundException) {
         "Coroutine debug info not available (kotlinx-coroutines-debug not in classpath)"
     } catch (e: Exception) {
         "Failed to collect coroutine info: ${e.message}"

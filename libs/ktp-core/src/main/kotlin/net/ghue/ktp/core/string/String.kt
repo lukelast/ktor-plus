@@ -11,7 +11,7 @@ import java.util.zip.GZIPOutputStream
 fun String.decodeUrlEncoded(): String =
     try {
         URLDecoder.decode(this, StandardCharsets.UTF_8)
-    } catch (ex: Exception) {
+    } catch (ex: IllegalArgumentException) {
         throw IllegalArgumentException("Could not URL decode encoded string '$this'", ex)
     }
 

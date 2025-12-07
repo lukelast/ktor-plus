@@ -22,6 +22,7 @@ object FirestoreDeserializer {
         registerDeserializer(T::class.java, deserializer)
     }
 
+    @Suppress("LongMethod", "complexity", "ReturnCount")
     fun deserialize(value: Any?, targetType: KType): Any? {
         if (value == null) {
             if (targetType.isMarkedNullable) return null

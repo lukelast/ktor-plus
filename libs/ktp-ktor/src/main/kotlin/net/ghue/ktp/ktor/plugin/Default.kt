@@ -18,11 +18,13 @@ import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 import org.slf4j.event.Level
 
+const val MIN_COMPRESS_SIZE_BYTES = 512L
+
 fun Application.installDefaultPlugins(config: KtpConfig) {
     install(MdcClearPlugin)
     install(ContentNegotiation) { json() }
     install(Compression) {
-        minimumSize(512)
+        minimumSize(MIN_COMPRESS_SIZE_BYTES)
         matchContentType(
             ContentType.Text.Any,
             ContentType.Application.Json,

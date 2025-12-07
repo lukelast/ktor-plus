@@ -25,6 +25,7 @@ object FirestoreSerializer {
         registerSerializer(T::class.java, serializer)
     }
 
+    @Suppress("ReturnCount")
     fun serialize(value: Any?): Any? {
         if (value == null) return null
 

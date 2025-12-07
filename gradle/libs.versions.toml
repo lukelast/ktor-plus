@@ -15,11 +15,13 @@ slf4j = "2.0.17"
 mockk = "1.14.6"
 stripe = "31.0.0"
 # When changing this version you must also update `Version.KOTEST`
+# When changing this version you must also update `Version.KOTEST`
 kotest = "6.0.5"
 gcpBom = "26.72.0"
+detekt = "2.0.0-alpha.1"
 
 [plugins]
-#detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
 
@@ -31,6 +33,7 @@ gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serializatio
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.25.0" }
 gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.3.0" }
+gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

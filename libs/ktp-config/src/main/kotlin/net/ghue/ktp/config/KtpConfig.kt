@@ -55,7 +55,8 @@ class KtpConfig(val config: Config, val env: Env) {
                 val missingField = findMissingConfigField(config, T::class, configPathRoot)
                 if (missingField != null) {
                     throw IllegalStateException(
-                        "Unable to construct config data class: ${T::class.qualifiedName}. Missing field: $missingField",
+                        "Unable to construct config data class: ${T::class.qualifiedName}. " +
+                            "Missing field: $missingField",
                         ex,
                     )
                 }
@@ -78,7 +79,7 @@ class KtpConfig(val config: Config, val env: Env) {
             // Unwrap exceptions thrown in the constructor.
             throw ex.targetException
         } catch (ex: Exception) {
-            throw RuntimeException(
+            throw IllegalStateException(
                 "Your config class must have a primary constructor " +
                     "which takes one parameter '${this::class.simpleName}'.",
                 ex,

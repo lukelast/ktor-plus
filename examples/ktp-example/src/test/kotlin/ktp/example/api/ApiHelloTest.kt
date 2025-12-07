@@ -3,8 +3,8 @@ package ktp.example.api
 import io.kotest.assertions.ktor.client.shouldBeOK
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.string.shouldContain
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import ktp.example.ktpApp
 import net.ghue.ktp.test.testKtpStart
 

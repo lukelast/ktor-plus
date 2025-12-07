@@ -4,9 +4,6 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-/** Information about a debug endpoint. */
-internal data class EndpointInfo(val path: String, val description: String, val isEnabled: Boolean)
-
 /**
  * Responds with an HTML index page listing all debug endpoints with their status.
  *
@@ -19,6 +16,9 @@ suspend fun RoutingCall.respondDebugIndex(config: ConfigDebugInfoConfig) {
 
     respondText(html, ContentType.Text.Html.withCharset(Charsets.UTF_8))
 }
+
+/** Information about a debug endpoint. */
+internal data class EndpointInfo(val path: String, val description: String, val isEnabled: Boolean)
 
 private fun buildEndpointList(config: ConfigDebugInfoConfig): List<EndpointInfo> {
     return listOf(

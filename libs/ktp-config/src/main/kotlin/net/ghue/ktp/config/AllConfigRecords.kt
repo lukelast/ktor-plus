@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 
 private val protectedPathWords = listOf("secret", "applicationKey", "password")
 
+private const val MAX_VALUE_SIZE = 200
+
 /** List all configuration values for informational purposes. Make sure secrets are hidden. */
 fun Config.toRecords(): List<ConfigRecord> =
     entrySet()
@@ -16,7 +18,7 @@ fun Config.toRecords(): List<ConfigRecord> =
                     it.value
                         .render(ConfigRenderOptions.concise().setJson(false))
                         .replace("\"", "")
-                        .take(200),
+                        .take(MAX_VALUE_SIZE),
                 source =
                     with(it.value.origin()) {
                         if (!resource().isNullOrBlank()) {

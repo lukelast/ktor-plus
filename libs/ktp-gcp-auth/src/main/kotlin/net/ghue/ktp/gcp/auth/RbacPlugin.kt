@@ -60,7 +60,8 @@ val RbacPlugin =
                 val userRolesStr = user.roles.joinToString(", ")
                 log {}
                     .info {
-                        "User ${user.userId} denied access. Required role: ${config.requiredRole}, User roles: [$userRolesStr]"
+                        "User ${user.userId} denied access. Required role: ${config.requiredRole}, " +
+                            "User roles: [$userRolesStr]"
                     }
                 call.respond(HttpStatusCode.Forbidden, "Insufficient permissions")
                 return@on

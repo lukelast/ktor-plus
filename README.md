@@ -158,7 +158,7 @@ Testing utilities and helpers for KTP applications:
 ## Developing KTP
 
 * Test everything
-    * `./gradlew ktfmtFormat check test`
+    * `./gradlew clean ktfmtFormat check`
 * Publish to your local maven repository for testing locally in another project.
     * `./gradlew clean publishToMavenLocal`
 * Format code

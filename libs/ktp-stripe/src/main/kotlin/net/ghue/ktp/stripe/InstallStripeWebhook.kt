@@ -14,12 +14,6 @@ import net.ghue.ktp.ktor.plugin.withIoContext
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
-interface StripeWebhookHandler {
-    suspend fun checkoutSessionCompleted(session: Session)
-
-    suspend fun checkoutSessionExpired(session: Session)
-}
-
 fun Routing.installStripeWebhook() {
     val config: KtpConfig by inject()
     val handler: StripeWebhookHandler by inject()
@@ -62,6 +56,12 @@ fun Routing.installStripeWebhook() {
             }
         }
     }
+}
+
+interface StripeWebhookHandler {
+    suspend fun checkoutSessionCompleted(session: Session)
+
+    suspend fun checkoutSessionExpired(session: Session)
 }
 
 private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {

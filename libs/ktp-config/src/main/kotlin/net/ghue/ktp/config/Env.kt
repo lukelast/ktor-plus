@@ -42,7 +42,7 @@ fun findEnvironment(): Env {
         if (!localDevEnv.isNullOrBlank()) {
             return Env(localDevEnv)
         }
-    } catch (ex: Exception) {
+    } catch (_: Exception) {
         // Doesn't exist, ignore.
     }
     // If nothing is configured.

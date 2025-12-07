@@ -1,5 +1,6 @@
 package net.ghue.ktp.gradle.project
 
+import net.ghue.ktp.gradle.project.mods.applyDetekt
 import net.ghue.ktp.lib.KtpVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -23,6 +24,8 @@ class ProjectPlugin : Plugin<Project> {
         project.repositories.mavenLocal()
 
         project.version = System.getenv("VERSION") ?: "0-SNAPSHOT"
+        
+        project.applyDetekt()
 
         when (mode) {
             ProjectMode.LIBRARY -> project.applyLibrary()

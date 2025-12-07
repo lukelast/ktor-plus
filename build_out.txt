@@ -1,0 +1,53 @@
+Parallel Configuration Cache is an incubating feature.
+Calculating task graph as configuration cache cannot be reused because an input to task ':ktp-gradle-plugin:compileKotlin' has changed.
+> Task :ktp-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ktp-gradle-plugin:generateVersionFile UP-TO-DATE
+> Task :ktp-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :ktp-gradle-plugin:processResources UP-TO-DATE
+> Task :ktp-gradle-plugin:compileKotlin
+> Task :ktp-gradle-plugin:compileJava NO-SOURCE
+> Task :ktp-gradle-plugin:classes UP-TO-DATE
+> Task :ktp-gradle-plugin:jar
+
+> Configure project :examples:ktp-example
+Applying KTP gradle project plugin to ktp-example, mode: KTOR, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-config
+Applying KTP gradle project plugin to ktp-config, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-core
+Applying KTP gradle project plugin to ktp-core, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-gcp
+Applying KTP gradle project plugin to ktp-gcp, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-gcp-auth
+Applying KTP gradle project plugin to ktp-gcp-auth, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-gcp-firestore
+Applying KTP gradle project plugin to ktp-gcp-firestore, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-ktor
+Applying KTP gradle project plugin to ktp-ktor, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-stripe
+Applying KTP gradle project plugin to ktp-stripe, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Configure project :libs:ktp-test
+Applying KTP gradle project plugin to ktp-test, mode: LIBRARY, KTP: 0-SNAPSHOT Kotlin: 2.2.21
+
+> Task :ktp-gradle-plugin:compileTestKotlin NO-SOURCE
+> Task :ktp-gradle-plugin:processTestResources NO-SOURCE
+> Task :ktp-gradle-plugin:compileTestJava NO-SOURCE
+> Task :ktp-gradle-plugin:testClasses UP-TO-DATE
+> Task :ktp-gradle-plugin:pluginUnderTestMetadata
+> Task :ktp-gradle-plugin:test NO-SOURCE
+> Task :ktp-gradle-plugin:sourcesJar
+> Task :ktp-gradle-plugin:assemble
+> Task :ktp-gradle-plugin:validatePlugins
+> Task :ktp-gradle-plugin:check
+> Task :ktp-gradle-plugin:build
+
+BUILD SUCCESSFUL in 6s
+8 actionable tasks: 5 executed, 3 up-to-date
+Configuration cache entry stored.

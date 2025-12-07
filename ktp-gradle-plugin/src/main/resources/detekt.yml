@@ -1,0 +1,20 @@
+style:
+  WildcardImport:
+    # Intellij is dead set on wildcard imports by default.
+    active: false
+  ThrowsCount:
+    max: 4
+  ReturnCount:
+    max: 3
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+
+naming:
+  MatchingDeclarationName:
+    active: false
+
+complexity:
+  ComplexCondition:
+    allowedConditions: 4

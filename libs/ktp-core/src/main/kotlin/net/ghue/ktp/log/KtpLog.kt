@@ -14,5 +14,5 @@ object Slf4jBridgeInstall {
         SLF4JBridgeHandler.install()
     }
 
-    operator fun invoke() {}
+    @Suppress("EmptyFunctionBlock") operator fun invoke() {}
 }

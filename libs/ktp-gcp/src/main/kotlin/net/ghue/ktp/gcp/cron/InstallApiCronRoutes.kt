@@ -10,14 +10,6 @@ import java.time.ZoneOffset
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.getKoin
 
-@Resource("/api")
-class Api {
-    @Resource("/cron")
-    class Cron(val parent: Api = Api()) {
-        @Resource("hourly") class Hourly(val parent: Cron = Cron())
-    }
-}
-
 /** Make sure you implement [CronHandler] and annotate it with [org.koin.core.annotation.Factory] */
 fun Route.installApiCronRoutes() {
     val handler: CronHandler by lazy {
@@ -39,5 +31,13 @@ fun Route.installApiCronRoutes() {
             get { handle() }
             post { handle() }
         }
+    }
+}
+
+@Resource("/api")
+class Api {
+    @Resource("/cron")
+    class Cron(val parent: Api = Api()) {
+        @Resource("hourly") class Hourly(val parent: Cron = Cron())
     }
 }

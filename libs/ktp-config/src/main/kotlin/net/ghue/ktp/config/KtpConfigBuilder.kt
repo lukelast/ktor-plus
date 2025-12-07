@@ -7,7 +7,7 @@ import com.typesafe.config.ConfigResolveOptions
 import net.ghue.ktp.config.KtpConfig.Companion.ENV_PATH
 import net.ghue.ktp.log.log
 
-class KtpConfigBuilder() {
+class KtpConfigBuilder {
     var env: Env = findEnvironment()
     var overrideMap: MutableMap<String, Any> = mutableMapOf()
 

@@ -27,8 +27,10 @@ import net.ghue.ktp.core.removePrefix
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
+private const val DEFAULT_VITE_PORT = 5173
+
 class ViteFrontendConfig {
-    var vitePort: Int = 5173
+    var vitePort: Int = DEFAULT_VITE_PORT
     var indexFile: Path = Path("src", "index.html")
     /**
      * The URI path under which all static files are served. Should match the `base` setting in
@@ -98,7 +100,7 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
     try {
         caching = CachingOptions(cacheControl = cacheControlMaxAge(1.hours))
         respondText(config.indexFileText, contentType = ContentType.Text.Html)
-    } catch (ex: Exception) {
+    } catch (ex: IllegalStateException) {
         log {}.warn(ex) { "Serving index html: ${config.indexFile}" }
         respond(HttpStatusCode.NotFound)
     }
