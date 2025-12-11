@@ -1,6 +1,7 @@
 package net.ghue.ktp.test
 
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.start
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -26,7 +27,7 @@ class KtpTestStartTest :
         }
 
         "testKtpStart injects KtpConfig" {
-            testKtpStart {
+            testKtpStart(start = false) {
                 application {
                     routing {
                         get("/config") {
@@ -44,7 +45,7 @@ class KtpTestStartTest :
         }
 
         "testKtpStart injects Application instance" {
-            testKtpStart {
+            testKtpStart(start = false) {
                 application {
                     routing {
                         get("/app") {
@@ -71,7 +72,8 @@ class KtpTestStartTest :
             }
 
             testKtpStart(
-                ktpAppCreate { createModule { single<TestService> { TestServiceImpl() } } }
+                ktpAppCreate { createModule { single<TestService> { TestServiceImpl() } } },
+                start = false,
             ) {
                 application {
                     routing {
@@ -89,7 +91,7 @@ class KtpTestStartTest :
         }
 
         "testKtpStart supports HTTP client testing" {
-            testKtpStart {
+            testKtpStart(start = false) {
                 application {
                     routing {
                         get("/health") { call.respond(HttpStatusCode.OK, "OK") }
@@ -115,7 +117,7 @@ class KtpTestStartTest :
         }
 
         "testKtpStart handles multiple routes" {
-            testKtpStart {
+            testKtpStart(start = false) {
                 application {
                     routing {
                         get("/") { call.respond(HttpStatusCode.OK, "Root") }

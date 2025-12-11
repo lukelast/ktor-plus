@@ -18,7 +18,7 @@ class KtpStartTest :
             val updatedBuilder =
                 originalBuilder.update {
                     addModule(module {})
-                    init { _ -> }
+                    appInit { _ -> }
                 }
 
             val originalApp = originalBuilder()
@@ -62,7 +62,7 @@ class KtpStartTest :
             val secondUpdate =
                 firstUpdate.update {
                     addModule(module {})
-                    init { _ -> }
+                    appInit { _ -> }
                 }
 
             val finalApp = secondUpdate()
@@ -95,7 +95,7 @@ class KtpStartTest :
             val updatedBuilder =
                 originalBuilder.update {
                     addModule(module {})
-                    init { _ -> }
+                    appInit { _ -> }
                 }
 
             val firstCall = updatedBuilder()

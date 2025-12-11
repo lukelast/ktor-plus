@@ -17,7 +17,7 @@ fun main() {
 
 val ktpApp = ktpAppCreate {
     addModule(DemoAppModule().module)
-    init { config ->
+    appInit { config ->
         installDefaultPlugins(config)
         configureAdministration()
         install(ConfigDebugInfoPlugin)

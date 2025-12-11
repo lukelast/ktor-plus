@@ -65,6 +65,7 @@ ktor-test = { module = "io.ktor:ktor-server-test-host" }
 ktor-client-core = { module = "io.ktor:ktor-client-core" }
 ktor-client-java = { module = "io.ktor:ktor-client-java" }
 ktor-client-resources = { module = "io.ktor:ktor-client-resources" }
+ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 
 # Config dependencies
 typesafeConfig = { module = "com.typesafe:config", version.ref = "typesafeConfig" }

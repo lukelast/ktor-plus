@@ -14,8 +14,16 @@ import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
 
+/**
+ * A function that creates a new [KtpApp] instance. This is used because each application run needs
+ * to generate its own [KtpApp] instance.
+ */
 typealias KtpAppBuilder = () -> KtpApp
 
+/**
+ * Creates a KTP application. This is a mutable builder used to build an instance of the immutable
+ * [KtpAppInstance] which is used to run KTP.
+ */
 class KtpApp {
     init {
         Slf4jBridgeInstall()
@@ -23,18 +31,28 @@ class KtpApp {
 
     internal val modules = mutableListOf<Module>()
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
+
+    /** Can be used to override the default [KtpConfig] instance. */
     var createConfigManager: () -> KtpConfig = { KtpConfig.create() }
 
+    /** Add a KOIN [Module]. */
     fun addModule(module: Module) {
         modules.add(module)
     }
 
+    /** Create a KOIN [Module]. */
     fun createModule(configModule: Module.() -> Unit) {
         addModule(module { configModule() })
     }
 
-    fun init(appInit: suspend Application.(KtpConfig) -> Unit) {
+    /** Configure the KTOR application. */
+    fun appInit(appInit: suspend Application.(KtpConfig) -> Unit) {
         appInits.add(appInit)
+    }
+
+    /** Remove all previously added app init blocks. */
+    fun clearAppInit() {
+        appInits.clear()
     }
 
     fun build(): KtpAppInstance {
@@ -85,6 +103,7 @@ fun KtpAppBuilder.update(updateBlock: KtpApp.() -> Unit): KtpAppBuilder {
     return { ktpApp }
 }
 
+/** Start the KTP application. */
 fun ktpStart(buildConfig: () -> KtpApp) {
     val appInstance = buildConfig().build()
     if (appInstance.config.env.isLocalDev) {

@@ -8,6 +8,8 @@ dependencies {
     api(libs.ktor.test)
     api(libs.koinTest)
     api(libs.kotest.koin)
+    api(libs.ktor.client.resources)
+    api(libs.ktor.client.contentNegotiation)
 
     implementation(libs.kotest.engine)
 }
