@@ -8,6 +8,8 @@ import com.google.cloud.firestore.SetOptions
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import net.ghue.ktp.gcp.await
+import net.ghue.ktp.ktor.error.KtpRspExNotFound
+import net.ghue.ktp.ktor.error.ktpRspError
 
 const val FIRESTORE_BATCH_SIZE = 500
 
@@ -35,10 +37,10 @@ suspend inline fun <reified T : Any> Query.getList(): List<T> =
 suspend inline fun <reified T : Any> Query.firstOrNull(): T? =
     get().await().documents.firstOrNull()?.deserialize()
 
-/** Gets a document by ID, throwing NoSuchElementException if not found. */
+/** Gets a document by ID, throwing [KtpRspExNotFound] if not found. */
 suspend inline fun <reified T : Any> CollectionReference.getOrThrow(documentId: String): T {
     return getOrNull(documentId)
-        ?: throw NoSuchElementException("${T::class.simpleName} with id $documentId not found")
+        ?: throw KtpRspExNotFound(T::class.simpleName ?: "Document", documentId)
 }
 
 /** Gets a document by ID, returning null if not found. */
@@ -51,26 +53,44 @@ suspend inline fun <reified T : Any> CollectionReference.getOrNull(documentId: S
 fun idFieldValue(item: Any): String {
     val idProperty =
         item::class.memberProperties.find { it.name == "id" }
-            ?: error("Property 'id' not found on ${item::class.simpleName}")
+            ?: ktpRspError {
+                title = "Missing ID Property"
+                detail = "Property 'id' not found on ${item::class.simpleName}"
+            }
 
     val idValue =
-        idProperty.getter.call(item) ?: error("Property 'id' is null on ${item::class.simpleName}")
+        idProperty.getter.call(item)
+            ?: ktpRspError {
+                title = "Null ID"
+                detail = "Property 'id' is null on ${item::class.simpleName}"
+            }
 
     val stringValue =
         if (idValue::class.isValue) {
             // Handle value class by getting the single property from the primary constructor
             val property =
                 idValue::class.memberProperties.firstOrNull()
-                    ?: error("Value class ${idValue::class.simpleName} has no properties")
+                    ?: ktpRspError {
+                        title = "Invalid Value Class"
+                        detail = "Value class ${idValue::class.simpleName} has no properties"
+                    }
             val innerValue =
                 property.getter.call(idValue)
-                    ?: error("Property 'id' is null on ${item::class.simpleName}")
+                    ?: ktpRspError {
+                        title = "Null ID"
+                        detail = "Property 'id' is null on ${item::class.simpleName}"
+                    }
             innerValue.toString()
         } else {
             idValue.toString()
         }
 
-    require(stringValue.isNotEmpty()) { "Property 'id' is empty on ${item::class.simpleName}" }
+    if (stringValue.isEmpty()) {
+        ktpRspError {
+            title = "Empty ID"
+            detail = "Property 'id' is empty on ${item::class.simpleName}"
+        }
+    }
     return stringValue
 }
 

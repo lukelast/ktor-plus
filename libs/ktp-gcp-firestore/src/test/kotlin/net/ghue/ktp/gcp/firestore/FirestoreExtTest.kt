@@ -20,6 +20,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import net.ghue.ktp.ktor.error.KtpRspEx
+import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 class FirestoreExtTest :
     StringSpec({
@@ -34,31 +36,26 @@ class FirestoreExtTest :
             data class MissingId(val name: String)
             data class NullId(val id: String?, val name: String)
 
-            val missing =
-                shouldThrow<IllegalStateException> { idFieldValue(MissingId(name = "Ada")) }
-            missing.message shouldBe "Property 'id' not found on MissingId"
+            val missing = shouldThrow<KtpRspEx> { idFieldValue(MissingId(name = "Ada")) }
+            missing.detail shouldBe "Property 'id' not found on MissingId"
 
-            val nullId =
-                shouldThrow<IllegalStateException> { idFieldValue(NullId(id = null, name = "Ada")) }
-            nullId.message shouldBe "Property 'id' is null on NullId"
+            val nullId = shouldThrow<KtpRspEx> { idFieldValue(NullId(id = null, name = "Ada")) }
+            nullId.detail shouldBe "Property 'id' is null on NullId"
         }
 
         "idFieldValue throws when id is empty string" {
             data class EmptyId(val id: String, val name: String)
 
-            val emptyId =
-                shouldThrow<IllegalArgumentException> {
-                    idFieldValue(EmptyId(id = "", name = "Ada"))
-                }
-            emptyId.message shouldBe "Property 'id' is empty on EmptyId"
+            val emptyId = shouldThrow<KtpRspEx> { idFieldValue(EmptyId(id = "", name = "Ada")) }
+            emptyId.detail shouldBe "Property 'id' is empty on EmptyId"
         }
 
         "idFieldValue throws when value class id is null" {
             val error =
-                shouldThrow<IllegalStateException> {
+                shouldThrow<KtpRspEx> {
                     idFieldValue(NullableValueUser(id = NullableUserId(null), name = "Ada"))
                 }
-            error.message shouldBe "Property 'id' is null on NullableValueUser"
+            error.detail shouldBe "Property 'id' is null on NullableValueUser"
         }
 
         "upsert stores serialized data without id and passes options" {
@@ -145,9 +142,8 @@ class FirestoreExtTest :
 
             collection.getOrNull<User>("user-1") shouldBe User(id = "user-1", name = "Ada")
 
-            val error =
-                shouldThrow<NoSuchElementException> { collection.getOrThrow<User>("user-1") }
-            error.message shouldBe "User with id user-1 not found"
+            val error = shouldThrow<KtpRspExNotFound> { collection.getOrThrow<User>("user-1") }
+            error.id shouldBe "user-1"
         }
 
         "batchWrite chunks items and commits each batch" {

@@ -10,6 +10,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.error.ktpRspError
 import net.ghue.ktp.ktor.plugin.withIoContext
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
@@ -46,7 +47,11 @@ fun Routing.installStripeWebhook() {
                         processCheckoutSession(event, handler::checkoutSessionExpired)
                     }
                     else -> {
-                        error("Unhandled event type: ${event.type}")
+                        ktpRspError {
+                            status = HttpStatusCode.BadRequest
+                            title = "Unhandled Event Type"
+                            detail = "Unhandled event type: ${event.type}"
+                        }
                     }
                 }
                 call.respond(HttpStatusCode.OK)
@@ -67,7 +72,11 @@ interface StripeWebhookHandler {
 private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {
     val session = event.asCheckoutSession()
     if (session.id.isNullOrBlank()) {
-        error("Missing checkout session ID")
+        ktpRspError {
+            status = HttpStatusCode.BadRequest
+            title = "Missing Checkout Session ID"
+            detail = "Stripe event contains a checkout session with no ID"
+        }
     }
     withLoggingContext("checkout-session-id" to session.id) {
         withIoContext {

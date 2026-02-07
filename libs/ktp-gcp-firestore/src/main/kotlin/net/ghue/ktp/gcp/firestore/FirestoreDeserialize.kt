@@ -6,6 +6,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
+import net.ghue.ktp.ktor.error.ktpRspError
 
 object FirestoreDeserializer {
     private val customDeserializers = mutableMapOf<Class<*>, (Any) -> Any?>()
@@ -26,9 +27,10 @@ object FirestoreDeserializer {
     fun deserialize(value: Any?, targetType: KType): Any? {
         if (value == null) {
             if (targetType.isMarkedNullable) return null
-            throw IllegalArgumentException(
-                "Constructing non-nullable type $targetType but value is null"
-            )
+            ktpRspError {
+                title = "Deserialization Error"
+                detail = "Constructing non-nullable type $targetType but value is null"
+            }
         }
 
         val kClass = targetType.jvmErasure
@@ -109,7 +111,10 @@ object FirestoreDeserializer {
     private fun deserializeObject(map: Map<String, Any?>, kClass: KClass<*>): Any {
         val constructor =
             kClass.primaryConstructor
-                ?: throw IllegalArgumentException("No primary constructor for $kClass")
+                ?: ktpRspError {
+                    title = "Deserialization Error"
+                    detail = "No primary constructor for $kClass"
+                }
 
         val callArgs =
             constructor.parameters
@@ -123,9 +128,10 @@ object FirestoreDeserializer {
                         } else if (param.type.isMarkedNullable) {
                             param to null
                         } else {
-                            throw IllegalArgumentException(
-                                "Missing required parameter $paramName for $kClass"
-                            )
+                            ktpRspError {
+                                title = "Deserialization Error"
+                                detail = "Missing required parameter $paramName for $kClass"
+                            }
                         }
                     }
                 }

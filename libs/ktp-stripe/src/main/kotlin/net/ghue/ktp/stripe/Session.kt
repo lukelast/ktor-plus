@@ -2,6 +2,8 @@ package net.ghue.ktp.stripe
 
 import com.stripe.model.Event
 import com.stripe.model.checkout.Session
+import io.ktor.http.HttpStatusCode
+import net.ghue.ktp.ktor.error.ktpRspError
 
 fun Event.asCheckoutSession(): Session = this.dataObjectDeserializer.`object`.get() as Session
 
@@ -25,7 +27,11 @@ enum class PaymentStatus {
             try {
                 valueOf(value.uppercase())
             } catch (_: Exception) {
-                error("Unknown payment status: $value")
+                ktpRspError {
+                    status = HttpStatusCode.BadRequest
+                    title = "Unknown Payment Status"
+                    detail = "Unknown payment status: $value"
+                }
             }
     }
 }

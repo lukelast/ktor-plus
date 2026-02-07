@@ -6,6 +6,7 @@ import com.google.cloud.firestore.DocumentReference
 import com.google.cloud.firestore.GeoPoint
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.memberProperties
+import net.ghue.ktp.ktor.error.ktpRspError
 
 object FirestoreSerializer {
     private val customSerializers = mutableMapOf<Class<*>, (Any) -> Any?>()
@@ -77,7 +78,10 @@ fun <T> T.serialize(): Map<String, Any> {
     @Suppress("UNCHECKED_CAST")
     val map =
         (result as? Map<String, Any>)
-            ?: error("Serialized result is not a Map. It was: ${result?.javaClass?.simpleName}")
+            ?: ktpRspError {
+                title = "Serialization Error"
+                detail = "Serialized result is not a Map. It was: ${result?.javaClass?.simpleName}"
+            }
     // `id` field is a special copy of the document ID so we don't want to store it.
     return map - "id"
 }
