@@ -1,20 +1,28 @@
 package net.ghue.ktp.ktor.plugin
 
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.cachingheaders.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.compression.*
-import io.ktor.server.plugins.conditionalheaders.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.forwardedheaders.*
-import io.ktor.server.plugins.hsts.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
-import io.ktor.server.resources.*
-import io.ktor.server.response.*
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.cachingheaders.CachingHeaders
+import io.ktor.server.plugins.calllogging.CallLogging
+import io.ktor.server.plugins.compression.Compression
+import io.ktor.server.plugins.compression.matchContentType
+import io.ktor.server.plugins.compression.minimumSize
+import io.ktor.server.plugins.conditionalheaders.ConditionalHeaders
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.forwardedheaders.ForwardedHeaders
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
+import io.ktor.server.plugins.hsts.HSTS
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
+import io.ktor.server.resources.Resources
+import io.ktor.server.response.respondText
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.error.KtpRspEx
+import net.ghue.ktp.ktor.error.processKtpRspEx
 import net.ghue.ktp.log.log
 import org.slf4j.event.Level
 
@@ -48,6 +56,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         }
     }
     install(StatusPages) {
+        exception<KtpRspEx>(::processKtpRspEx)
         exception<Throwable> { call, cause ->
             log {}
                 .warn(cause) {

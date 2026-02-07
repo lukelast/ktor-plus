@@ -17,7 +17,7 @@ Use four-space indentation and idiomatic Kotlin style. Keep packages under the `
 Unit and integration tests rely on `kotlin.test` and Ktor's `testApplication` utilities. Name test files with the `*Test.kt` suffix and ensure each new feature has at least one covering test. Execute `./gradlew test` for module-level runs or `./gradlew check` for the full suite; investigate reports under `build/reports/tests/`. Aim to keep fast-running tests, mocking external services where needed.
 
 ## Commit & Pull Request Guidelines
-Write concise, present-tense commit subjects (e.g. `Add Vite static routing helpers`). Squash fixups before pushing. Pull requests should summarize the change, link relevant issues, list manual/automated test results, and include screenshots or config snippets when altering HTTP surfaces or build outputs.
+NEVER stage, commit, or push with git.
 
 ## Publishing & Release Notes
 Main-branch commits automatically produce releases; verify version bumps in `gradle.properties` when cutting tagged builds. Update `README.md` and module-level docs when introducing new public APIs, and call out breaking changes in the PR description so the release notes stay accurate.

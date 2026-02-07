@@ -1,7 +1,7 @@
 package ktp.example
 
 import io.ktor.server.application.*
-import ktp.example.api.installApiHello
+import ktp.example.api.installApi
 import ktp.example.plugins.configureAdministration
 import net.ghue.ktp.ktor.app.debug.ConfigDebugInfoPlugin
 import net.ghue.ktp.ktor.plugin.installDefaultPlugins
@@ -21,7 +21,7 @@ val ktpApp = ktpAppCreate {
         installDefaultPlugins(config)
         configureAdministration()
         install(ConfigDebugInfoPlugin)
-        installApiHello()
+        installApi()
     }
 }
 
