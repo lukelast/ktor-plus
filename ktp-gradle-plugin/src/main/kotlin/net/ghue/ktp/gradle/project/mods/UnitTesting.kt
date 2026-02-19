@@ -13,7 +13,7 @@ fun Project.installKotest() {
         add("testImplementation", "io.kotest:kotest-runner-junit5")
         add("testImplementation", "io.kotest:kotest-assertions-core")
         // Version isn't in the BOM so must be set.
-        add("testImplementation", "io.kotest:kotest-extensions-koin:6.0.4", )
+        add("testImplementation", "io.kotest:kotest-extensions-koin", )
         add("testImplementation", "io.kotest:kotest-assertions-ktor")
     }
     project.tasks.withType<Test> {
