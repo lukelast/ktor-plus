@@ -12,7 +12,6 @@ fun Project.installKotest() {
         add("testImplementation", platform("io.kotest:kotest-bom:${Version.KOTEST}"))
         add("testImplementation", "io.kotest:kotest-runner-junit5")
         add("testImplementation", "io.kotest:kotest-assertions-core")
-        // Version isn't in the BOM so must be set.
         add("testImplementation", "io.kotest:kotest-extensions-koin", )
         add("testImplementation", "io.kotest:kotest-assertions-ktor")
     }
