@@ -37,8 +37,7 @@ gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "dete
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
 kotest-engine = { module = "io.kotest:kotest-framework-engine"}
-# For some reason this version isn't in the BOM.
-kotest-koin = { module = "io.kotest:kotest-extensions-koin", version = "6.1.3"  }
+kotest-koin = { module = "io.kotest:kotest-extensions-koin" }
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
