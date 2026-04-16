@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.gradleKtfmt)
     implementation(libs.gradleKsp)
     implementation(libs.gradleDetekt)
+    implementation(libs.gradleKoinCompiler)
     compileOnly(libs.gradleShadow)
 }
 

@@ -12,8 +12,7 @@ fun Project.applyKtor() {
     pluginManager.apply(KtorGradlePlugin::class.java)
 
     applyKtfmt()
-    applyKspGradlePlugin()
-    applyKoinKspCompiler()
+    applyKoinCompilerPlugin()
     configureShadow()
     installKotest()
 

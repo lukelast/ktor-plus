@@ -10,3 +10,8 @@ dependencies {
     implementation(project(":libs:ktp-ktor"))
     testImplementation(project(":libs:ktp-test"))
 }
+
+koinCompiler {
+    userLogs = true
+    debugLogs = true
+}
