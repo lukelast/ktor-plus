@@ -5,12 +5,18 @@ import io.ktor.server.application.Application
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import ktp.example.service.DemoService
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 import net.ghue.ktp.ktor.error.ktpRspError
+import org.koin.ktor.ext.inject
 
 fun Application.installApi() {
     routing {
         get("/") { call.respondText("KTP is running!") }
+        get("/message") {
+            val demoService: DemoService by inject()
+            call.respondText(demoService.message())
+        }
         get("/error") {
             ktpRspError {
                 internalMessage = "Secret error data"

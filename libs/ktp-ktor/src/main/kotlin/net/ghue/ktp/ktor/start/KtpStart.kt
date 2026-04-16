@@ -1,14 +1,19 @@
 package net.ghue.ktp.ktor.start
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.application.serverConfig
+import io.ktor.server.engine.applicationEnvironment
+import io.ktor.server.engine.connector
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.Slf4jBridgeInstall
 import net.ghue.ktp.log.installLocalDevConsoleLogger
 import net.ghue.ktp.log.log
 import org.koin.core.module.Module
+import org.koin.dsl.KoinConfiguration
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
@@ -30,6 +35,7 @@ class KtpApp {
     }
 
     internal val modules = mutableListOf<Module>()
+    internal val koinConfigs = mutableListOf<KoinConfiguration>()
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
 
     /** Can be used to override the default [KtpConfig] instance. */
@@ -38,6 +44,14 @@ class KtpApp {
     /** Add a KOIN [Module]. */
     fun addModule(module: Module) {
         modules.add(module)
+    }
+
+    /**
+     * Add a generated KOIN Configuration from the compiler plugin. Example
+     * `koinConfiguration<MyApp>()`
+     */
+    fun addKoinConfig(config: KoinConfiguration) {
+        koinConfigs.add(config)
     }
 
     /** Create a KOIN [Module]. */
@@ -61,6 +75,7 @@ class KtpApp {
         return KtpAppInstance(
             config = config,
             modules = modules.toList(),
+            koinConfigs = koinConfigs.toList(),
             appInits = appInits.toList(),
         )
     }
@@ -69,6 +84,7 @@ class KtpApp {
 data class KtpAppInstance(
     val config: KtpConfig,
     val modules: List<Module>,
+    val koinConfigs: List<KoinConfiguration>,
     val appInits: List<suspend Application.(KtpConfig) -> Unit>,
 ) {
 
@@ -77,6 +93,7 @@ data class KtpAppInstance(
             slf4jLogger()
             modules(module { single { app } })
             modules(modules)
+            koinConfigs.forEach { config -> config.appDeclaration(this) }
         }
     }
 

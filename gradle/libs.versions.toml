@@ -1,10 +1,9 @@
 [versions]
-kotlin = "2.3.10"
-ksp = "2.3.6"
-koin = "4.1.1"
-# This needs to match Version.KOIN_KSP
-koinAnnotations = "2.3.1"
-ktor = "3.4.0"
+kotlin = "2.3.20"
+# Keep in sync with `Version.KOIN`
+koin = "4.2.1"
+koinPlugin = "1.0.0-RC1"
+ktor = "3.4.2"
 versionCheck = "0.53.0"
 kotlinCoroutines = "1.10.2"
 typesafeConfig = "1.4.5"
@@ -19,7 +18,6 @@ gcpBom = "26.76.0"
 detekt = "2.0.0-alpha.2"
 
 [plugins]
-detekt = { id = "dev.detekt", version.ref = "detekt" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
 
@@ -29,9 +27,9 @@ gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.r
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.25.0" }
-gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.3.1" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
+gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
@@ -74,7 +72,7 @@ classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classg
 ## Koin dependencies
 koinBom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
 koinCore = { module = "io.insert-koin:koin-core" }
-koinAnnotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
+koinAnnotations = { module = "io.insert-koin:koin-annotations" }
 koinKtor = { module = "io.insert-koin:koin-ktor" }
 koinLoggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
 koinTest = { module = "io.insert-koin:koin-test" }
