@@ -1,6 +1,7 @@
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.CollectionReference
+import com.google.cloud.firestore.DocumentReference
 import com.google.cloud.firestore.FieldPath
 import com.google.cloud.firestore.Firestore
 import com.google.cloud.firestore.Query
@@ -46,6 +47,17 @@ suspend inline fun <reified T : Any> CollectionReference.getOrThrow(documentId: 
 /** Gets a document by ID, returning null if not found. */
 suspend inline fun <reified T : Any> CollectionReference.getOrNull(documentId: String): T? {
     val doc = this.document(documentId).get().await()
+    return doc.deserialize<T>()
+}
+
+/** Gets a document from this reference, throwing [KtpRspExNotFound] if not found. */
+suspend inline fun <reified T : Any> DocumentReference.getOrThrow(): T {
+    return getOrNull<T>() ?: throw KtpRspExNotFound(T::class.simpleName ?: "Document", id)
+}
+
+/** Gets a document from this reference, returning null if not found. */
+suspend inline fun <reified T : Any> DocumentReference.getOrNull(): T? {
+    val doc = get().await()
     return doc.deserialize<T>()
 }
 
