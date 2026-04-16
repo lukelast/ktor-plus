@@ -17,7 +17,7 @@ fun main() {
 }
 
 val ktpApp = ktpAppCreate {
-    addKoinApp(koinConfiguration<MyApp>())
+    addKoinConfig(koinConfiguration<MyApp>())
     appInit { config ->
         installDefaultPlugins(config)
         configureAdministration()

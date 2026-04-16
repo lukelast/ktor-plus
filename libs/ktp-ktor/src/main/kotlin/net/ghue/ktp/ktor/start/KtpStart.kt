@@ -50,7 +50,7 @@ class KtpApp {
      * Add a generated KOIN Configuration from the compiler plugin. Example
      * `koinConfiguration<MyApp>()`
      */
-    fun addKoinApp(config: KoinConfiguration) {
+    fun addKoinConfig(config: KoinConfiguration) {
         koinConfigs.add(config)
     }
 
