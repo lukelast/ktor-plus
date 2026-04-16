@@ -7,6 +7,7 @@ import io.ktor.server.engine.applicationEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.Slf4jBridgeInstall
 import net.ghue.ktp.log.installLocalDevConsoleLogger
@@ -17,7 +18,6 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * A function that creates a new [KtpApp] instance. This is used because each application run needs

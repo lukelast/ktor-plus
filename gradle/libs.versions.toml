@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.3.20"
-ksp = "2.3.6"
+# Keep in sync with `Version.KOIN`
 koin = "4.2.1"
 koinPlugin = "1.0.0-RC1"
 ktor = "3.4.2"
@@ -27,7 +27,6 @@ gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.r
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.25.0" }
-gradleKsp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.3.1" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
