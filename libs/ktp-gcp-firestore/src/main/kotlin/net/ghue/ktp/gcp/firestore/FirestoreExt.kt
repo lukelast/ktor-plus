@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.CollectionReference
