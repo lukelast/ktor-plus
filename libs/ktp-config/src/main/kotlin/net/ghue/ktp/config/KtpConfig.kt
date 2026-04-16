@@ -175,12 +175,11 @@ private fun filterConfig(
         }
         ConfigValueType.LIST -> {
             val originalList = value as ConfigList
-            val filteredList =
-                originalList.mapIndexedNotNull { index, item ->
-                    // Construct the path for the list item
-                    val itemPath = "$path[$index]"
-                    filterConfig(item, itemPath, predicate)
-                }
+            val filteredList = originalList.mapIndexedNotNull { index, item ->
+                // Construct the path for the list item
+                val itemPath = "$path[$index]"
+                filterConfig(item, itemPath, predicate)
+            }
 
             if (filteredList.isNotEmpty()) ConfigValueFactory.fromIterable(filteredList) else null
         }

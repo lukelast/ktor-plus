@@ -44,8 +44,8 @@ class KtpRspExTest :
                 mapOf("attempt" to 3, "retryable" to true, "correlationId" to "abc-123")
         }
 
-        "ErrorBuilder.buildExtraFields returns a copy" {
-            val builder = ErrorBuilder()
+        "KtpRspExBuilder.buildExtraFields returns a copy" {
+            val builder = KtpRspExBuilder()
             builder.extra("initial", "one")
 
             val snapshot = builder.buildExtraFields()

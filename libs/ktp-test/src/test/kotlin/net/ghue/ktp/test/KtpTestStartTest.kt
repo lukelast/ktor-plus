@@ -72,7 +72,7 @@ class KtpTestStartTest :
             }
 
             testKtpStart(
-                ktpAppCreate { createModule { single<TestService> { TestServiceImpl() } } },
+                ktpAppCreate { addModule { single<TestService> { TestServiceImpl() } } },
                 start = false,
             ) {
                 application {

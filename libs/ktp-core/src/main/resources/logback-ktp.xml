@@ -1,5 +1,5 @@
 <included>
-  <condition class="net.ghue.ktp.log.IsGcloudRun"/>
+  <condition class="net.ghue.ktp.log.IsCloudRun"/>
   <if>
     <then>
       <!-- Google Cloud Run: Use JSON structured logging for proper multiline support -->

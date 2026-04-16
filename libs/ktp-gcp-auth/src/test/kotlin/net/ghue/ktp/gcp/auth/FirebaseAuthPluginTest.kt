@@ -29,13 +29,12 @@ class FirebaseAuthPluginTest :
     StringSpec({
         "installs plugin with default configuration" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("env.localDev", "false")
-                        configValue("env.name", "test")
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("env.localDev", "false")
+                    configValue("env.name", "test")
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -66,13 +65,12 @@ class FirebaseAuthPluginTest :
 
         "uses non-secure cookies in local dev environment" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("env.localDev", "true")
-                        configValue("env.name", "test")
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("env.localDev", "true")
+                    configValue("env.name", "test")
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -162,11 +160,10 @@ class FirebaseAuthPluginTest :
 
         "unauthenticated user gets 401 on protected routes" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -204,11 +201,10 @@ class FirebaseAuthPluginTest :
 
         "login endpoint sets session cookie" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
@@ -263,14 +259,13 @@ class FirebaseAuthPluginTest :
 
         "logout endpoint clears session and redirects" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("env.localDev", "false")
-                        configValue("env.name", "test")
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                        configValue("auth.redirectAfterLogout", "/goodbye")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("env.localDev", "false")
+                    configValue("env.name", "test")
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    configValue("auth.redirectAfterLogout", "/goodbye")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
@@ -322,13 +317,12 @@ class FirebaseAuthPluginTest :
 
         "invalid Firebase token returns error" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("env.localDev", "false")
-                        configValue("env.name", "test")
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("env.localDev", "false")
+                    configValue("env.name", "test")
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -367,13 +361,12 @@ class FirebaseAuthPluginTest :
 
         "custom login and logout URLs are used" {
             testApplication {
-                val config =
-                    KtpConfig.create {
-                        setUnitTestEnv()
-                        configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                        configValue("auth.loginUrl", "/custom/signin")
-                        configValue("auth.logoutUrl", "/custom/signout")
-                    }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    configValue("auth.loginUrl", "/custom/signin")
+                    configValue("auth.logoutUrl", "/custom/signout")
+                }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()

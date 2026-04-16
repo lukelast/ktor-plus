@@ -25,12 +25,11 @@ class KtpConfigBuilderTest :
         }
 
         "create allows multiple configuration overrides" {
-            val config =
-                KtpConfig.create {
-                    setUnitTestEnv()
-                    configValue("app.name", "test-app")
-                    configValue("app.version", "1.2.3")
-                }
+            val config = KtpConfig.create {
+                setUnitTestEnv()
+                configValue("app.name", "test-app")
+                configValue("app.version", "1.2.3")
+            }
 
             config.data.app.name shouldBe "test-app"
             config.data.app.version shouldBe "1.2.3"

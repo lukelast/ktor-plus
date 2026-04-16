@@ -91,7 +91,7 @@ Configuration management built on Typesafe Config with layered, environment-spec
 Ktor-specific extensions and utilities for building production-ready microservices:
 
 - **Debug Endpoints**: HTML index page, configuration viewer, GC logs, thread dumps, version info
-- **ConfigDebugInfoPlugin**: Modern Ktor plugin with access control and configurable endpoints
+- **DebugEndpointsPlugin**: Modern Ktor plugin with access control and configurable endpoints
 - **Health Checks**: Built-in health endpoint for liveness/readiness probes
 - **Vite Frontend**: Integration for serving Vite-built frontend applications
 - **KtpStart**: Application startup utilities and configuration

@@ -2,17 +2,17 @@ package net.ghue.ktp.log
 
 import ch.qos.logback.core.boolex.PropertyConditionBase
 
-class IsGcloudRun : PropertyConditionBase() {
+class IsCloudRun : PropertyConditionBase() {
     init {
-        Slf4jBridgeInstall()
+        installSlf4jBridge()
     }
 
     override fun evaluate(): Boolean {
-        val isGcloudRun =
+        val isCloudRun =
             System.getenv("K_SERVICE") != null || System.getProperty("K_SERVICE") != null
-        if (isGcloudRun) {
+        if (isCloudRun) {
             log {}.debug { "Determined to be running in Google Cloud Run" }
         }
-        return isGcloudRun
+        return isCloudRun
     }
 }

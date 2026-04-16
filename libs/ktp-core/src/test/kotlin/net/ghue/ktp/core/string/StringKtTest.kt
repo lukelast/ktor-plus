@@ -11,4 +11,11 @@ class StringKtTest :
             "a-b-c".remove('-') shouldBe "abc"
             "a-b-c".remove('-', 'b') shouldBe "ac"
         }
+
+        "toGzippedBytes and ungzipToString round trip content" {
+            val original = "hello compressed world"
+            val compressed = original.toGzippedBytes()
+
+            compressed.ungzipToString() shouldBe original
+        }
     })

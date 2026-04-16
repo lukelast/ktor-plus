@@ -57,12 +57,11 @@ class KtpConfigTest :
         }
 
         "extractChild deserializes nested config" {
-            val config =
-                KtpConfig.create {
-                    setUnitTestEnv()
-                    configValue("app.name", "test-app")
-                    configValue("app.version", "1.0.0")
-                }
+            val config = KtpConfig.create {
+                setUnitTestEnv()
+                configValue("app.name", "test-app")
+                configValue("app.version", "1.0.0")
+            }
 
             config.data.app.name shouldBe "test-app"
             config.data.app.version shouldBe "1.0.0"

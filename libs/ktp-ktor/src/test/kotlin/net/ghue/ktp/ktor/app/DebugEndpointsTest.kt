@@ -9,8 +9,8 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.app.debug.ConfigDebugInfoPlugin
 import net.ghue.ktp.ktor.app.debug.DebugEndpoints
+import net.ghue.ktp.ktor.app.debug.DebugEndpointsPlugin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
@@ -31,7 +31,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin)
+                    install(DebugEndpointsPlugin)
                 }
                 with(client.get("/debug/version")) {
                     status shouldBe HttpStatusCode.OK
@@ -56,7 +56,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin)
+                    install(DebugEndpointsPlugin)
                 }
                 with(client.get("/debug/config")) {
                     status shouldBe HttpStatusCode.OK
@@ -83,7 +83,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         // Block all access
                         accessControl = { false }
                     }
@@ -108,7 +108,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         // Allow only requests with specific header
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
@@ -138,7 +138,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         enableVersionEndpoint = true
                         enableConfigEndpoint = false
                         enableGcLogEndpoint = false
@@ -165,7 +165,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) { routePrefix = "/admin/debug" }
+                    install(DebugEndpointsPlugin) { routePrefix = "/admin/debug" }
                 }
                 // Old route doesn't work
                 with(client.get("/debug/version")) { status shouldBe HttpStatusCode.NotFound }
@@ -192,7 +192,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin)
+                    install(DebugEndpointsPlugin)
                 }
                 with(client.get("/debug${DebugEndpoints.THREADS}")) {
                     status shouldBe HttpStatusCode.OK
@@ -220,7 +220,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
@@ -255,7 +255,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) { enableThreadDumpEndpoint = false }
+                    install(DebugEndpointsPlugin) { enableThreadDumpEndpoint = false }
                 }
                 with(client.get("/debug${DebugEndpoints.THREADS}")) {
                     status shouldBe HttpStatusCode.NotFound
@@ -278,7 +278,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin)
+                    install(DebugEndpointsPlugin)
                 }
                 with(client.get("/debug")) {
                     status shouldBe HttpStatusCode.OK
@@ -288,7 +288,7 @@ class DebugEndpointsTest :
                     body shouldContain "/debug${DebugEndpoints.CONFIG}"
                     body shouldContain "/debug${DebugEndpoints.VERSION}"
                     body shouldContain "/debug${DebugEndpoints.THREADS}"
-                    body shouldContain "/debug${DebugEndpoints.GCLOG}"
+                    body shouldContain "/debug${DebugEndpoints.GC_LOG}"
                     body shouldContain "Enabled"
                 }
             }
@@ -309,7 +309,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         enableConfigEndpoint = true
                         enableVersionEndpoint = false
                         enableGcLogEndpoint = false
@@ -322,7 +322,7 @@ class DebugEndpointsTest :
                     // Should show all endpoints
                     body shouldContain "/debug${DebugEndpoints.CONFIG}"
                     body shouldContain "/debug${DebugEndpoints.VERSION}"
-                    body shouldContain "/debug${DebugEndpoints.GCLOG}"
+                    body shouldContain "/debug${DebugEndpoints.GC_LOG}"
                     body shouldContain "/debug${DebugEndpoints.THREADS}"
                     // Check for status indicators
                     body shouldContain "Enabled"
@@ -346,7 +346,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) {
+                    install(DebugEndpointsPlugin) {
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
@@ -375,7 +375,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin) { routePrefix = "/admin/debug" }
+                    install(DebugEndpointsPlugin) { routePrefix = "/admin/debug" }
                 }
                 // Old route doesn't work
                 with(client.get("/debug")) { status shouldBe HttpStatusCode.NotFound }
@@ -404,7 +404,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(ConfigDebugInfoPlugin)
+                    install(DebugEndpointsPlugin)
                 }
                 // Index works
                 with(client.get("/debug")) {

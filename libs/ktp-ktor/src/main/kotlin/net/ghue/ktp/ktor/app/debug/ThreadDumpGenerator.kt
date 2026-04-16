@@ -64,7 +64,7 @@ fun generateThreadDump(): String {
     return sb.toString()
 }
 
-private const val MS_PER_SECOND = 1_000_000
+private const val NANOS_PER_MILLISECOND = 1_000_000
 
 @Suppress("complexity")
 private fun formatThreadInfo(
@@ -107,7 +107,7 @@ private fun formatThreadInfo(
         val userTime = threadMXBean.getThreadUserTime(threadInfo.threadId)
         if (cpuTime >= 0) {
             sb.appendLine(
-                "   CPU time: ${cpuTime / MS_PER_SECOND}ms (user: ${userTime / MS_PER_SECOND}ms)"
+                "   CPU time: ${cpuTime / NANOS_PER_MILLISECOND}ms (user: ${userTime / NANOS_PER_MILLISECOND}ms)"
             )
         }
     }

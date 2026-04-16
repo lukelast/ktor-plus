@@ -5,9 +5,9 @@ import io.kotest.matchers.shouldBe
 
 class EnumKtTest :
     StringSpec({
-        "enumToCamelCase converts enum constants" {
-            TestEnum.TEST_ENUM_01.enumToCamelCase() shouldBe "testEnum01"
-            TestEnum.ABC2022_11_FRANK.enumToCamelCase() shouldBe "abc202211Frank"
+        "toCamelCase converts enum constants" {
+            TestEnum.TEST_ENUM_01.toCamelCase() shouldBe "testEnum01"
+            TestEnum.ABC2022_11_FRANK.toCamelCase() shouldBe "abc202211Frank"
         }
     })
 

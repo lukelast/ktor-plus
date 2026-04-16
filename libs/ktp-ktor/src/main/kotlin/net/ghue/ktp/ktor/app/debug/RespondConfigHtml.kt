@@ -16,7 +16,7 @@ suspend fun RoutingCall.respondConfigHtml() {
     val runtimeRecords =
         listOf(
             collectGcInfo(),
-            collectMaxGcHeapMib(),
+            collectMaxHeapMib(),
             collectCpuCores(),
             ConfigRecord(path = "kotlin version", value = KotlinVersion.CURRENT.toString()),
         )

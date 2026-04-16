@@ -9,8 +9,8 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.log.Slf4jBridgeInstall
 import net.ghue.ktp.log.installLocalDevConsoleLogger
+import net.ghue.ktp.log.installSlf4jBridge
 import net.ghue.ktp.log.log
 import org.koin.core.module.Module
 import org.koin.dsl.KoinConfiguration
@@ -20,18 +20,18 @@ import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
 
 /**
- * A function that creates a new [KtpApp] instance. This is used because each application run needs
- * to generate its own [KtpApp] instance.
+ * A function that creates a new [KtpAppBuilder] instance. This is used because each application run
+ * needs to generate its own [KtpAppBuilder] instance.
  */
-typealias KtpAppBuilder = () -> KtpApp
+typealias KtpAppBuilderFactory = () -> KtpAppBuilder
 
 /**
  * Creates a KTP application. This is a mutable builder used to build an instance of the immutable
- * [KtpAppInstance] which is used to run KTP.
+ * [KtpApp] which is used to run KTP.
  */
-class KtpApp {
+class KtpAppBuilder {
     init {
-        Slf4jBridgeInstall()
+        installSlf4jBridge()
     }
 
     internal val modules = mutableListOf<Module>()
@@ -39,7 +39,7 @@ class KtpApp {
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
 
     /** Can be used to override the default [KtpConfig] instance. */
-    var createConfigManager: () -> KtpConfig = { KtpConfig.create() }
+    var createKtpConfig: () -> KtpConfig = { KtpConfig.create() }
 
     /** Add a KOIN [Module]. */
     fun addModule(module: Module) {
@@ -54,25 +54,25 @@ class KtpApp {
         koinConfigs.add(config)
     }
 
-    /** Create a KOIN [Module]. */
-    fun createModule(configModule: Module.() -> Unit) {
+    /** Build and add a KOIN [Module] from a DSL block. */
+    fun addModule(configModule: Module.() -> Unit) {
         addModule(module { configModule() })
     }
 
-    /** Configure the KTOR application. */
-    fun appInit(appInit: suspend Application.(KtpConfig) -> Unit) {
+    /** Register a KTOR application init block. */
+    fun addAppInit(appInit: suspend Application.(KtpConfig) -> Unit) {
         appInits.add(appInit)
     }
 
     /** Remove all previously added app init blocks. */
-    fun clearAppInit() {
+    fun clearAppInits() {
         appInits.clear()
     }
 
-    fun build(): KtpAppInstance {
-        val config = createConfigManager()
+    fun build(): KtpApp {
+        val config = createKtpConfig()
         modules.addFirst(module { single { config } })
-        return KtpAppInstance(
+        return KtpApp(
             config = config,
             modules = modules.toList(),
             koinConfigs = koinConfigs.toList(),
@@ -81,7 +81,7 @@ class KtpApp {
     }
 }
 
-data class KtpAppInstance(
+data class KtpApp(
     val config: KtpConfig,
     val modules: List<Module>,
     val koinConfigs: List<KoinConfiguration>,
@@ -97,43 +97,43 @@ data class KtpAppInstance(
         }
     }
 
-    suspend fun appInit(app: Application) {
+    suspend fun runAppInits(app: Application) {
         for (appInit in appInits) {
             app.appInit(config)
         }
     }
 }
 
-fun ktpAppCreate(buildBlock: KtpApp.() -> Unit): () -> KtpApp = {
-    val ktpApp = KtpApp()
-    ktpApp.buildBlock()
-    ktpApp
+fun ktpAppCreate(buildBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory = {
+    val ktpAppBuilder = KtpAppBuilder()
+    ktpAppBuilder.buildBlock()
+    ktpAppBuilder
 }
 
-fun KtpAppBuilder.start() {
-    ktpStart(this)
+fun KtpAppBuilderFactory.start() {
+    ktpAppStart(this)
 }
 
-fun KtpAppBuilder.update(updateBlock: KtpApp.() -> Unit): KtpAppBuilder {
-    val ktpApp = this()
-    ktpApp.updateBlock()
-    return { ktpApp }
+fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory {
+    val ktpAppBuilder = this()
+    ktpAppBuilder.updateBlock()
+    return { ktpAppBuilder }
 }
 
 /** Start the KTP application. */
-fun ktpStart(buildConfig: () -> KtpApp) {
-    val appInstance = buildConfig().build()
-    if (appInstance.config.env.isLocalDev) {
+fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
+    val ktpApp = ktpAppBuilder().build()
+    if (ktpApp.config.env.isLocalDev) {
         installLocalDevConsoleLogger()
     }
 
     val ktorEnv = applicationEnvironment { this.log = LoggerFactory.getLogger("ktor") }
     val serverConfig =
         serverConfig(ktorEnv) {
-            developmentMode = appInstance.config.env.isLocalDev
+            developmentMode = ktpApp.config.env.isLocalDev
             module {
-                appInstance.installKoin(this)
-                appInstance.appInit(this)
+                ktpApp.installKoin(this)
+                ktpApp.runAppInits(this)
             }
         }
     val server =
@@ -142,8 +142,8 @@ fun ktpStart(buildConfig: () -> KtpApp) {
             rootConfig = serverConfig,
             configure = {
                 connector {
-                    port = appInstance.config.data.app.server.port
-                    host = appInstance.config.data.app.server.host
+                    port = ktpApp.config.data.app.server.port
+                    host = ktpApp.config.data.app.server.host
                 }
                 enableHttp2 = false
                 enableH2c = false

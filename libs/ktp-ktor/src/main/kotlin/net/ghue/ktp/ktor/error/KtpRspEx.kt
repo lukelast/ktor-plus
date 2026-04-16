@@ -33,7 +33,7 @@ open class KtpRspEx(
  * }
  * ```
  */
-class ErrorBuilder {
+class KtpRspExBuilder {
     /** HTTP status code for the response. Default: `500 Internal Server Error`. */
     var status: HttpStatusCode = HttpStatusCode.InternalServerError
 
@@ -80,8 +80,8 @@ class ErrorBuilder {
     fun buildExtraFields(): Map<String, Any> = extraFields.toMap()
 }
 
-inline fun ktpRspError(builder: ErrorBuilder.() -> Unit): Nothing {
-    val builderInstance = ErrorBuilder().apply(builder)
+inline fun ktpRspError(builder: KtpRspExBuilder.() -> Unit): Nothing {
+    val builderInstance = KtpRspExBuilder().apply(builder)
     throw KtpRspEx(
         internalMessage = builderInstance.internalMessage,
         status = builderInstance.status,

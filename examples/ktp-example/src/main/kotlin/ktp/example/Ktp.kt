@@ -3,7 +3,7 @@ package ktp.example
 import io.ktor.server.application.install
 import ktp.example.api.installApi
 import ktp.example.plugins.configureAdministration
-import net.ghue.ktp.ktor.app.debug.ConfigDebugInfoPlugin
+import net.ghue.ktp.ktor.app.debug.DebugEndpointsPlugin
 import net.ghue.ktp.ktor.plugin.installDefaultPlugins
 import net.ghue.ktp.ktor.start.ktpAppCreate
 import net.ghue.ktp.ktor.start.start
@@ -18,10 +18,10 @@ fun main() {
 
 val ktpApp = ktpAppCreate {
     addKoinConfig(koinConfiguration<MyApp>())
-    appInit { config ->
+    addAppInit { config ->
         installDefaultPlugins(config)
         configureAdministration()
-        install(ConfigDebugInfoPlugin)
+        install(DebugEndpointsPlugin)
         installApi()
     }
 }

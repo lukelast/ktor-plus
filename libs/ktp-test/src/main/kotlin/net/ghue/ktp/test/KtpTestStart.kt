@@ -5,11 +5,11 @@ import io.ktor.client.plugins.resources.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.start.KtpAppBuilder
+import net.ghue.ktp.ktor.start.KtpAppBuilderFactory
 import net.ghue.ktp.ktor.start.ktpAppCreate
 
 fun testKtpStart(
-    ktp: KtpAppBuilder = ktpAppCreate {},
+    ktp: KtpAppBuilderFactory = ktpAppCreate {},
     /**
      * Should the application be started. Disable this if you want to do more configuration before
      * it is started.
@@ -20,7 +20,7 @@ fun testKtpStart(
 ) {
     testApplication {
         val ktpApp = ktp()
-        ktpApp.createConfigManager = {
+        ktpApp.createKtpConfig = {
             KtpConfig.create {
                 setUnitTestEnv()
                 overrideMap.forEach { (key, value) -> configValue(key, value) }
@@ -29,7 +29,7 @@ fun testKtpStart(
         val ktpInstance = ktpApp.build()
         application {
             ktpInstance.installKoin(this)
-            ktpInstance.appInit(this)
+            ktpInstance.runAppInits(this)
         }
         client = createClient {
             install(Resources)

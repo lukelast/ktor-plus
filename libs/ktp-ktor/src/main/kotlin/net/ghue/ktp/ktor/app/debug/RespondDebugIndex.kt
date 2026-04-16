@@ -10,7 +10,7 @@ import io.ktor.server.routing.*
  * The index page displays a table showing each endpoint's path, description, and enabled/disabled
  * status. Only enabled endpoints are clickable links.
  */
-suspend fun RoutingCall.respondDebugIndex(config: ConfigDebugInfoConfig) {
+suspend fun RoutingCall.respondDebugIndex(config: DebugEndpointsConfig) {
     val endpoints = buildEndpointList(config)
     val html = INDEX_TEMPLATE.trimIndent().replace("{{ENDPOINT_ROWS}}", endpoints.toHtmlRows())
 
@@ -18,26 +18,30 @@ suspend fun RoutingCall.respondDebugIndex(config: ConfigDebugInfoConfig) {
 }
 
 /** Information about a debug endpoint. */
-internal data class EndpointInfo(val path: String, val description: String, val isEnabled: Boolean)
+internal data class DebugEndpointRow(
+    val path: String,
+    val description: String,
+    val isEnabled: Boolean,
+)
 
-private fun buildEndpointList(config: ConfigDebugInfoConfig): List<EndpointInfo> {
+private fun buildEndpointList(config: DebugEndpointsConfig): List<DebugEndpointRow> {
     return listOf(
-        EndpointInfo(
+        DebugEndpointRow(
             path = config.routePrefix + DebugEndpoints.CONFIG,
             description = "Configuration values, runtime info, and environment variables",
             isEnabled = config.enableConfigEndpoint,
         ),
-        EndpointInfo(
-            path = config.routePrefix + DebugEndpoints.GCLOG,
+        DebugEndpointRow(
+            path = config.routePrefix + DebugEndpoints.GC_LOG,
             description = "Garbage collection log file contents",
             isEnabled = config.enableGcLogEndpoint,
         ),
-        EndpointInfo(
+        DebugEndpointRow(
             path = config.routePrefix + DebugEndpoints.THREADS,
             description = "Thread dump with stack traces and lock information",
             isEnabled = config.enableThreadDumpEndpoint,
         ),
-        EndpointInfo(
+        DebugEndpointRow(
             path = config.routePrefix + DebugEndpoints.VERSION,
             description = "Application version string",
             isEnabled = config.enableVersionEndpoint,
@@ -45,7 +49,7 @@ private fun buildEndpointList(config: ConfigDebugInfoConfig): List<EndpointInfo>
     )
 }
 
-private fun List<EndpointInfo>.toHtmlRows(): String =
+private fun List<DebugEndpointRow>.toHtmlRows(): String =
     joinToString("\n") { endpoint ->
         val statusClass = if (endpoint.isEnabled) "status-enabled" else "status-disabled"
         val statusText = if (endpoint.isEnabled) "Enabled" else "Disabled"

@@ -8,11 +8,13 @@ import org.slf4j.bridge.SLF4JBridgeHandler
 @Suppress("NOTHING_TO_INLINE")
 inline fun log(noinline func: () -> Unit): KLogger = KotlinLogging.logger(func)
 
-object Slf4jBridgeInstall {
+private object Slf4jBridgeInstaller {
     init {
         SLF4JBridgeHandler.removeHandlersForRootLogger()
         SLF4JBridgeHandler.install()
     }
+}
 
-    @Suppress("EmptyFunctionBlock") operator fun invoke() {}
+fun installSlf4jBridge() {
+    Slf4jBridgeInstaller
 }

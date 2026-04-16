@@ -20,7 +20,7 @@ fun collectGcInfo(): ConfigRecord {
     )
 }
 
-fun collectMaxGcHeapMib(): ConfigRecord {
+fun collectMaxHeapMib(): ConfigRecord {
     val runtime = Runtime.getRuntime()
     val maxMemory = runtime.maxMemory()
     return ConfigRecord(
@@ -32,7 +32,7 @@ fun collectMaxGcHeapMib(): ConfigRecord {
 
 fun collectCpuCores(): ConfigRecord {
     return ConfigRecord(
-        path = "cpu virtual threads",
+        path = "cpu cores",
         source = "jvm",
         value = Runtime.getRuntime().availableProcessors().toString(),
     )

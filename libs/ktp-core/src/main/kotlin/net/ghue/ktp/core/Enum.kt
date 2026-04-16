@@ -1,7 +1,7 @@
 package net.ghue.ktp.core
 
-/** Turn enum name to camel case. */
-fun Enum<*>.enumToCamelCase() =
+/** Convert an enum constant name to camel case. */
+fun Enum<*>.toCamelCase() =
     this.name
         .split("_")
         .map(String::lowercase)

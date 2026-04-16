@@ -5,8 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-const val K8S_LIVENESS = "/healthz"
-const val K8S_READINESS = "/readyz"
+const val K8S_LIVENESS_PATH = "/healthz"
+const val K8S_READINESS_PATH = "/readyz"
 
 /** Add Kubernetes health checks to the application. */
 fun Application.installK8sHealthCheck(
@@ -16,14 +16,14 @@ fun Application.installK8sHealthCheck(
     readinessCheck: () -> Boolean = { true },
 ) {
     routing {
-        get(K8S_LIVENESS) {
+        get(K8S_LIVENESS_PATH) {
             if (healthCheck()) {
                 call.respondText("Alive", status = HttpStatusCode.OK)
             } else {
                 call.respondText("Not Alive", status = HttpStatusCode.ServiceUnavailable)
             }
         }
-        get(K8S_READINESS) {
+        get(K8S_READINESS_PATH) {
             if (readinessCheck()) {
                 call.respondText("Ready", status = HttpStatusCode.OK)
             } else {

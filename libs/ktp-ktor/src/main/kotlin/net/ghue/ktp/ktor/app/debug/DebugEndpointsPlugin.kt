@@ -10,17 +10,17 @@ import net.ghue.ktp.log.log
 object DebugEndpoints {
     const val BASE = "/debug"
     const val CONFIG = "/config"
-    const val GCLOG = "/gclog"
+    const val GC_LOG = "/gclog"
     const val THREADS = "/threads"
     const val VERSION = "/version"
 }
 
 /**
- * Configuration for the ConfigDebugInfo plugin.
+ * Configuration for the DebugEndpoints plugin.
  *
  * Example usage with access control (localhost only):
  * ```
- * install(ConfigDebugInfoPlugin) {
+ * install(DebugEndpointsPlugin) {
  *     accessControl = {
  *         request.local.remoteHost == "127.0.0.1"
  *     }
@@ -29,21 +29,21 @@ object DebugEndpoints {
  *
  * Example usage with custom route prefix:
  * ```
- * install(ConfigDebugInfoPlugin) {
+ * install(DebugEndpointsPlugin) {
  *     routePrefix = "/admin/debug"
  * }
  * ```
  *
  * Example usage with selective endpoints:
  * ```
- * install(ConfigDebugInfoPlugin) {
+ * install(DebugEndpointsPlugin) {
  *     enableConfigEndpoint = true
  *     enableVersionEndpoint = true
  *     enableGcLogEndpoint = false  // Disable GC log endpoint
  * }
  * ```
  */
-class ConfigDebugInfoConfig {
+class DebugEndpointsConfig {
     /** Route prefix for debug endpoints. Default: "/debug" */
     var routePrefix: String = DebugEndpoints.BASE
 
@@ -95,15 +95,12 @@ class ConfigDebugInfoConfig {
  * **Security Warning**: These endpoints expose sensitive application information. Always use
  * `accessControl` to restrict access in production environments.
  */
-val ConfigDebugInfoPlugin =
-    createApplicationPlugin(
-        name = "ConfigDebugInfo",
-        createConfiguration = ::ConfigDebugInfoConfig,
-    ) {
+val DebugEndpointsPlugin =
+    createApplicationPlugin(name = "DebugEndpoints", createConfiguration = ::DebugEndpointsConfig) {
         if (pluginConfig.accessControl == null) {
             log {}
                 .warn {
-                    "ConfigDebugInfoPlugin installed without access control! " +
+                    "DebugEndpointsPlugin installed without access control! " +
                         "This may expose sensitive information. " +
                         "It is strongly recommended to set accessControl to restrict access."
                 }
@@ -113,7 +110,7 @@ val ConfigDebugInfoPlugin =
         }
     }
 
-private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
+private fun Route.installDebugEndpoints(pluginConfig: DebugEndpointsConfig) {
     if (pluginConfig.enableConfigEndpoint) {
         get(DebugEndpoints.CONFIG) {
             if (pluginConfig.accessControl?.invoke(call) == false) {
@@ -125,7 +122,7 @@ private fun Route.installDebugEndpoints(pluginConfig: ConfigDebugInfoConfig) {
     }
 
     if (pluginConfig.enableGcLogEndpoint) {
-        get(DebugEndpoints.GCLOG) {
+        get(DebugEndpoints.GC_LOG) {
             if (pluginConfig.accessControl?.invoke(call) == false) {
                 call.respond(HttpStatusCode.Forbidden)
                 return@get

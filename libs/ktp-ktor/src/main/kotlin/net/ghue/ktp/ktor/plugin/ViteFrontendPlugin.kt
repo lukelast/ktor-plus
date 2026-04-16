@@ -33,18 +33,18 @@ class ViteFrontendConfig {
     var vitePort: Int = DEFAULT_VITE_PORT
     var indexFile: Path = Path("src", "index.html")
     /**
-     * The URI path under which all static files are served. Should match the `base` setting in
-     * vite.config.ts. No leading or trailing slashes.
+     * The URI path segment under which all static files are served. Should match the `base` setting
+     * in vite.config.ts. No leading or trailing slashes.
      */
-    var staticUri: String = "static"
+    var staticPathSegment: String = "static"
     /** The directory on the production backend where static files are stored. */
-    var staticDir: Path = Path(staticUri)
+    var staticDir: Path = Path(staticPathSegment)
 
     /** Where the frontend files are built during development. */
-    var frontEndDist: Path = Path("frontend", "dist")
+    var frontendDist: Path = Path("frontend", "dist")
     var browserUriPathPrefix: String = "p"
 
-    val staticRootUri: String = "/${staticUri}"
+    val staticRootPath: String = "/${staticPathSegment}"
 
     val indexFilePath: Path
         get() = staticDir.resolve(indexFile)
@@ -75,18 +75,18 @@ val ViteFrontendPlugin =
         val ktpConfig: KtpConfig by application.inject()
 
         if (ktpConfig.env.isLocalDev) {
-            val viteDev = ServeViteDev(config)
+            val viteDev = ViteDevProxy(config)
             application.monitor.subscribe(ApplicationStopPreparing) { viteDev.close() }
-            viteDev.init(application)
+            viteDev.registerRoutes(application)
         } else {
             application.routing {
                 fun StaticContentConfig<*>.configCache() {
                     cacheControl { listOf(cacheControlMaxAge(7.days)) }
                 }
                 if (config.staticDir.isDirectory()) {
-                    staticFiles(config.staticRootUri, config.staticDir.toFile()) { configCache() }
+                    staticFiles(config.staticRootPath, config.staticDir.toFile()) { configCache() }
                 } else {
-                    staticResources(config.staticRootUri, config.staticDir.toString()) {
+                    staticResources(config.staticRootPath, config.staticDir.toString()) {
                         configCache()
                     }
                 }
@@ -106,10 +106,10 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
     }
 }
 
-private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
+private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
 
-    val frontEndFiles: Path =
-        config.frontEndDist
+    val frontendFiles: Path =
+        config.frontendDist
             .let {
                 if (it.notExists()) {
                     Path("..").resolve(it)
@@ -127,11 +127,11 @@ private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
         client.close()
     }
 
-    fun init(app: Application) {
+    fun registerRoutes(app: Application) {
         app.routing {
             get("/") { call.serveDevRoute(config.indexFilePath) }
             get(config.frontendRoute) { call.serveDevRoute(config.indexFilePath) }
-            get("${config.staticRootUri}/{...}") { call.serveDevRoute(Path(call.request.path())) }
+            get("${config.staticRootPath}/{...}") { call.serveDevRoute(Path(call.request.path())) }
         }
     }
 
@@ -149,7 +149,7 @@ private class ServeViteDev(val config: ViteFrontendConfig) : Closeable {
     }
 
     private suspend fun ApplicationCall.serveFromFrontendFiles(path: Path) {
-        val file = frontEndFiles.resolve(path.removePrefix(config.staticUri))
+        val file = frontendFiles.resolve(path.removePrefix(config.staticPathSegment))
         if (file.isReadable()) {
             log {}.info { "Serving: $file" }
             respondPath(file)
