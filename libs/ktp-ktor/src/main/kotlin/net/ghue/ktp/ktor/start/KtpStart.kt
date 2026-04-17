@@ -71,10 +71,13 @@ class KtpAppBuilder {
 
     fun build(): KtpApp {
         val config = createKtpConfig()
-        modules.addFirst(module { single { config } })
+        val allModules = buildList {
+            add(module { single { config } })
+            addAll(modules)
+        }
         return KtpApp(
             config = config,
-            modules = modules.toList(),
+            modules = allModules,
             koinConfigs = koinConfigs.toList(),
             appInits = appInits.toList(),
         )

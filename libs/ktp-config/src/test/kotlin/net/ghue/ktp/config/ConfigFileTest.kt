@@ -69,24 +69,14 @@ class ConfigFileTest :
                             env = "dev",
                             text = """v=8_config_dev""",
                         ),
-                        fakeConfig(
-                            8,
-                            configName = "config",
-                            env = "",
-                            text = """v=8_config_all""",
-                        ),
+                        fakeConfig(8, configName = "config", env = "", text = """v=8_config_all"""),
                         fakeConfig(
                             3,
                             configName = "config",
                             env = "dev",
                             text = """v=3_config_dev""",
                         ),
-                        fakeConfig(
-                            3,
-                            configName = "config",
-                            env = "",
-                            text = """v=3_config_all""",
-                        ),
+                        fakeConfig(3, configName = "config", env = "", text = """v=3_config_all"""),
                         fakeConfig(3, configName = "", env = "", text = """v=3_no_name"""),
                     )
                     .shuffled()
@@ -125,19 +115,9 @@ class ConfigFileTest :
                         fakeConfig(9, configName = "z", env = "prod", text = """v=9_z_prod"""),
                         fakeConfig(2, configName = "a", env = "dev", text = """v=2_a_dev"""),
                         fakeConfig(2, configName = "a", env = "", text = """v=2_a_all"""),
-                        fakeConfig(
-                            2,
-                            configName = "",
-                            env = "test",
-                            text = """v=2_no_name_test""",
-                        ),
+                        fakeConfig(2, configName = "", env = "test", text = """v=2_no_name_test"""),
                         fakeConfig(2, configName = "", env = "", text = """v=2_no_name_all"""),
-                        fakeConfig(
-                            6,
-                            configName = "b",
-                            env = "staging",
-                            text = """v=6_b_staging""",
-                        ),
+                        fakeConfig(6, configName = "b", env = "staging", text = """v=6_b_staging"""),
                     )
                     .shuffled()
 

@@ -22,12 +22,18 @@ class DefaultPluginsTest :
             testApplication {
                 application {
                     installDefaultPlugins(KtpConfig.create { setUnitTestEnv() })
-                    routing { get("/boom") { throw RuntimeException("leak me") } }
+
+                    routing {
+                        get("/boom") {
+                            @Suppress("TooGenericExceptionThrown") throw RuntimeException("leak me")
+                        }
+                    }
                 }
 
                 val response = client.get("/boom")
                 response.status shouldBe HttpStatusCode.InternalServerError
-                response.contentType()?.withoutParameters() shouldBe ContentType.Application.ProblemJson
+                response.contentType()?.withoutParameters() shouldBe
+                    ContentType.Application.ProblemJson
 
                 val bodyText = response.bodyAsText()
                 bodyText.contains("leak me") shouldBe false

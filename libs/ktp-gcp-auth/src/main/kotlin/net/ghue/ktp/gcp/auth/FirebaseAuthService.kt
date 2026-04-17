@@ -28,7 +28,17 @@ class FirebaseAuthService(
 
     suspend fun RoutingContext.handleLogin() {
         try {
-            val loginRequest: LoginRequest = json.decodeFromString(call.receiveText())
+            val loginRequest: LoginRequest =
+                try {
+                    json.decodeFromString(call.receiveText())
+                } catch (ex: Exception) {
+                    throw AuthEx(
+                        message = "Malformed login request",
+                        status = BadRequest,
+                        userError = true,
+                        cause = ex,
+                    )
+                }
             if (loginRequest.idToken.isBlank()) {
                 throw AuthEx(
                     message = "Login request token is empty",

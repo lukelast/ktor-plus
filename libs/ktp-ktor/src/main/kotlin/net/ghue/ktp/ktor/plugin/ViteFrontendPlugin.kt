@@ -107,18 +107,6 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
 }
 
 private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
-
-    val frontendFiles: Path =
-        config.frontendDist
-            .let {
-                if (it.notExists()) {
-                    Path("..").resolve(it)
-                } else {
-                    it
-                }
-            }
-            .toRealPath()
-
     // Create HTTP client with short timeout
     val client =
         HttpClient(Java) { engine { config { connectTimeout(500.milliseconds.toJavaDuration()) } } }
@@ -149,6 +137,12 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
     }
 
     private suspend fun ApplicationCall.serveFromFrontendFiles(path: Path) {
+        val frontendFiles = frontendFilesOrNull()
+        if (frontendFiles == null) {
+            log {}.warn { "Frontend dist directory not found for fallback: ${config.frontendDist}" }
+            respond(HttpStatusCode.NotFound)
+            return
+        }
         val file = frontendFiles.resolve(path.removePrefix(config.staticPathSegment))
         if (file.isReadable()) {
             log {}.info { "Serving: $file" }
@@ -158,6 +152,11 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
             respond(HttpStatusCode.NotFound)
         }
     }
+
+    private fun frontendFilesOrNull(): Path? =
+        listOf(config.frontendDist, Path("..").resolve(config.frontendDist))
+            .map { it.normalize() }
+            .firstOrNull { it.isDirectory() }
 
     private suspend fun ApplicationCall.fetchFromViteDevServer(path: Path): ViteDevResponse? {
         try {

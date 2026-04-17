@@ -8,6 +8,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
+import java.net.ServerSocket
 import kotlin.io.path.Path
 import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.module
@@ -101,6 +102,26 @@ class ViteFrontendTest :
                     status shouldBe HttpStatusCode.OK
                     bodyAsText().shouldContain("Test Index Page")
                 }
+            }
+        }
+
+        "dev mode starts even when frontend dist fallback is missing" {
+            testApplication {
+                val unavailablePort = ServerSocket(0).use { it.localPort }
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    overrideValue("env.localDev", "true")
+                }
+
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin) {
+                        vitePort = unavailablePort
+                        frontendDist = Path("missing-frontend", "dist")
+                    }
+                }
+
+                client.get("/static/missing.css").status shouldBe HttpStatusCode.NotFound
             }
         }
 

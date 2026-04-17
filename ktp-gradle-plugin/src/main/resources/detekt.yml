@@ -18,3 +18,5 @@ naming:
 complexity:
   ComplexCondition:
     allowedConditions: 4
+  LongMethod:
+    allowedLines: 80

@@ -32,14 +32,18 @@ fun Config.toRecords(): List<ConfigRecord> =
             )
         }
         .map { configRecord ->
-            if (
-                secretPathWords.any { word -> configRecord.path.contains(word, ignoreCase = true) }
-            ) {
-                configRecord.copy(value = "${configRecord.value.length} chars")
-            } else {
-                configRecord
-            }
+            configRecord.copy(value = maskConfigDisplayValue(configRecord.path, configRecord.value))
         }
         .sortedBy { it.path }
+
+fun maskConfigDisplayValue(path: String, value: String): String =
+    if (
+        path.equals(KtpConfig.KTP_CONFIG_ENV_VAR, ignoreCase = true) ||
+            secretPathWords.any { word -> path.contains(word, ignoreCase = true) }
+    ) {
+        "${value.length} chars"
+    } else {
+        value
+    }
 
 @Serializable data class ConfigRecord(val path: String, val value: String, val source: String = "")

@@ -10,12 +10,15 @@ import org.koin.dsl.module
 
 fun firebaseAuthModule() = module {
     single {
-        FirebaseApp.initializeApp(
-            FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.getApplicationDefault())
-                .setProjectId(ServiceOptions.getDefaultProjectId())
-                .build()
-        )
+        synchronized(FirebaseApp::class.java) {
+            FirebaseApp.getApps().firstOrNull { it.name == FirebaseApp.DEFAULT_APP_NAME }
+                ?: FirebaseApp.initializeApp(
+                    FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.getApplicationDefault())
+                        .setProjectId(ServiceOptions.getDefaultProjectId())
+                        .build()
+                )
+        }
     }
 
     single { FirebaseAuth.getInstance(get()) }

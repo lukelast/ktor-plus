@@ -5,6 +5,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.ghue.ktp.config.ConfigRecord
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.config.maskConfigDisplayValue
 import net.ghue.ktp.config.toRecords
 import org.koin.ktor.ext.inject
 
@@ -24,21 +25,13 @@ suspend fun RoutingCall.respondConfigHtml() {
         System.getenv()
             .entries
             .sortedBy { it.key }
-            .map {
-                val sanitizedValue =
-                    if (
-                        it.key.equals(KtpConfig.KTP_CONFIG_ENV_VAR, ignoreCase = true) ||
-                            it.key.contains("secret", ignoreCase = true)
-                    ) {
-                        "${it.value.length} chars"
-                    } else {
-                        it.value
-                    }
-                ConfigRecord(path = it.key, value = sanitizedValue)
-            }
+            .map { ConfigRecord(path = it.key, value = maskConfigDisplayValue(it.key, it.value)) }
     val systemPropertyRecords =
         System.getProperties().stringPropertyNames().sorted().map { key ->
-            ConfigRecord(path = key, value = System.getProperty(key).orEmpty())
+            ConfigRecord(
+                path = key,
+                value = maskConfigDisplayValue(key, System.getProperty(key).orEmpty()),
+            )
         }
 
     val html =
@@ -54,13 +47,20 @@ suspend fun RoutingCall.respondConfigHtml() {
 private fun Iterable<ConfigRecord>.toHtmlRows(includeSource: Boolean): String =
     joinToString("\n") { record ->
         listOfNotNull(
-                """<td class="path-cell">${record.path}</td>""",
-                """<td class="value-cell">${record.value}</td>""",
+                """<td class="path-cell">${record.path.escapeHtml()}</td>""",
+                """<td class="value-cell">${record.value.escapeHtml()}</td>""",
                 if (includeSource) {
-                    """<td class="source-cell">${record.source}</td>"""
+                    """<td class="source-cell">${record.source.escapeHtml()}</td>"""
                 } else {
                     null
                 },
             )
             .joinToString(separator = "", prefix = "<tr>", postfix = "</tr>")
     }
+
+private fun String.escapeHtml(): String =
+    this.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;")

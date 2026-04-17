@@ -45,6 +45,7 @@ data class ConfigFile(
                     ?: error(
                         "Invalid config file name: $resourceUri. Must start with a priority number."
                     )
+            @Suppress("MagicNumber")
             if (priority !in 0..9) {
                 error("Invalid config file priority: $resourceUri. Must be between 0 and 9")
             }

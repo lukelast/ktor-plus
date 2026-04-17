@@ -103,4 +103,19 @@ class KtpStartTest :
             firstCall.modules.size shouldBe 1
             firstCall.appInits.size shouldBe 1
         }
+
+        "build does not accumulate config modules across repeated invocations" {
+            val updatedBuilder =
+                ktpAppCreate {
+                        createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+                        addModule(module {})
+                    }
+                    .update { addModule(module {}) }
+
+            val firstBuild = updatedBuilder().build()
+            val secondBuild = updatedBuilder().build()
+
+            firstBuild.modules.size shouldBe 3
+            secondBuild.modules.size shouldBe 3
+        }
     })

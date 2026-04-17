@@ -68,6 +68,47 @@ class DebugEndpointsTest :
             }
         }
 
+        "/debug/config escapes HTML values and masks sensitive system properties" {
+            val htmlProperty = "ktp.debug.html"
+            val secretProperty = "ktp.debug.password"
+            val htmlValue = "<b>danger</b>"
+            val secretValue = "supersecret!"
+
+            System.setProperty(htmlProperty, htmlValue)
+            System.setProperty(secretProperty, secretValue)
+            try {
+                testApplication {
+                    application {
+                        install(Koin) {
+                            modules(
+                                module {
+                                    single {
+                                        KtpConfig.create {
+                                            setUnitTestEnv()
+                                            overrideValue("app.name", "<script>alert(1)</script>")
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        install(DebugEndpointsPlugin)
+                    }
+                    with(client.get("/debug/config")) {
+                        status shouldBe HttpStatusCode.OK
+                        val body = bodyAsText()
+                        body shouldContain "&lt;script&gt;alert(1)&lt;/script&gt;"
+                        body.contains("<script>alert(1)</script>") shouldBe false
+                        body shouldContain "&lt;b&gt;danger&lt;/b&gt;"
+                        body.contains("<b>danger</b>") shouldBe false
+                        body shouldContain "${secretValue.length} chars"
+                    }
+                }
+            } finally {
+                System.clearProperty(htmlProperty)
+                System.clearProperty(secretProperty)
+            }
+        }
+
         "access control blocks unauthorized requests" {
             testApplication {
                 application {

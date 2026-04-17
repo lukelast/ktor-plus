@@ -1,11 +1,16 @@
 package net.ghue.ktp.gcp.auth
 
+import com.google.auth.oauth2.AccessToken
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseToken
 import io.kotest.core.extensions.install
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -18,15 +23,44 @@ import io.ktor.server.testing.*
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.util.Date
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.KtpConfig
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 
 class FirebaseAuthPluginTest :
     StringSpec({
+        "firebaseAuthModule reuses an existing default Firebase app" {
+            deleteDefaultFirebaseApp()
+
+            val existingApp =
+                FirebaseApp.initializeApp(
+                    FirebaseOptions.builder()
+                        .setCredentials(
+                            GoogleCredentials.create(
+                                AccessToken("test-token", Date(System.currentTimeMillis() + 60_000))
+                            )
+                        )
+                        .setProjectId("test-project")
+                        .build()
+                )
+
+            try {
+                val koinApp = koinApplication { modules(firebaseAuthModule()) }
+                try {
+                    koinApp.koin.get<FirebaseApp>() shouldBeSameInstanceAs existingApp
+                } finally {
+                    koinApp.close()
+                }
+            } finally {
+                deleteDefaultFirebaseApp()
+            }
+        }
+
         "installs plugin with default configuration" {
             testApplication {
                 val config = KtpConfig.create {
@@ -359,6 +393,46 @@ class FirebaseAuthPluginTest :
             }
         }
 
+        "malformed login payload returns bad request" {
+            testApplication {
+                val config = KtpConfig.create {
+                    setUnitTestEnv()
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                }
+
+                val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
+                val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
+
+                application {
+                    install(KoinIsolated) {
+                        modules(
+                            module {
+                                single { config }
+                                single {
+                                    FirebaseAuthService(
+                                        ktpConfig = config,
+                                        firebaseAuth = mockFirebaseAuth,
+                                        lifecycle = mockLifecycle,
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    install(FirebaseAuthPlugin)
+                }
+
+                val response =
+                    client.post("/auth/login") {
+                        contentType(ContentType.Application.Json)
+                        setBody("{bad json")
+                    }
+
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.bodyAsText() shouldBe "{}"
+            }
+        }
+
         "custom login and logout URLs are used" {
             testApplication {
                 val config = KtpConfig.create {
@@ -428,4 +502,10 @@ private fun createMockFirebaseToken(): FirebaseToken {
     every { mockToken.isEmailVerified } returns true
     every { mockToken.claims } returns emptyMap()
     return mockToken
+}
+
+private fun deleteDefaultFirebaseApp() {
+    FirebaseApp.getApps()
+        .filter { it.name == FirebaseApp.DEFAULT_APP_NAME }
+        .forEach(FirebaseApp::delete)
 }
