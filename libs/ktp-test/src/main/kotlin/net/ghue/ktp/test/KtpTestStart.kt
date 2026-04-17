@@ -23,7 +23,7 @@ fun testKtpStart(
         ktpApp.createKtpConfig = {
             KtpConfig.create {
                 setUnitTestEnv()
-                overrideMap.forEach { (key, value) -> configValue(key, value) }
+                overrideMap.forEach { (key, value) -> overrideValue(key, value) }
             }
         }
         val ktpInstance = ktpApp.build()

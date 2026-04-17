@@ -19,7 +19,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {
@@ -36,7 +36,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {
@@ -84,7 +84,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "true")
+                    overrideValue("env.localDev", "true")
                 }
 
                 application {
@@ -108,7 +108,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {
@@ -129,7 +129,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {
@@ -153,7 +153,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {
@@ -169,7 +169,7 @@ class ViteFrontendTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
+                    overrideValue("env.localDev", "false")
                 }
 
                 application {

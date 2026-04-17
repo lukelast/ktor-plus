@@ -25,7 +25,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "69")
+                                        overrideValue("app.version", "69")
                                     }
                                 }
                             }
@@ -49,8 +49,8 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
-                                        configValue("app.name", "test-app")
+                                        overrideValue("app.version", "1.0.0")
+                                        overrideValue("app.name", "test-app")
                                     }
                                 }
                             }
@@ -77,7 +77,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -102,7 +102,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -132,7 +132,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -159,7 +159,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -186,7 +186,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -214,7 +214,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -249,7 +249,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -272,7 +272,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -303,7 +303,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -340,7 +340,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -369,7 +369,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "1.0.0")
+                                        overrideValue("app.version", "1.0.0")
                                     }
                                 }
                             }
@@ -398,7 +398,7 @@ class DebugEndpointsTest :
                                 single {
                                     KtpConfig.create {
                                         setUnitTestEnv()
-                                        configValue("app.version", "2.0.0")
+                                        overrideValue("app.version", "2.0.0")
                                     }
                                 }
                             }

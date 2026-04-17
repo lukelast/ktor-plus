@@ -24,18 +24,18 @@ class EnvTest :
         }
 
         "default env is treated as local dev" {
-            val env = Env(DEFAULT_ENV)
+            val env = Env(LOCAL_DEV_ENV_NAME)
             env.isLocalDev shouldBe true
         }
 
         "default env suffix still counts as local dev" {
-            val env = Env("$DEFAULT_ENV-xyz")
+            val env = Env("$LOCAL_DEV_ENV_NAME-xyz")
             env.isLocalDev shouldBe true
         }
 
         "TEST_UNIT is recognised as CI environment" {
             val env = Env.TEST_UNIT
-            env.isCiTest shouldBe true
+            env.isTest shouldBe true
             env.isLocalDev shouldBe false
             env.isDefault shouldBe false
         }

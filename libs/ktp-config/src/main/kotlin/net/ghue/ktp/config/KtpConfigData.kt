@@ -9,7 +9,7 @@ data class KtpConfigData(val app: App) {
         val hostname: String,
         val server: Server,
     ) {
-        fun shortName() = nameShort.ifEmpty {
+        fun nameShortOrDerived() = nameShort.ifEmpty {
             name
                 .split("-")
                 .filterNot(String::isEmpty)

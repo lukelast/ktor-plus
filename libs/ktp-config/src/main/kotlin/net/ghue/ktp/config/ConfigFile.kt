@@ -6,15 +6,15 @@ data class ConfigFile(
     /** Name of the original file like `default.config.conf`. */
     val fileName: String,
     /**
-     * The group is the first part of the file name like `default` in `default.config.conf`. It
-     * represents the ordering importance of the config.
+     * The priority is the first dot-separated token of the file name (a digit 0-9) like `5` in
+     * `5.database.prod.conf`. Lower values have higher precedence when configs are merged.
      */
     val priority: Int,
     /**
-     * The optional name of the config file like `config` in `default.config.conf`. If not present,
-     * this will be an empty string.
+     * The optional base name of the config file like `config` in `default.config.conf`. If not
+     * present, this will be an empty string.
      */
-    val name: String,
+    val baseName: String,
     val envName: String,
 
     /** The text content of the config file. */
@@ -27,16 +27,16 @@ data class ConfigFile(
             { it.priority },
             // Files with an env come first, sorted by env name.
             { it.envName.ifEmpty { Char.MAX_VALUE.toString() } },
-            // Then files with a name, sorted by name.
-            { it.name.ifEmpty { Char.MAX_VALUE.toString() } },
+            // Then files with a base name, sorted by base name.
+            { it.baseName.ifEmpty { Char.MAX_VALUE.toString() } },
             // Fallback to path for stable sort
             { it.absolutePath.reversed() },
         )
 
     companion object {
-        fun create(fullPath: String, content: String): ConfigFile {
+        fun create(fullPath: String, text: String): ConfigFile {
             val fileName = fullPath.substringAfterLast("/")
-            val nameTokens = fileName.split(".").filter { it != KtpConfig.CONF_FILE_EXT }
+            val nameTokens = fileName.split(".").filter { it != KtpConfig.CONFIG_FILE_EXT }
             if (nameTokens.isEmpty()) {
                 error("Invalid config file name: $fullPath")
             }
@@ -45,23 +45,26 @@ data class ConfigFile(
                     ?: error(
                         "Invalid config file name: $fullPath. Must start with a priority number."
                     )
-            val name = nameTokens.getOrElse(1) { "" }
+            if(priority !in 0..9){
+                error("Invalid config file priority: $fullPath. Must be between 0 and 9")
+            }
+            val baseName = nameTokens.getOrElse(1) { "" }
             return ConfigFile(
                 absolutePath = fullPath,
                 fileName = fileName,
                 priority = priority,
-                name = name,
+                baseName = baseName,
                 envName = nameTokens.getOrNull(2) ?: "",
-                text = content,
+                text = text,
             )
         }
     }
 
     /** Does this [ConfigFile] belong in the given [env]? */
     @Suppress("ReturnCount")
-    fun filterForEnv(env: Env): Boolean {
+    fun appliesTo(env: Env): Boolean {
         // Prevent unit tests from picking up local dev override configs.
-        if (env.isCiTest && envName.isEmpty() && (name == "local" || name.isEmpty())) {
+        if (env.isTest && envName.isEmpty() && (baseName == "local" || baseName.isEmpty())) {
             return false
         }
         if (envName.isEmpty()) {

@@ -4,7 +4,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigRenderOptions
 import kotlinx.serialization.Serializable
 
-private val protectedPathWords = listOf("secret", "applicationKey", "password")
+private val secretPathWords = listOf("secret", "applicationKey", "password")
 
 private const val MAX_VALUE_SIZE = 200
 
@@ -33,9 +33,7 @@ fun Config.toRecords(): List<ConfigRecord> =
         }
         .map { configRecord ->
             if (
-                protectedPathWords.any { word ->
-                    configRecord.path.contains(word, ignoreCase = true)
-                }
+                secretPathWords.any { word -> configRecord.path.contains(word, ignoreCase = true) }
             ) {
                 configRecord.copy(value = "${configRecord.value.length} chars")
             } else {

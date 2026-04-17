@@ -31,9 +31,9 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
-                    configValue("env.name", "test")
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("env.localDev", "false")
+                    overrideValue("env.name", "test")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
@@ -67,9 +67,9 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "true")
-                    configValue("env.name", "test")
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("env.localDev", "true")
+                    overrideValue("env.name", "test")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
@@ -162,7 +162,7 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
@@ -203,7 +203,7 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
@@ -261,10 +261,10 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
-                    configValue("env.name", "test")
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    configValue("auth.redirectAfterLogout", "/goodbye")
+                    overrideValue("env.localDev", "false")
+                    overrideValue("env.name", "test")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("auth.redirectAfterLogout", "/goodbye")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
@@ -319,9 +319,9 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("env.localDev", "false")
-                    configValue("env.name", "test")
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("env.localDev", "false")
+                    overrideValue("env.name", "test")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
@@ -363,9 +363,9 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    configValue("auth.loginUrl", "/custom/signin")
-                    configValue("auth.logoutUrl", "/custom/signout")
+                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
+                    overrideValue("auth.loginUrl", "/custom/signin")
+                    overrideValue("auth.logoutUrl", "/custom/signout")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()

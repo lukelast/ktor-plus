@@ -4,32 +4,32 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigResolveOptions
-import net.ghue.ktp.config.KtpConfig.Companion.ENV_PATH
+import net.ghue.ktp.config.KtpConfig.Companion.ENV_CONFIG_PATH
 import net.ghue.ktp.log.log
 
 class KtpConfigBuilder {
     var env: Env = findEnvironment()
     var overrideMap: MutableMap<String, Any> = mutableMapOf()
 
-    fun configValue(key: String, value: Any) = overrideMap.put(key, value)
+    fun overrideValue(key: String, value: Any) = overrideMap.put(key, value)
 
     fun setUnitTestEnv() {
         env = Env.TEST_UNIT
     }
 
-    fun setIntegrationEnv() {
+    fun setIntegrationTestEnv() {
         env = Env.TEST_INTEGRATION
     }
 
     fun build(): KtpConfig {
-        val config = createConfigForEnv(env, overrideMap)
+        val config = buildConfigForEnv(env, overrideMap)
         return KtpConfig(config, env)
     }
 }
 
-private fun createConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): Config {
+private fun buildConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap()): Config {
     val allConfigFiles = scanConfigFiles()
-    val usedConfigFiles = allConfigFiles.filter { it.filterForEnv(env) }
+    val usedConfigFiles = allConfigFiles.filter { it.appliesTo(env) }
     val ignoredFiles = allConfigFiles - usedConfigFiles.toSet()
     log {}
         .info {
@@ -51,10 +51,10 @@ fun buildConfig(
     overrideMap: Map<String, Any> = emptyMap(),
 ): Config {
     val configs = buildList {
-        add(ConfigFactory.parseMap(mapOf(ENV_PATH to env.name), "current environment"))
+        add(ConfigFactory.parseMap(mapOf(ENV_CONFIG_PATH to env.name), "current environment"))
         add(ConfigFactory.parseMap(overrideMap, "overrides"))
         add(ConfigFactory.systemEnvironmentOverrides())
-        buildConfigFromEnvText()?.let { add(it) }
+        buildConfigFromEnvVar()?.let { add(it) }
         configFiles.sorted().forEach { file ->
             add(
                 ConfigFactory.parseString(
@@ -69,8 +69,8 @@ fun buildConfig(
         .resolve(ConfigResolveOptions.defaults())
 }
 
-fun buildConfigFromEnvText(
-    configText: String = System.getenv(KtpConfig.ENV_CONFIG_KEY) ?: ""
+fun buildConfigFromEnvVar(
+    configText: String = System.getenv(KtpConfig.KTP_CONFIG_ENV_VAR) ?: ""
 ): Config? {
     if (configText.isBlank()) {
         return null
@@ -78,10 +78,10 @@ fun buildConfigFromEnvText(
     return try {
         ConfigFactory.parseString(
             configText,
-            ConfigParseOptions.defaults().setOriginDescription(KtpConfig.ENV_CONFIG_KEY),
+            ConfigParseOptions.defaults().setOriginDescription(KtpConfig.KTP_CONFIG_ENV_VAR),
         )
     } catch (ex: Exception) {
-        log {}.warn(ex) { "Failed to parse config from ENV var: ${KtpConfig.ENV_CONFIG_KEY}" }
+        log {}.warn(ex) { "Failed to parse config from ENV var: ${KtpConfig.KTP_CONFIG_ENV_VAR}" }
         null
     }
 }

@@ -12,10 +12,10 @@ import kotlin.reflect.jvm.jvmErasure
 
 class KtpConfig(val config: Config, val env: Env) {
     companion object {
-        const val CONF_FILE_EXT = "conf"
-        const val CONF_FILE_DIR = "ktp"
-        const val ENV_PATH = "env"
-        const val ENV_CONFIG_KEY = "KTP_CONFIG"
+        const val CONFIG_FILE_EXT = "conf"
+        const val CONFIG_FILE_DIR = "ktp"
+        const val ENV_CONFIG_PATH = "env"
+        const val KTP_CONFIG_ENV_VAR = "KTP_CONFIG"
 
         init {
             // https://github.com/lightbend/config#optional-system-or-env-variable-overrides
@@ -24,9 +24,9 @@ class KtpConfig(val config: Config, val env: Env) {
             System.setProperty("config.override_with_env_vars", "true")
         }
 
-        fun create(buildConfig: KtpConfigBuilder.() -> Unit = {}): KtpConfig {
+        fun create(configure: KtpConfigBuilder.() -> Unit = {}): KtpConfig {
             val builder = KtpConfigBuilder()
-            builder.buildConfig()
+            builder.configure()
             return builder.build()
         }
     }
@@ -95,7 +95,7 @@ class KtpConfig(val config: Config, val env: Env) {
     }
 
     /** Create a config file containing all possible values. */
-    fun genTemplate(): String {
+    fun renderTemplate(): String {
         val options =
             ConfigRenderOptions.defaults()
                 .setJson(false)
@@ -103,7 +103,7 @@ class KtpConfig(val config: Config, val env: Env) {
                 .setComments(true)
                 .setOriginComments(true)
         val filteredConfig =
-            filterConfig(config.root()) { path, _ -> path != ENV_PATH } ?: error("No config")
+            filterConfig(config.root()) { path, _ -> path != ENV_CONFIG_PATH } ?: error("No config")
         // These comment lines don't seem useful.
         val extraComments = Regex("^.*# hardcoded value.*\\R?", RegexOption.MULTILINE)
         val renderedConfig = filteredConfig.render(options).replace(extraComments, "")

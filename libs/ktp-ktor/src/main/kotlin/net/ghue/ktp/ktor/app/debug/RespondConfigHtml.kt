@@ -27,7 +27,7 @@ suspend fun RoutingCall.respondConfigHtml() {
             .map {
                 val sanitizedValue =
                     if (
-                        it.key.equals(KtpConfig.ENV_CONFIG_KEY, ignoreCase = true) ||
+                        it.key.equals(KtpConfig.KTP_CONFIG_ENV_VAR, ignoreCase = true) ||
                             it.key.contains("secret", ignoreCase = true)
                     ) {
                         "${it.value.length} chars"

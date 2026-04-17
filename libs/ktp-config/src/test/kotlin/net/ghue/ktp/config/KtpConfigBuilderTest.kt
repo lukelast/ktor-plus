@@ -9,15 +9,15 @@ class KtpConfigBuilderTest :
             KtpConfig.create { setUnitTestEnv() }.env shouldBe Env.TEST_UNIT
         }
 
-        "create with setIntegrationEnv defaults to Env.TEST_INTEGRATION" {
-            KtpConfig.create { setIntegrationEnv() }.env shouldBe Env.TEST_INTEGRATION
+        "create with setIntegrationTestEnv defaults to Env.TEST_INTEGRATION" {
+            KtpConfig.create { setIntegrationTestEnv() }.env shouldBe Env.TEST_INTEGRATION
         }
 
         "create allows overriding configuration values" {
             KtpConfig.create { setUnitTestEnv() }.data.app.name shouldBe ""
             KtpConfig.create {
                     setUnitTestEnv()
-                    configValue("app.name", "blah")
+                    overrideValue("app.name", "blah")
                 }
                 .data
                 .app
@@ -27,8 +27,8 @@ class KtpConfigBuilderTest :
         "create allows multiple configuration overrides" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
-                configValue("app.name", "test-app")
-                configValue("app.version", "1.2.3")
+                overrideValue("app.name", "test-app")
+                overrideValue("app.version", "1.2.3")
             }
 
             config.data.app.name shouldBe "test-app"
@@ -49,9 +49,9 @@ class KtpConfigBuilderTest :
         "buildConfig prefers alphabetical names when priority matches" {
             val files =
                 listOf(
-                        fakeConfig(0, name = "a", text = """v=a"""),
-                        fakeConfig(0, name = "b", text = """v=b"""),
-                        fakeConfig(0, name = "c", text = """v=c"""),
+                        fakeConfig(0, baseName = "a", text = """v=a"""),
+                        fakeConfig(0, baseName = "b", text = """v=b"""),
+                        fakeConfig(0, baseName = "c", text = """v=c"""),
                     )
                     .shuffled()
 
@@ -71,10 +71,10 @@ class KtpConfigBuilderTest :
             builder.env shouldBe findEnvironment()
         }
 
-        "builder configValue adds to override map" {
+        "builder overrideValue adds to override map" {
             val builder = KtpConfigBuilder()
-            builder.configValue("key1", "value1")
-            builder.configValue("key2", 42)
+            builder.overrideValue("key1", "value1")
+            builder.overrideValue("key2", 42)
 
             builder.overrideMap["key1"] shouldBe "value1"
             builder.overrideMap["key2"] shouldBe 42

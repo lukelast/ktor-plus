@@ -12,7 +12,7 @@ val appName = config.data.app.name
 // Testing with overrides
 val config = KtpConfig.create {
     setUnitTestEnv()
-    configValue("app.name", "test-app")
+    overrideValue("app.name", "test-app")
 }
 ```
 
@@ -34,7 +34,7 @@ Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://gi
 
 ### Configuration Precedence (highest to lowest)
 
-1. Override map (`configValue()`)
+1. Override map (`overrideValue()`)
 2. `CONFIG_FORCE_` environment variables
 3. System environment (`sysenv` path)
 4. System properties
@@ -59,13 +59,13 @@ val config = KtpConfig.create()
 val config = KtpConfig.create { setUnitTestEnv() }
 
 // Integration testing
-val config = KtpConfig.create { setIntegrationEnv() }
+val config = KtpConfig.create { setIntegrationTestEnv() }
 
 // With overrides
 val config = KtpConfig.create {
     setUnitTestEnv()
-    configValue("app.name", "test-app")
-    configValue("database.host", "localhost")
+    overrideValue("app.name", "test-app")
+    overrideValue("database.host", "localhost")
 }
 
 // Specific environment

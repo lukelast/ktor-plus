@@ -5,27 +5,27 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class BuildConfigFromEnvTextTest :
+class BuildConfigFromEnvVarTest :
     StringSpec({
-        "buildConfigFromEnvText returns null when config text is empty" {
-            val result = buildConfigFromEnvText("")
+        "buildConfigFromEnvVar returns null when config text is empty" {
+            val result = buildConfigFromEnvVar("")
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null when config text is blank" {
-            val result = buildConfigFromEnvText("   ")
+        "buildConfigFromEnvVar returns null when config text is blank" {
+            val result = buildConfigFromEnvVar("   ")
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText parses simple config" {
+        "buildConfigFromEnvVar parses simple config" {
             val configText = "mykey = \"myvalue\""
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("mykey") shouldBe "myvalue"
         }
 
-        "buildConfigFromEnvText parses complex nested config" {
+        "buildConfigFromEnvVar parses complex nested config" {
             val configText =
                 """
                 app {
@@ -38,7 +38,7 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("app.name") shouldBe "test-app"
@@ -46,7 +46,7 @@ class BuildConfigFromEnvTextTest :
             result.getInt("app.server.port") shouldBe 8080
         }
 
-        "buildConfigFromEnvText parses HOCON with substitution when resolved" {
+        "buildConfigFromEnvVar parses HOCON with substitution when resolved" {
             val configText =
                 """
                 baseUrl = "https://example.com"
@@ -54,10 +54,10 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
-            // Note: The config is not resolved by buildConfigFromEnvText itself
+            // Note: The config is not resolved by buildConfigFromEnvVar itself
             // Substitutions are resolved later in buildConfig()
             result.getString("baseUrl") shouldBe "https://example.com"
             // After resolve(), apiUrl will be evaluated
@@ -65,96 +65,96 @@ class BuildConfigFromEnvTextTest :
             resolved.getString("apiUrl") shouldBe "https://example.com/api"
         }
 
-        "buildConfigFromEnvText returns null for invalid config syntax" {
+        "buildConfigFromEnvVar returns null for invalid config syntax" {
             val configText = "invalid { syntax [ = "
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for mismatched braces" {
+        "buildConfigFromEnvVar returns null for mismatched braces" {
             val configText = "app { name = \"test\" "
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for unclosed quotes" {
+        "buildConfigFromEnvVar returns null for unclosed quotes" {
             val configText = "key = \"value without closing quote"
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for malformed arrays" {
+        "buildConfigFromEnvVar returns null for malformed arrays" {
             val configText = "items = [\"item1\", \"item2\""
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for incomplete key-value pairs" {
+        "buildConfigFromEnvVar returns null for incomplete key-value pairs" {
             val configText = "key = "
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for missing equals sign" {
+        "buildConfigFromEnvVar returns null for missing equals sign" {
             val configText = "key value"
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText allows trailing comma in object" {
+        "buildConfigFromEnvVar allows trailing comma in object" {
             // HOCON allows trailing commas
             val configText = "app { name = \"test\", }"
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldNotBeNull()
             result.getString("app.name") shouldBe "test"
         }
 
-        "buildConfigFromEnvText returns null for invalid escape sequences" {
+        "buildConfigFromEnvVar returns null for invalid escape sequences" {
             val configText = "key = \"invalid \\x escape\""
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText returns null for duplicate key at same level" {
+        "buildConfigFromEnvVar returns null for duplicate key at same level" {
             // HOCON typically allows duplicate keys (last wins), but some strict parsers may reject
             val configText = "key = \"value1\"\nkey = \"value2\""
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             // This should actually parse successfully in HOCON - last value wins
             result.shouldNotBeNull()
             result.getString("key") shouldBe "value2"
         }
 
-        "buildConfigFromEnvText returns null for nested mismatched brackets" {
+        "buildConfigFromEnvVar returns null for nested mismatched brackets" {
             val configText = "outer { inner [ key = value ] }"
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvText parses unquoted strings as valid HOCON" {
+        "buildConfigFromEnvVar parses unquoted strings as valid HOCON" {
             // HOCON allows unquoted strings for simple values
             val configText = "key = value"
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
             result.shouldNotBeNull()
             result.getString("key") shouldBe "value"
         }
 
-        "buildConfigFromEnvText includes KTP_CONFIG origin description" {
+        "buildConfigFromEnvVar includes KTP_CONFIG origin description" {
             val configText = "testKey = \"testValue\""
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             val origin = result.getValue("testKey").origin()
-            origin.description() shouldBe "${KtpConfig.ENV_CONFIG_KEY}: 1"
+            origin.description() shouldBe "${KtpConfig.KTP_CONFIG_ENV_VAR}: 1"
         }
 
-        "buildConfigFromEnvText parses config with arrays" {
+        "buildConfigFromEnvVar parses config with arrays" {
             val configText =
                 """
                 items = ["item1", "item2", "item3"]
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             val items = result.getStringList("items")
@@ -164,7 +164,7 @@ class BuildConfigFromEnvTextTest :
             items[2] shouldBe "item3"
         }
 
-        "buildConfigFromEnvText parses config with nested objects" {
+        "buildConfigFromEnvVar parses config with nested objects" {
             val configText =
                 """
                 database {
@@ -178,7 +178,7 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("database.host") shouldBe "localhost"
@@ -187,7 +187,7 @@ class BuildConfigFromEnvTextTest :
             result.getString("database.credentials.password") shouldBe "secret"
         }
 
-        "buildConfigFromEnvText parses config with numbers and booleans" {
+        "buildConfigFromEnvVar parses config with numbers and booleans" {
             val configText =
                 """
                 intValue = 42
@@ -197,7 +197,7 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getInt("intValue") shouldBe 42
@@ -206,7 +206,7 @@ class BuildConfigFromEnvTextTest :
             result.getBoolean("boolValue") shouldBe true
         }
 
-        "buildConfigFromEnvText parses config with comments" {
+        "buildConfigFromEnvVar parses config with comments" {
             val configText =
                 """
                 # This is a comment
@@ -216,24 +216,24 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("key1") shouldBe "value1"
             result.getString("key2") shouldBe "value2"
         }
 
-        "buildConfigFromEnvText reads from system environment by default" {
+        "buildConfigFromEnvVar reads from system environment by default" {
             // When no parameter is passed, it should read from KTP_CONFIG env var
             // This will pass if the env var is not set (returns null)
-            val envValue = System.getenv(KtpConfig.ENV_CONFIG_KEY)
+            val envValue = System.getenv(KtpConfig.KTP_CONFIG_ENV_VAR)
             if (envValue.isNullOrBlank()) {
-                val result = buildConfigFromEnvText()
+                val result = buildConfigFromEnvVar()
                 result.shouldBeNull()
             }
         }
 
-        "buildConfigFromEnvText handles multiline config strings" {
+        "buildConfigFromEnvVar handles multiline config strings" {
             val configText =
                 """
                 app {
@@ -248,14 +248,14 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("app.name") shouldBe "multiline-app"
             result.getStringList("app.features").size shouldBe 3
         }
 
-        "buildConfigFromEnvText handles empty objects" {
+        "buildConfigFromEnvVar handles empty objects" {
             val configText =
                 """
                 emptySection {}
@@ -263,14 +263,14 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.hasPath("emptySection") shouldBe true
             result.getString("nonEmptySection.key") shouldBe "value"
         }
 
-        "buildConfigFromEnvText handles special characters in values" {
+        "buildConfigFromEnvVar handles special characters in values" {
             val configText =
                 """
                 url = "https://example.com/path?param=value&other=123"
@@ -279,7 +279,7 @@ class BuildConfigFromEnvTextTest :
                 """
                     .trimIndent()
 
-            val result = buildConfigFromEnvText(configText)
+            val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
             result.getString("url") shouldBe "https://example.com/path?param=value&other=123"

@@ -11,7 +11,7 @@ class KtpConfigAuthTest :
         "auth config parses session timeout in days" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
-                configValue("auth.sessionTimeout", "7d")
+                overrideValue("auth.sessionTimeout", "7d")
             }
 
             config.auth.sessionTimeout shouldBe "7d"
@@ -21,7 +21,7 @@ class KtpConfigAuthTest :
         "auth config parses session timeout in hours" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
-                configValue("auth.sessionTimeout", "48h")
+                overrideValue("auth.sessionTimeout", "48h")
             }
 
             config.auth.sessionTimeout shouldBe "48h"
@@ -31,10 +31,10 @@ class KtpConfigAuthTest :
         "auth config reads all URL values" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
-                configValue("auth.loginUrl", "/custom/login")
-                configValue("auth.logoutUrl", "/custom/logout")
-                configValue("auth.redirectAfterLogout", "/dashboard")
-                configValue("auth.sessionTimeout", "14d")
+                overrideValue("auth.loginUrl", "/custom/login")
+                overrideValue("auth.logoutUrl", "/custom/logout")
+                overrideValue("auth.redirectAfterLogout", "/dashboard")
+                overrideValue("auth.sessionTimeout", "14d")
             }
 
             config.auth.loginUrl shouldBe "/custom/login"
