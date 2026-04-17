@@ -5,10 +5,11 @@ import com.stripe.model.Event
 import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
 import io.github.oshai.kotlinlogging.withLoggingContext
-import io.ktor.http.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.post
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.error.ktpRspError
 import net.ghue.ktp.ktor.plugin.withIoContext
@@ -37,28 +38,23 @@ fun Routing.installStripeWebhook() {
                 return@post
             }
         withLoggingContext("event-type" to event.type) {
-            try {
-                log {}.info { "Processing stripe event" }
-                when (event.type) {
-                    "checkout.session.completed" -> {
-                        processCheckoutSession(event, handler::checkoutSessionCompleted)
-                    }
-                    "checkout.session.expired" -> {
-                        processCheckoutSession(event, handler::checkoutSessionExpired)
-                    }
-                    else -> {
-                        ktpRspError {
-                            status = HttpStatusCode.BadRequest
-                            title = "Unhandled Event Type"
-                            detail = "Unhandled event type: ${event.type}"
-                        }
+            log {}.info { "Processing stripe event" }
+            when (event.type) {
+                "checkout.session.completed" -> {
+                    processCheckoutSession(event, handler::checkoutSessionCompleted)
+                }
+                "checkout.session.expired" -> {
+                    processCheckoutSession(event, handler::checkoutSessionExpired)
+                }
+                else -> {
+                    ktpRspError {
+                        status = HttpStatusCode.BadRequest
+                        title = "Unhandled Event Type"
+                        detail = "Unhandled event type: ${event.type}"
                     }
                 }
-                call.respond(HttpStatusCode.OK)
-            } catch (ex: Exception) {
-                log {}.warn(ex) { "Error handling stripe event" }
-                call.respond(HttpStatusCode.InternalServerError, "Error handling stripe event")
             }
+            call.respond(HttpStatusCode.OK)
         }
     }
 }
