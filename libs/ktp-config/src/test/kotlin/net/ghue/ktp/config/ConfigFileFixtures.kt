@@ -2,18 +2,18 @@ package net.ghue.ktp.config
 
 fun fakeConfig(
     priority: Int,
-    baseName: String = "",
+    configName: String = "",
     env: String = "",
     text: String = "",
 ): ConfigFile =
     ConfigFile(
-        absolutePath = "",
+        resourceUri = "",
         fileName =
-            listOf(priority.toString(), baseName, KtpConfig.CONFIG_FILE_EXT)
+            listOf(priority.toString(), configName, KtpConfig.CONFIG_FILE_EXT)
                 .filter { it.isNotEmpty() }
                 .joinToString("."),
         priority = priority,
-        baseName = baseName,
+        configName = configName,
         envName = env,
         text = text,
     )

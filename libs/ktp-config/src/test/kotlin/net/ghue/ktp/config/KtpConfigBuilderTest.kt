@@ -49,9 +49,9 @@ class KtpConfigBuilderTest :
         "buildConfig prefers alphabetical names when priority matches" {
             val files =
                 listOf(
-                        fakeConfig(0, baseName = "a", text = """v=a"""),
-                        fakeConfig(0, baseName = "b", text = """v=b"""),
-                        fakeConfig(0, baseName = "c", text = """v=c"""),
+                        fakeConfig(0, configName = "a", text = """v=a"""),
+                        fakeConfig(0, configName = "b", text = """v=b"""),
+                        fakeConfig(0, configName = "c", text = """v=c"""),
                     )
                     .shuffled()
 

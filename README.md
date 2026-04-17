@@ -77,7 +77,7 @@ Core utilities with minimal dependencies, providing essential building blocks fo
 Configuration management built on Typesafe Config with layered, environment-specific overrides:
 
 - **HOCON Format**: Human-optimized configuration using HOCON syntax
-- **Priority-Based Layering**: Files named `<priority>.<name>.<environment>.conf` with configurable precedence
+- **Priority-Based Layering**: Files named `<priority>.<configName>.<environment>.conf` with configurable precedence
 - **Environment Detection**: Automatic detection via `KTP_ENV`, `ENV`, or Kubernetes namespace
 - **Secret Masking**: Automatic sanitization of sensitive values in logs
 - **Environment Variables**: Override any config value with `CONFIG_FORCE_` prefix

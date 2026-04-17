@@ -9,7 +9,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class ParseUtilTest :
+class DurationParsingTest :
     StringSpec({
         "parseDuration parses days" {
             parseDuration("7d") shouldBe 7.days

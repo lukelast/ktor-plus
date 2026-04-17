@@ -1,8 +1,8 @@
 package net.ghue.ktp.config
 
 data class ConfigFile(
-    /** Fullest, absolute path to the config file. Could be in a jar. */
-    val absolutePath: String,
+    /** Resource URI for the config file. Could be in a jar. */
+    val resourceUri: String,
     /** Name of the original file like `default.config.conf`. */
     val fileName: String,
     /**
@@ -11,10 +11,10 @@ data class ConfigFile(
      */
     val priority: Int,
     /**
-     * The optional base name of the config file like `config` in `default.config.conf`. If not
-     * present, this will be an empty string.
+     * The optional config name of the file like `config` in `default.config.conf`. If not present,
+     * this will be an empty string.
      */
-    val baseName: String,
+    val configName: String,
     val envName: String,
 
     /** The text content of the config file. */
@@ -28,32 +28,32 @@ data class ConfigFile(
             // Files with an env come first, sorted by env name.
             { it.envName.ifEmpty { Char.MAX_VALUE.toString() } },
             // Then files with a base name, sorted by base name.
-            { it.baseName.ifEmpty { Char.MAX_VALUE.toString() } },
+            { it.configName.ifEmpty { Char.MAX_VALUE.toString() } },
             // Fallback to path for stable sort
-            { it.absolutePath.reversed() },
+            { it.resourceUri.reversed() },
         )
 
     companion object {
-        fun create(fullPath: String, text: String): ConfigFile {
-            val fileName = fullPath.substringAfterLast("/")
+        fun create(resourceUri: String, text: String): ConfigFile {
+            val fileName = resourceUri.substringAfterLast("/")
             val nameTokens = fileName.split(".").filter { it != KtpConfig.CONFIG_FILE_EXT }
             if (nameTokens.isEmpty()) {
-                error("Invalid config file name: $fullPath")
+                error("Invalid config file name: $resourceUri")
             }
             val priority =
                 nameTokens[0].toIntOrNull()
                     ?: error(
-                        "Invalid config file name: $fullPath. Must start with a priority number."
+                        "Invalid config file name: $resourceUri. Must start with a priority number."
                     )
-            if(priority !in 0..9){
-                error("Invalid config file priority: $fullPath. Must be between 0 and 9")
+            if (priority !in 0..9) {
+                error("Invalid config file priority: $resourceUri. Must be between 0 and 9")
             }
-            val baseName = nameTokens.getOrElse(1) { "" }
+            val configName = nameTokens.getOrElse(1) { "" }
             return ConfigFile(
-                absolutePath = fullPath,
+                resourceUri = resourceUri,
                 fileName = fileName,
                 priority = priority,
-                baseName = baseName,
+                configName = configName,
                 envName = nameTokens.getOrNull(2) ?: "",
                 text = text,
             )
@@ -64,7 +64,7 @@ data class ConfigFile(
     @Suppress("ReturnCount")
     fun appliesTo(env: Env): Boolean {
         // Prevent unit tests from picking up local dev override configs.
-        if (env.isTest && envName.isEmpty() && (baseName == "local" || baseName.isEmpty())) {
+        if (env.isTest && envName.isEmpty() && (configName == "local" || configName.isEmpty())) {
             return false
         }
         if (envName.isEmpty()) {

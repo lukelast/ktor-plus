@@ -20,10 +20,10 @@ val config = KtpConfig.create {
 
 Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://github.com/lightbend/config/blob/main/HOCON.md).
 
-### File Naming: `<priority>.<name>.<environment>.conf`
+### File Naming: `<priority>.<configName>.<environment>.conf`
 
 - **Priority** (required): Number 0-9. Lower = higher priority (0 overrides 9)
-- **Name** (optional): Descriptive identifier (e.g., `database`, `kafka`)
+- **Config name** (optional): Descriptive identifier (e.g., `database`, `kafka`)
 - **Environment** (optional): Applies only to specific env (e.g., `prod`, `test`)
 
 **Examples:**
@@ -39,7 +39,7 @@ Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://gi
 3. System environment (`sysenv` path)
 4. System properties
 5. `KTP_CONFIG` environment variable
-6. Config files (by priority, env, name, alphabetically)
+6. Config files (by priority, env, config name, alphabetically)
 
 ## Environment Detection
 
