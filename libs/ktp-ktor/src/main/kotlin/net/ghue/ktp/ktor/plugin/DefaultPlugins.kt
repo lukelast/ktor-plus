@@ -19,7 +19,6 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.resources.Resources
-import io.ktor.server.response.respondText
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.error.KtpRspEx
 import net.ghue.ktp.ktor.error.processKtpRspEx
@@ -63,7 +62,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
                     "Unhandled exception in request: ${call.request.path()} " +
                         "with method: ${call.request.httpMethod.value}"
                 }
-            call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
+            processKtpRspEx(call, KtpRspEx(cause = cause))
         }
     }
     install(Resources)
