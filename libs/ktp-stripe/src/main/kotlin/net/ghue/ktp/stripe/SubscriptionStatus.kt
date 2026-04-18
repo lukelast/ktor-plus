@@ -22,5 +22,5 @@ enum class SubscriptionStatus {
     }
 }
 
-val Subscription.statusTyped: SubscriptionStatus
+val Subscription.statusEnum: SubscriptionStatus
     get() = SubscriptionStatus.fromString(this.status)

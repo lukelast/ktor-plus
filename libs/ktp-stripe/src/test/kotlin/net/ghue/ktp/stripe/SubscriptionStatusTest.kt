@@ -1,5 +1,6 @@
 package net.ghue.ktp.stripe
 
+import com.stripe.model.Subscription
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -41,5 +42,11 @@ class SubscriptionStatusTest :
             SubscriptionStatus.entries.forEach { status ->
                 SubscriptionStatus.fromString(status.toString()) shouldBe status
             }
+        }
+
+        "statusEnum parses the Stripe subscription status string" {
+            val subscription = Subscription().apply { status = "active" }
+
+            subscription.statusEnum shouldBe SubscriptionStatus.ACTIVE
         }
     })

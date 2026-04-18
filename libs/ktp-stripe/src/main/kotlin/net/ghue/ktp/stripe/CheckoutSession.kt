@@ -36,5 +36,5 @@ enum class PaymentStatus {
     }
 }
 
-val Session.paymentStatusTyped: PaymentStatus
+val Session.paymentStatusEnum: PaymentStatus
     get() = PaymentStatus.fromString(this.paymentStatus)

@@ -74,12 +74,15 @@ val config = KtpConfig.create { env = Env("staging") }
 
 ## Accessing Configuration
 
+`extractChild<T>()` reads from the config object whose name matches `T` with the first letter lowercased.
+
 ```kotlin
 // Built-in data
 val name = config.data.app.name
 val version = config.data.app.version
 
 // Custom data classes
+// DatabaseConfig maps to the "databaseConfig" config object.
 data class DatabaseConfig(val host: String, val port: Int)
 val dbConfig = config.extractChild<DatabaseConfig>()
 
@@ -88,6 +91,11 @@ class MyServiceConfig(config: KtpConfig) {
     val db = config.extractChild<DatabaseConfig>()
 }
 val serviceConfig = config.get<MyServiceConfig>()
+
+// Examples:
+// extractChild<Auth>() reads from "auth"
+// extractChild<Stripe>() reads from "stripe"
+// extractChild<DatabaseConfig>() reads from "databaseConfig"
 
 // Debugging
 val allConfig = config.getAllConfig()  // Secrets masked

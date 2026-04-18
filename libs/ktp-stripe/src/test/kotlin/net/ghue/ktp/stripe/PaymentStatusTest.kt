@@ -1,5 +1,6 @@
 package net.ghue.ktp.stripe
 
+import com.stripe.model.checkout.Session
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
@@ -35,5 +36,11 @@ class PaymentStatusTest :
             PaymentStatus.PAID.isPaid shouldBe true
             PaymentStatus.NO_PAYMENT_REQUIRED.isPaid shouldBe true
             PaymentStatus.UNPAID.isPaid shouldBe false
+        }
+
+        "paymentStatusEnum parses the Stripe checkout session payment status string" {
+            val session = Session().apply { paymentStatus = "paid" }
+
+            session.paymentStatusEnum shouldBe PaymentStatus.PAID
         }
     })
