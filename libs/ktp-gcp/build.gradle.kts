@@ -2,6 +2,8 @@ plugins { id("com.github.lukelast.ktor-plus") }
 
 dependencies {
     api(platform(libs.gcpBom))
+    api(platform(libs.ktor.bom))
+    api(platform(libs.koinBom))
 
     api(libs.gcpCore)
 

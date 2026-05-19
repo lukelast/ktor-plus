@@ -6,6 +6,10 @@ dependencies {
 
     api(project(":libs:ktp-ktor"))
 
+    api(platform(libs.gcpBom))
+    api(platform(libs.ktor.bom))
+    api(platform(libs.koinBom))
+
     // Ktor
     api(libs.ktor.sessions)
     api(libs.ktor.auth)

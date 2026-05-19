@@ -3,6 +3,8 @@ plugins { id("com.github.lukelast.ktor-plus") }
 dependencies {
     api(project(":libs:ktp-ktor"))
 
+    api(platform(libs.ktor.bom))
+    api(platform(libs.koinBom))
     api(platform(libs.kotest.bom))
     api(libs.mockk)
     api(libs.ktor.test)
