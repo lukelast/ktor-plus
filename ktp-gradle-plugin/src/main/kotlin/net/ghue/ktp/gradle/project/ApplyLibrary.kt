@@ -8,6 +8,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.api.publish.tasks.GenerateModuleMetadata
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.withType
@@ -45,5 +46,16 @@ fun Project.configPublishJava() {
                 from(components.getByName("java"))
             }
         }
+    }
+
+    // Disable Gradle Module Metadata on JitPack builds only. JitPack rewrites the
+    // server-side .module file and strips the `-sources` classifier from the
+    // sourcesElements file entry, which causes IntelliJ to attach the binary jar
+    // as the SOURCES root and source navigation breaks for consumers.
+    // Without GMM, Gradle falls back to POM-based resolution, where the sources
+    // classifier convention is hardcoded and JitPack serves it correctly.
+    // See https://github.com/jitpack/jitpack.io/issues/4476
+    if (System.getenv("JITPACK") != null) {
+        tasks.withType<GenerateModuleMetadata>().configureEach { enabled = false }
     }
 }
