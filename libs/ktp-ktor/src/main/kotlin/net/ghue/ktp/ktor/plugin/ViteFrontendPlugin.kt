@@ -2,6 +2,7 @@ package net.ghue.ktp.ktor.plugin
 
 import io.ktor.client.*
 import io.ktor.client.engine.java.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -20,6 +21,7 @@ import kotlin.io.path.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.Resource
@@ -109,7 +111,16 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
 private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
     // Create HTTP client with short timeout
     val client =
-        HttpClient(Java) { engine { config { connectTimeout(500.milliseconds.toJavaDuration()) } } }
+        HttpClient(Java) {
+            engine {
+                // The JDK client defaults to HTTP_2, which sends `Connection: Upgrade` on plain
+                // http. Vite's dev server routes any upgrade request to its HMR WebSocket
+                // handler, which ignores it and never responds, hanging the request forever.
+                protocolVersion = java.net.http.HttpClient.Version.HTTP_1_1
+                config { connectTimeout(500.milliseconds.toJavaDuration()) }
+            }
+            install(HttpTimeout) { requestTimeoutMillis = 10.seconds.inWholeMilliseconds }
+        }
 
     override fun close() {
         client.close()
