@@ -11,7 +11,6 @@ import io.ktor.server.plugins.compression.matchContentType
 import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.conditionalheaders.ConditionalHeaders
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.forwardedheaders.ForwardedHeaders
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -40,8 +39,12 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         )
         default()
     }
-    install(XForwardedHeaders)
-    install(ForwardedHeaders)
+    // GCP's frontend (Cloud Run / GFE) appends the real client IP as the LAST entry of
+    // X-Forwarded-For and does not sanitize earlier, client-supplied entries. Ktor's default
+    // useFirstProxy() would trust the spoofable first entry. The RFC 7239 Forwarded header is
+    // never set or sanitized by GCP, so installing ForwardedHeaders would let clients poison
+    // call.request.origin — deliberately not installed.
+    install(XForwardedHeaders) { useLastProxy() }
     install(ConditionalHeaders)
     if (!config.env.isLocalDev) {
         install(HSTS)
