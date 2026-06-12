@@ -24,6 +24,23 @@ suspend inline fun <reified T : Any> CollectionReference.upsert(
     document(idFieldValue(document)).set(document.serialize(), setOptions).await()
 }
 
+/**
+ * Sets the document to exactly [document], deleting fields not present in it. Unlike [upsert],
+ * whose merge write never removes existing fields or map keys.
+ */
+suspend inline fun <reified T : Any> CollectionReference.replace(document: T) {
+    document(idFieldValue(document)).set(document.serialize()).await()
+}
+
+/**
+ * Partial merge write of raw field values, bypassing the reflection serializer. Use for Firestore
+ * server-side sentinels like [com.google.cloud.firestore.FieldValue.increment], which [upsert]
+ * would mangle. Creates the document when missing.
+ */
+suspend fun DocumentReference.setMerge(fields: Map<String, Any>) {
+    set(fields, SetOptions.merge()).await()
+}
+
 /** Creates a new document with an auto-generated ID, passing the ID to the builder function. */
 suspend fun <T : Any> CollectionReference.newDoc(documentBuilder: (String) -> T): T {
     val newDocRef = this.document()
