@@ -25,7 +25,9 @@ dependencies {
     implementation(libs.gradleKtfmt)
     implementation(libs.gradleDetekt)
     implementation(libs.gradleKoinCompiler)
-    compileOnly(libs.gradleShadow)
+    // Must be on the runtime classpath (not compileOnly) to win over the older Shadow the
+    // Ktor plugin pulls in: 9.1.0 has service-file merge regressions (GradleUp/shadow#1348).
+    implementation(libs.gradleShadow)
 }
 
 kotlin { jvmToolchain(21) }
