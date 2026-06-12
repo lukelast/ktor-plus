@@ -1,21 +1,21 @@
 [versions]
-kotlin = "2.3.20"
+kotlin = "2.4.0"
 # Keep in sync with `Version.KOIN`
 koin = "4.2.1"
-koinPlugin = "1.0.0-RC1"
-ktor = "3.4.2"
-versionCheck = "0.53.0"
-kotlinCoroutines = "1.10.2"
-typesafeConfig = "1.4.6"
+koinPlugin = "1.0.1"
+ktor = "3.5.0"
+versionCheck = "0.54.0"
+kotlinCoroutines = "1.11.0"
+typesafeConfig = "1.4.9"
 config4k = "0.7.0"
 classgraph = "4.8.184"
-slf4j = "2.0.17"
-mockk = "1.14.9"
-stripe = "32.0.0"
+slf4j = "2.0.18"
+mockk = "1.14.11"
+stripe = "33.0.0"
 # When changing this version you must also update `Version.KOTEST`
 kotest = "6.1.11"
-gcpBom = "26.80.0"
-detekt = "2.0.0-alpha.2"
+gcpBom = "26.83.0"
+detekt = "2.0.0-alpha.3"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -27,7 +27,7 @@ gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.r
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.26.0" }
-gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.4.1" }
+gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.4.2" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
 
@@ -88,11 +88,11 @@ gcpFirestore = { module = "com.google.cloud:google-cloud-firestore" }
 
 # Firebase Admin SDK - manages its own version but uses GCP BOM for transitive deps
 #firebaseBom = { module = "com.google.firebase:firebase-bom", version = "34.12.0" }
-firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.8.0" }
+firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.9.0" }
 
 # Logging dependencies
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.32" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.34" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
-kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version = "8.0.01" }
+kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version = "8.0.4" }
 slf4jJcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
 slf4jJul = { module = "org.slf4j:jul-to-slf4j", version.ref = "slf4j" }
