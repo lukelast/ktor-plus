@@ -1,6 +1,5 @@
 package net.ghue.ktp.gradle.settings
 
-import net.ghue.ktp.gradle.common.Version
 import net.ghue.ktp.lib.KtpVersion
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
@@ -13,7 +12,7 @@ class SettingsPlugin : Plugin<Settings> {
         settings.dependencyResolutionManagement {
             versionCatalogs {
                 create("libs") {
-                    library("koin.bom", "io.insert-koin", "koin-bom").version(Version.KOIN)
+                    library("koin.bom", "io.insert-koin", "koin-bom").version(KtpVersion.KOIN)
 
                     val ktpVersion = version("ktp", KtpVersion.VERSION)
                     KtpVersion.libs.forEach {

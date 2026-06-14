@@ -1,6 +1,5 @@
 [versions]
 kotlin = "2.4.0"
-# Keep in sync with `Version.KOIN`
 koin = "4.2.1"
 koinPlugin = "1.0.1"
 ktor = "3.5.0"
@@ -12,7 +11,6 @@ classgraph = "4.8.184"
 slf4j = "2.0.18"
 mockk = "1.14.11"
 stripe = "33.0.0"
-# When changing this version you must also update `Version.KOTEST`
 kotest = "6.1.11"
 gcpBom = "26.83.0"
 detekt = "2.0.0-alpha.3"

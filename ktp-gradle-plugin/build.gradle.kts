@@ -54,14 +54,18 @@ val versionGenTask =
     tasks.register("generateVersionFile") {
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
         val projectVersion = project.version.toString()
+        val koinVersion = libs.versions.koin.get()
+        val kotestVersion = libs.versions.kotest.get()
 
         inputs.property("version", projectVersion)
+        inputs.property("koinVersion", koinVersion)
+        inputs.property("kotestVersion", kotestVersion)
         outputs.file(outputFile)
 
         doLast {
             outputFile.get().asFile.parentFile.mkdirs()
 
-            val libs =
+            val libraryNames =
                 layout.buildDirectory
                     .dir("../../libs")
                     .get()
@@ -76,9 +80,19 @@ val versionGenTask =
                     """
             package net.ghue.ktp.lib
 
+            /** Generated from `gradle/libs.versions.toml`; do not edit by hand. */
             object KtpVersion {
+                /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
-                val libs = listOf(${libs.joinToString { "\"$it\"" }})
+
+                /** koin BOM version this plugin injects into consumer builds. */
+                const val KOIN = "$koinVersion"
+
+                /** kotest BOM version this plugin injects into consumer builds. */
+                const val KOTEST = "$kotestVersion"
+
+                /** Names of the ktor-plus library modules this plugin publishes. */
+                val libs = listOf(${libraryNames.joinToString { "\"$it\"" }})
             }
         """
                         .trimIndent()
