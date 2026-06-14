@@ -66,16 +66,11 @@ interface StripeWebhookHandler {
 }
 
 private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {
-    val session = event.asCheckoutSession()
-    if (session.id.isNullOrBlank()) {
-        ktpRspError {
-            status = HttpStatusCode.BadRequest
-            title = "Missing Checkout Session ID"
-            detail = "Stripe event contains a checkout session with no ID"
-        }
-    }
-    withLoggingContext("checkout-session-id" to session.id) {
-        withIoContext {
+    // asCheckoutSession may issue a blocking Stripe API call on the fallback path, so resolve it
+    // (and run the handler) on the IO dispatcher. It also guarantees a non-blank session id.
+    withIoContext {
+        val session = event.asCheckoutSession()
+        withLoggingContext("checkout-session-id" to session.id) {
             try {
                 body(session)
             } catch (ex: Exception) {

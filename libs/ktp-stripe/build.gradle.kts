@@ -7,4 +7,5 @@ dependencies {
     api(platform(libs.koinBom))
 
     api(libs.stripe)
+    implementation(libs.kotlinJson)
 }
