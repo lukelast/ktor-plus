@@ -163,8 +163,6 @@ Testing utilities and helpers for KTP applications:
     * `./gradlew clean publishToMavenLocal`
 * Format code
     * `./gradlew ktfmtFormat`
-* Update gradle
-  * `./gradlew wrapper --gradle-version latest`
 
 ## Gradle Plugins
 
