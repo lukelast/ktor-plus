@@ -10,6 +10,7 @@ config4k = "0.7.0"
 classgraph = "4.8.184"
 slf4j = "2.0.18"
 mockk = "1.14.11"
+byteBuddy = "1.18.10"
 stripe = "33.0.0"
 kotest = "6.1.11"
 gcpBom = "26.83.0"
@@ -31,6 +32,7 @@ gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.c
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+byteBuddyAgent = { module = "net.bytebuddy:byte-buddy-agent", version.ref = "byteBuddy" }
 kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
 kotest-engine = { module = "io.kotest:kotest-framework-engine"}
 kotest-koin = { module = "io.kotest:kotest-extensions-koin" }
