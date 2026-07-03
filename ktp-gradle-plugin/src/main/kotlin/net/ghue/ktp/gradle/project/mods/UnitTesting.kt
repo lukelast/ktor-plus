@@ -1,14 +1,10 @@
 package net.ghue.ktp.gradle.project.mods
 
 import net.ghue.ktp.lib.KtpVersion
-import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.testing.Test
-import org.gradle.jvm.toolchain.JavaLauncher
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
@@ -73,20 +69,4 @@ private class ByteBuddyAgentArgumentProvider(
 ) : CommandLineArgumentProvider {
     override fun asArguments(): Iterable<String> =
         agentClasspath.files.map { "-javaagent:${it.absolutePath}" }
-}
-
-private class SunMiscUnsafeMemoryAccessArgumentProvider(
-    @get:Internal val javaLauncher: Provider<JavaLauncher>
-) : CommandLineArgumentProvider {
-    override fun asArguments(): Iterable<String> {
-        val javaMajorVersion =
-            javaLauncher.orNull?.metadata?.languageVersion?.asInt()
-                ?: JavaVersion.current().majorVersion.toInt()
-
-        return if (javaMajorVersion >= 23) {
-            listOf("--sun-misc-unsafe-memory-access=allow")
-        } else {
-            emptyList()
-        }
-    }
 }
