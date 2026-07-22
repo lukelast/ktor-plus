@@ -2,6 +2,7 @@ package net.ghue.ktp.stripe
 
 import com.stripe.exception.SignatureVerificationException
 import com.stripe.model.Event
+import com.stripe.model.Subscription
 import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
 import io.github.oshai.kotlinlogging.withLoggingContext
@@ -46,6 +47,12 @@ fun Routing.installStripeWebhook() {
                 "checkout.session.expired" -> {
                     processCheckoutSession(event, handler::checkoutSessionExpired)
                 }
+                "customer.subscription.updated" -> {
+                    processSubscription(event, handler::subscriptionUpdated)
+                }
+                "customer.subscription.deleted" -> {
+                    processSubscription(event, handler::subscriptionDeleted)
+                }
                 else -> {
                     ktpRspError {
                         status = HttpStatusCode.BadRequest
@@ -63,6 +70,22 @@ interface StripeWebhookHandler {
     suspend fun checkoutSessionCompleted(session: Session)
 
     suspend fun checkoutSessionExpired(session: Session)
+
+    /**
+     * Fires on `customer.subscription.updated` — e.g. a scheduled cancellation
+     * (cancel_at_period_end), a quantity change, or a status transition. Default no-op so existing
+     * handlers keep compiling; the event type only arrives if the Stripe webhook endpoint
+     * subscribes to it.
+     */
+    suspend fun subscriptionUpdated(subscription: Subscription) {}
+
+    /**
+     * Fires on `customer.subscription.deleted` — the subscription has actually ended (period-end
+     * cancellation taking effect, immediate cancellation, or final payment failure). Default no-op
+     * so existing handlers keep compiling; the event type only arrives if the Stripe webhook
+     * endpoint subscribes to it.
+     */
+    suspend fun subscriptionDeleted(subscription: Subscription) {}
 }
 
 private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {
@@ -73,6 +96,22 @@ private suspend fun processCheckoutSession(event: Event, body: suspend (Session)
         withLoggingContext("checkout-session-id" to session.id) {
             try {
                 body(session)
+            } catch (ex: Exception) {
+                log {}.warn(ex) { ex.message }
+                throw ex
+            }
+        }
+    }
+}
+
+private suspend fun processSubscription(event: Event, body: suspend (Subscription) -> Unit) {
+    // asSubscription may issue a blocking Stripe API call on the fallback path, so resolve it
+    // (and run the handler) on the IO dispatcher. It also guarantees a non-blank subscription id.
+    withIoContext {
+        val subscription = event.asSubscription()
+        withLoggingContext("subscription-id" to subscription.id) {
+            try {
+                body(subscription)
             } catch (ex: Exception) {
                 log {}.warn(ex) { ex.message }
                 throw ex
