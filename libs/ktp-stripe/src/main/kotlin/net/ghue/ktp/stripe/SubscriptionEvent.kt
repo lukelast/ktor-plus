@@ -10,18 +10,16 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import net.ghue.ktp.ktor.error.ktpRspError
 
-fun Event.asSubscription(): Subscription = asSubscription { Subscription.retrieve(it) }
-
 /**
  * Decodes the [Subscription] from this event. When the event's API version matches the SDK, Stripe
  * gives us a high-integrity snapshot we can use directly; otherwise only the (version-stable) id is
- * trusted and [retrieveSubscription] re-fetches a clean object.
+ * trusted and a clean object is re-fetched.
  */
-internal fun Event.asSubscription(retrieveSubscription: (String) -> Subscription): Subscription {
+internal fun Event.asSubscription(): Subscription {
     val deserializer = dataObjectDeserializer
     val subscription =
         when (val stripeObject = deserializer.`object`.orElse(null)) {
-            null -> retrieveSubscription(deserializer.subscriptionId())
+            null -> Subscription.retrieve(deserializer.subscriptionId())
             is Subscription -> stripeObject
             else ->
                 ktpRspError {

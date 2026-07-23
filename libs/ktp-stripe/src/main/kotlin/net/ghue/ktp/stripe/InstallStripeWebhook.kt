@@ -5,6 +5,7 @@ import com.stripe.model.Event
 import com.stripe.model.Subscription
 import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
+import com.stripe.param.WebhookEndpointCreateParams.EnabledEvent
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -12,7 +13,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.post
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.error.ktpRspError
 import net.ghue.ktp.ktor.plugin.withIoContext
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
@@ -41,24 +41,20 @@ fun Routing.installStripeWebhook() {
         withLoggingContext("event-type" to event.type) {
             log {}.info { "Processing stripe event" }
             when (event.type) {
-                "checkout.session.completed" -> {
+                EnabledEvent.CHECKOUT__SESSION__COMPLETED.value -> {
                     processCheckoutSession(event, handler::checkoutSessionCompleted)
                 }
-                "checkout.session.expired" -> {
+                EnabledEvent.CHECKOUT__SESSION__EXPIRED.value -> {
                     processCheckoutSession(event, handler::checkoutSessionExpired)
                 }
-                "customer.subscription.updated" -> {
+                EnabledEvent.CUSTOMER__SUBSCRIPTION__UPDATED.value -> {
                     processSubscription(event, handler::subscriptionUpdated)
                 }
-                "customer.subscription.deleted" -> {
+                EnabledEvent.CUSTOMER__SUBSCRIPTION__DELETED.value -> {
                     processSubscription(event, handler::subscriptionDeleted)
                 }
                 else -> {
-                    ktpRspError {
-                        status = HttpStatusCode.BadRequest
-                        title = "Unhandled Event Type"
-                        detail = "Unhandled event type: ${event.type}"
-                    }
+                    handler.otherEvent(event.type)
                 }
             }
             call.respond(HttpStatusCode.OK)
@@ -67,25 +63,15 @@ fun Routing.installStripeWebhook() {
 }
 
 interface StripeWebhookHandler {
-    suspend fun checkoutSessionCompleted(session: Session)
+    suspend fun checkoutSessionCompleted(session: Session) {}
 
-    suspend fun checkoutSessionExpired(session: Session)
+    suspend fun checkoutSessionExpired(session: Session) {}
 
-    /**
-     * Fires on `customer.subscription.updated` — e.g. a scheduled cancellation
-     * (cancel_at_period_end), a quantity change, or a status transition. Default no-op so existing
-     * handlers keep compiling; the event type only arrives if the Stripe webhook endpoint
-     * subscribes to it.
-     */
     suspend fun subscriptionUpdated(subscription: Subscription) {}
 
-    /**
-     * Fires on `customer.subscription.deleted` — the subscription has actually ended (period-end
-     * cancellation taking effect, immediate cancellation, or final payment failure). Default no-op
-     * so existing handlers keep compiling; the event type only arrives if the Stripe webhook
-     * endpoint subscribes to it.
-     */
     suspend fun subscriptionDeleted(subscription: Subscription) {}
+
+    suspend fun otherEvent(eventType: String) {}
 }
 
 private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {

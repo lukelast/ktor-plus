@@ -8,4 +8,6 @@ dependencies {
 
     api(libs.stripe)
     implementation(libs.kotlinJson)
+
+    testImplementation(libs.mockk)
 }

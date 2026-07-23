@@ -8,34 +8,36 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import io.mockk.verify
 import net.ghue.ktp.ktor.error.KtpRspEx
 
 class SubscriptionEventTest :
     StringSpec({
+        beforeTest { mockkStatic(Subscription::class) }
+        afterTest { unmockkStatic(Subscription::class) }
+
         "asSubscription returns safely decoded subscription" {
-            var retrieved = false
             val event = subscriptionEvent(apiVersion = Stripe.API_VERSION)
 
-            val subscription = event.asSubscription {
-                retrieved = true
-                Subscription()
-            }
+            val subscription = event.asSubscription()
 
             subscription.id shouldBe "sub_test_123"
             subscription.status shouldBe "canceled"
-            retrieved shouldBe false
+            verify(exactly = 0) { Subscription.retrieve(any<String>()) }
         }
 
         "asSubscription retrieves subscription when safe decoding is unavailable" {
             val event = subscriptionEvent(apiVersion = "2019-01-01")
             val retrievedSubscription = Subscription().apply { id = "sub_test_retrieved" }
+            every { Subscription.retrieve("sub_test_123") } returns retrievedSubscription
 
-            val subscription = event.asSubscription { subscriptionId ->
-                subscriptionId shouldBe "sub_test_123"
-                retrievedSubscription
-            }
+            val subscription = event.asSubscription()
 
             subscription shouldBe retrievedSubscription
+            verify(exactly = 1) { Subscription.retrieve("sub_test_123") }
         }
 
         "asSubscription rejects fallback events without a subscription id" {
@@ -52,10 +54,7 @@ class SubscriptionEventTest :
                             .trimIndent(),
                 )
 
-            val ex =
-                shouldThrow<KtpRspEx> {
-                    event.asSubscription { error("retrieve should not be called") }
-                }
+            val ex = shouldThrow<KtpRspEx> { event.asSubscription() }
 
             ex.status shouldBe HttpStatusCode.BadRequest
             ex.title shouldBe "Missing Subscription ID"
@@ -75,10 +74,7 @@ class SubscriptionEventTest :
                             .trimIndent(),
                 )
 
-            val ex =
-                shouldThrow<KtpRspEx> {
-                    event.asSubscription { error("retrieve should not be called") }
-                }
+            val ex = shouldThrow<KtpRspEx> { event.asSubscription() }
 
             ex.status shouldBe HttpStatusCode.BadRequest
             ex.title shouldBe "Unexpected Stripe Object"
