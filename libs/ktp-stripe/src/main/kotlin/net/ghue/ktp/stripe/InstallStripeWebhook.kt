@@ -1,11 +1,7 @@
 package net.ghue.ktp.stripe
 
 import com.stripe.exception.SignatureVerificationException
-import com.stripe.model.Event
-import com.stripe.model.Subscription
-import com.stripe.model.checkout.Session
 import com.stripe.net.Webhook
-import com.stripe.param.WebhookEndpointCreateParams.EnabledEvent
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -13,7 +9,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.post
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.plugin.withIoContext
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
@@ -38,70 +33,55 @@ fun Routing.installStripeWebhook() {
                 call.respond(HttpStatusCode.Unauthorized, "Invalid signature")
                 return@post
             }
-        withLoggingContext("event-type" to event.type) {
+        val webhookEvent = event.toWebhookEvent()
+        withLoggingContext(
+            "stripe-event-id" to webhookEvent.eventId.value,
+            "event-type" to webhookEvent.type,
+            "stripe-object-id" to webhookEvent.objectIdRaw,
+        ) {
             log {}.info { "Processing stripe event" }
-            when (event.type) {
-                EnabledEvent.CHECKOUT__SESSION__COMPLETED.value -> {
-                    processCheckoutSession(event, handler::checkoutSessionCompleted)
+            try {
+                when (val id = webhookEvent.objectId) {
+                    is CheckoutSessionId -> handler.onCheckoutSession(webhookEvent, id)
+                    is SubscriptionId -> handler.onSubscription(webhookEvent, id)
+                    is InvoiceId -> handler.onInvoice(webhookEvent, id)
+                    is CustomerId -> handler.onCustomer(webhookEvent, id)
+                    null -> {
+                        // An empty object type means the data object could not be parsed, so the
+                        // event is acked without any typed handler seeing it.
+                        if (webhookEvent.objectTypeRaw.isEmpty()) {
+                            log {}.warn { "Stripe event data object is unreadable" }
+                        }
+                        handler.onOther(webhookEvent)
+                    }
                 }
-                EnabledEvent.CHECKOUT__SESSION__EXPIRED.value -> {
-                    processCheckoutSession(event, handler::checkoutSessionExpired)
-                }
-                EnabledEvent.CUSTOMER__SUBSCRIPTION__UPDATED.value -> {
-                    processSubscription(event, handler::subscriptionUpdated)
-                }
-                EnabledEvent.CUSTOMER__SUBSCRIPTION__DELETED.value -> {
-                    processSubscription(event, handler::subscriptionDeleted)
-                }
-                else -> {
-                    handler.otherEvent(event.type)
-                }
+            } catch (ex: Exception) {
+                log {}.warn(ex) { ex.message }
+                throw ex
             }
             call.respond(HttpStatusCode.OK)
         }
     }
 }
 
+/**
+ * Webhook handlers grouped by Stripe object type. Use [StripeWebhookEvent.type] or
+ * [StripeWebhookEvent.action] to distinguish e.g. `completed` from `expired`. Dedicated handlers
+ * guarantee a non-null object id. The few Stripe events whose objects intentionally have no id,
+ * notably `invoice.upcoming`, arrive at [onOther]; this keeps the common handler API non-null while
+ * preserving those special cases through the raw event fields.
+ *
+ * Handlers receive only version-stable ids. To read the full object, re-fetch it with the app's
+ * [com.stripe.StripeClient], e.g. `id.retrieve(client)`.
+ */
 interface StripeWebhookHandler {
-    suspend fun checkoutSessionCompleted(session: Session) {}
+    suspend fun onCheckoutSession(event: StripeWebhookEvent, id: CheckoutSessionId) {}
 
-    suspend fun checkoutSessionExpired(session: Session) {}
+    suspend fun onSubscription(event: StripeWebhookEvent, id: SubscriptionId) {}
 
-    suspend fun subscriptionUpdated(subscription: Subscription) {}
+    suspend fun onInvoice(event: StripeWebhookEvent, id: InvoiceId) {}
 
-    suspend fun subscriptionDeleted(subscription: Subscription) {}
+    suspend fun onCustomer(event: StripeWebhookEvent, id: CustomerId) {}
 
-    suspend fun otherEvent(eventType: String) {}
-}
-
-private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {
-    // asCheckoutSession may issue a blocking Stripe API call on the fallback path, so resolve it
-    // (and run the handler) on the IO dispatcher. It also guarantees a non-blank session id.
-    withIoContext {
-        val session = event.asCheckoutSession()
-        withLoggingContext("checkout-session-id" to session.id) {
-            try {
-                body(session)
-            } catch (ex: Exception) {
-                log {}.warn(ex) { ex.message }
-                throw ex
-            }
-        }
-    }
-}
-
-private suspend fun processSubscription(event: Event, body: suspend (Subscription) -> Unit) {
-    // asSubscription may issue a blocking Stripe API call on the fallback path, so resolve it
-    // (and run the handler) on the IO dispatcher. It also guarantees a non-blank subscription id.
-    withIoContext {
-        val subscription = event.asSubscription()
-        withLoggingContext("subscription-id" to subscription.id) {
-            try {
-                body(subscription)
-            } catch (ex: Exception) {
-                log {}.warn(ex) { ex.message }
-                throw ex
-            }
-        }
-    }
+    suspend fun onOther(event: StripeWebhookEvent) {}
 }
