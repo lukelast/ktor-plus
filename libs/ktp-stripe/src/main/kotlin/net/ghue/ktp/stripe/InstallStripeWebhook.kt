@@ -1,5 +1,6 @@
 package net.ghue.ktp.stripe
 
+import com.stripe.StripeClient
 import com.stripe.exception.SignatureVerificationException
 import com.stripe.model.Event
 import com.stripe.model.Subscription
@@ -21,6 +22,12 @@ fun Routing.installStripeWebhook() {
     val config: KtpConfig by inject()
     val handler: StripeWebhookHandler by inject()
     val webhookSecret = config.stripe.webhookSecret
+    // Stripe safely deserializes an event's data object only when the event's api_version
+    // matches the API version this stripe-java SDK is pinned to. On a mismatch (the webhook
+    // endpoint is pinned to a different version, e.g. after an SDK upgrade), the decoders trust
+    // only the object id and re-fetch a clean copy from the API — an authenticated call, which
+    // needs this client because the global Stripe.apiKey is never set.
+    val stripeClient = StripeClient(config.stripe.secretKey)
     post("/api/stripe/event") {
         val payload: String = call.receive()
         val stripeSigHeaderName = "Stripe-Signature"
@@ -42,16 +49,16 @@ fun Routing.installStripeWebhook() {
             log {}.info { "Processing stripe event" }
             when (event.type) {
                 EnabledEvent.CHECKOUT__SESSION__COMPLETED.value -> {
-                    processCheckoutSession(event, handler::checkoutSessionCompleted)
+                    processCheckoutSession(stripeClient, event, handler::checkoutSessionCompleted)
                 }
                 EnabledEvent.CHECKOUT__SESSION__EXPIRED.value -> {
-                    processCheckoutSession(event, handler::checkoutSessionExpired)
+                    processCheckoutSession(stripeClient, event, handler::checkoutSessionExpired)
                 }
                 EnabledEvent.CUSTOMER__SUBSCRIPTION__UPDATED.value -> {
-                    processSubscription(event, handler::subscriptionUpdated)
+                    processSubscription(stripeClient, event, handler::subscriptionUpdated)
                 }
                 EnabledEvent.CUSTOMER__SUBSCRIPTION__DELETED.value -> {
-                    processSubscription(event, handler::subscriptionDeleted)
+                    processSubscription(stripeClient, event, handler::subscriptionDeleted)
                 }
                 else -> {
                     handler.otherEvent(event.type)
@@ -74,11 +81,15 @@ interface StripeWebhookHandler {
     suspend fun otherEvent(eventType: String) {}
 }
 
-private suspend fun processCheckoutSession(event: Event, body: suspend (Session) -> Unit) {
+private suspend fun processCheckoutSession(
+    client: StripeClient,
+    event: Event,
+    body: suspend (Session) -> Unit,
+) {
     // asCheckoutSession may issue a blocking Stripe API call on the fallback path, so resolve it
     // (and run the handler) on the IO dispatcher. It also guarantees a non-blank session id.
     withIoContext {
-        val session = event.asCheckoutSession()
+        val session = event.asCheckoutSession(client)
         withLoggingContext("checkout-session-id" to session.id) {
             try {
                 body(session)
@@ -90,11 +101,15 @@ private suspend fun processCheckoutSession(event: Event, body: suspend (Session)
     }
 }
 
-private suspend fun processSubscription(event: Event, body: suspend (Subscription) -> Unit) {
+private suspend fun processSubscription(
+    client: StripeClient,
+    event: Event,
+    body: suspend (Subscription) -> Unit,
+) {
     // asSubscription may issue a blocking Stripe API call on the fallback path, so resolve it
     // (and run the handler) on the IO dispatcher. It also guarantees a non-blank subscription id.
     withIoContext {
-        val subscription = event.asSubscription()
+        val subscription = event.asSubscription(client)
         withLoggingContext("subscription-id" to subscription.id) {
             try {
                 body(subscription)

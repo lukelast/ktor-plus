@@ -1,5 +1,6 @@
 package net.ghue.ktp.stripe
 
+import com.stripe.StripeClient
 import com.stripe.model.Event
 import com.stripe.model.EventDataObjectDeserializer
 import com.stripe.model.checkout.Session
@@ -10,7 +11,17 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import net.ghue.ktp.ktor.error.ktpRspError
 
+@Deprecated(
+    "Depends on the process-global Stripe.apiKey, which nothing in KTP sets, so the " +
+        "fallback re-fetch fails with AuthenticationException unless the application set " +
+        "the key itself. Pass an authenticated StripeClient instead.",
+    ReplaceWith("asCheckoutSession(client)"),
+)
 fun Event.asCheckoutSession(): Session = asCheckoutSession { Session.retrieve(it) }
+
+fun Event.asCheckoutSession(client: StripeClient): Session = asCheckoutSession {
+    client.v1().checkout().sessions().retrieve(it)
+}
 
 /**
  * Decodes the checkout [Session] from this event. When the event's API version matches the SDK,

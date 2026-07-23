@@ -1,6 +1,7 @@
 package net.ghue.ktp.stripe
 
 import com.stripe.Stripe
+import com.stripe.StripeClient
 import com.stripe.model.Event
 import com.stripe.model.StripeObject
 import com.stripe.model.Subscription
@@ -9,38 +10,38 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
+import io.mockk.mockk
 import io.mockk.verify
 import net.ghue.ktp.ktor.error.KtpRspEx
 
 class SubscriptionEventTest :
     StringSpec({
-        beforeTest { mockkStatic(Subscription::class) }
-        afterTest { unmockkStatic(Subscription::class) }
-
         "asSubscription returns safely decoded subscription" {
+            val client = mockk<StripeClient>()
             val event = subscriptionEvent(apiVersion = Stripe.API_VERSION)
 
-            val subscription = event.asSubscription()
+            val subscription = event.asSubscription(client)
 
             subscription.id shouldBe "sub_test_123"
             subscription.status shouldBe "canceled"
-            verify(exactly = 0) { Subscription.retrieve(any<String>()) }
+            verify(exactly = 0) { client.v1() }
         }
 
         "asSubscription retrieves subscription when safe decoding is unavailable" {
+            val client = mockk<StripeClient>()
             val event = subscriptionEvent(apiVersion = "2019-01-01")
             val retrievedSubscription = Subscription().apply { id = "sub_test_retrieved" }
-            every { Subscription.retrieve("sub_test_123") } returns retrievedSubscription
+            every { client.v1().subscriptions().retrieve("sub_test_123") } returns
+                retrievedSubscription
 
-            val subscription = event.asSubscription()
+            val subscription = event.asSubscription(client)
 
             subscription shouldBe retrievedSubscription
-            verify(exactly = 1) { Subscription.retrieve("sub_test_123") }
+            verify(exactly = 1) { client.v1().subscriptions().retrieve("sub_test_123") }
         }
 
         "asSubscription rejects fallback events without a subscription id" {
+            val client = mockk<StripeClient>()
             val event =
                 subscriptionEvent(
                     apiVersion = "2019-01-01",
@@ -54,13 +55,14 @@ class SubscriptionEventTest :
                             .trimIndent(),
                 )
 
-            val ex = shouldThrow<KtpRspEx> { event.asSubscription() }
+            val ex = shouldThrow<KtpRspEx> { event.asSubscription(client) }
 
             ex.status shouldBe HttpStatusCode.BadRequest
             ex.title shouldBe "Missing Subscription ID"
         }
 
         "asSubscription rejects safely decoded non-subscription objects" {
+            val client = mockk<StripeClient>()
             val event =
                 subscriptionEvent(
                     apiVersion = Stripe.API_VERSION,
@@ -74,7 +76,7 @@ class SubscriptionEventTest :
                             .trimIndent(),
                 )
 
-            val ex = shouldThrow<KtpRspEx> { event.asSubscription() }
+            val ex = shouldThrow<KtpRspEx> { event.asSubscription(client) }
 
             ex.status shouldBe HttpStatusCode.BadRequest
             ex.title shouldBe "Unexpected Stripe Object"

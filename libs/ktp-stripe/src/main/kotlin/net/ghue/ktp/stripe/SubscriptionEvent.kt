@@ -1,5 +1,6 @@
 package net.ghue.ktp.stripe
 
+import com.stripe.StripeClient
 import com.stripe.model.Event
 import com.stripe.model.EventDataObjectDeserializer
 import com.stripe.model.Subscription
@@ -15,11 +16,14 @@ import net.ghue.ktp.ktor.error.ktpRspError
  * gives us a high-integrity snapshot we can use directly; otherwise only the (version-stable) id is
  * trusted and a clean object is re-fetched.
  */
-internal fun Event.asSubscription(): Subscription {
+internal fun Event.asSubscription(client: StripeClient): Subscription {
     val deserializer = dataObjectDeserializer
     val subscription =
         when (val stripeObject = deserializer.`object`.orElse(null)) {
-            null -> Subscription.retrieve(deserializer.subscriptionId())
+            null -> {
+                val subscriptionId = deserializer.subscriptionId()
+                client.v1().subscriptions().retrieve(subscriptionId)
+            }
             is Subscription -> stripeObject
             else ->
                 ktpRspError {
