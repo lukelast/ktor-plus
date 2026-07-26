@@ -21,7 +21,8 @@ fun Project.applyLibrary() {
     pluginManager.apply(MavenPublishPlugin::class.java)
     applyKtfmt()
 
-    val outputJavaVersion = JavaVersion.VERSION_17
+    // Virtual threads require 21+.
+    val outputJavaVersion = JavaVersion.VERSION_21
 
     // Configure Java to include source JAR
     extensions.configure<JavaPluginExtension> {

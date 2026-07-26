@@ -4,6 +4,8 @@ dependencies {
     api(libs.kotlinReflect)
     api(libs.kotlinJson)
 
+    api(libs.caffeine)
+
     api(libs.logbackClassic)
     api(libs.logstashLogbackEncoder)
 
