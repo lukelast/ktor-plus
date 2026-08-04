@@ -13,8 +13,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.log.log
 
@@ -107,52 +105,50 @@ class FirebaseAuthService(
     }
 
     @Throws(AuthEx::class)
-    private suspend fun verifyToken(firebaseIdToken: String): FirebaseToken =
-        withContext(Dispatchers.IO) {
-            try {
-                firebaseAuth.verifyIdToken(firebaseIdToken, true)
-                    ?: throw AuthEx(message = "Should not return null", userError = false)
-            } catch (ex: IllegalArgumentException) {
-                throw AuthEx(
-                    message = "Invalid login request, possibly Firebase app has no project ID",
-                    userError = false,
-                    cause = ex,
-                )
-            } catch (ex: FirebaseAuthException) {
-                // https://firebase.google.com/docs/reference/admin/java/reference/com/google/firebase/ErrorCode
-                when (ex.errorCode) {
-                    ErrorCode.UNAUTHENTICATED,
-                    ErrorCode.NOT_FOUND ->
-                        throw AuthEx(
-                            status = HttpStatusCode.Unauthorized,
-                            userError = true,
-                            cause = ex,
-                        )
-                    ErrorCode.PERMISSION_DENIED ->
-                        throw AuthEx(
-                            status = HttpStatusCode.Forbidden,
-                            userError = true,
-                            cause = ex,
-                        )
-                    ErrorCode.INVALID_ARGUMENT ->
-                        throw AuthEx(status = BadRequest, userError = true, cause = ex)
-                    ErrorCode.DEADLINE_EXCEEDED ->
-                        throw AuthEx(
-                            status = HttpStatusCode.RequestTimeout,
-                            userError = false,
-                            cause = ex,
-                        )
-                    else -> {
-                        throw AuthEx(
-                            status = HttpStatusCode.Unauthorized,
-                            userError = false,
-                            cause = ex,
-                        )
-                    }
+    private fun verifyToken(firebaseIdToken: String): FirebaseToken =
+        try {
+            firebaseAuth.verifyIdToken(firebaseIdToken, true)
+                ?: throw AuthEx(message = "Should not return null", userError = false)
+        } catch (ex: IllegalArgumentException) {
+            throw AuthEx(
+                message = "Invalid login request, possibly Firebase app has no project ID",
+                userError = false,
+                cause = ex,
+            )
+        } catch (ex: FirebaseAuthException) {
+            // https://firebase.google.com/docs/reference/admin/java/reference/com/google/firebase/ErrorCode
+            when (ex.errorCode) {
+                ErrorCode.UNAUTHENTICATED,
+                ErrorCode.NOT_FOUND ->
+                    throw AuthEx(
+                        status = HttpStatusCode.Unauthorized,
+                        userError = true,
+                        cause = ex,
+                    )
+                ErrorCode.PERMISSION_DENIED ->
+                    throw AuthEx(
+                        status = HttpStatusCode.Forbidden,
+                        userError = true,
+                        cause = ex,
+                    )
+                ErrorCode.INVALID_ARGUMENT ->
+                    throw AuthEx(status = BadRequest, userError = true, cause = ex)
+                ErrorCode.DEADLINE_EXCEEDED ->
+                    throw AuthEx(
+                        status = HttpStatusCode.RequestTimeout,
+                        userError = false,
+                        cause = ex,
+                    )
+                else -> {
+                    throw AuthEx(
+                        status = HttpStatusCode.Unauthorized,
+                        userError = false,
+                        cause = ex,
+                    )
                 }
-            } catch (ex: Exception) {
-                throw AuthEx(userError = false, cause = ex)
             }
+        } catch (ex: Exception) {
+            throw AuthEx(userError = false, cause = ex)
         }
 }
 

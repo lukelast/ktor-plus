@@ -5,7 +5,6 @@ import com.stripe.model.Customer
 import com.stripe.model.Invoice
 import com.stripe.model.Subscription
 import com.stripe.model.checkout.Session
-import net.ghue.ktp.ktor.plugin.withIoContext
 
 /**
  * A Stripe object id extracted from a webhook event. Ids are stable across Stripe API versions, so
@@ -27,21 +26,15 @@ sealed interface StripeId {
 @JvmInline value class CustomerId(override val value: String) : StripeId
 
 /** Fetches the current [Session] from the Stripe API at the app's pinned SDK version. */
-suspend fun CheckoutSessionId.retrieve(client: StripeClient): Session = withIoContext {
+fun CheckoutSessionId.retrieve(client: StripeClient): Session =
     client.v1().checkout().sessions().retrieve(value)
-}
 
 /** Fetches the current [Subscription] from the Stripe API at the app's pinned SDK version. */
-suspend fun SubscriptionId.retrieve(client: StripeClient): Subscription = withIoContext {
+fun SubscriptionId.retrieve(client: StripeClient): Subscription =
     client.v1().subscriptions().retrieve(value)
-}
 
 /** Fetches the current [Invoice] from the Stripe API at the app's pinned SDK version. */
-suspend fun InvoiceId.retrieve(client: StripeClient): Invoice = withIoContext {
-    client.v1().invoices().retrieve(value)
-}
+fun InvoiceId.retrieve(client: StripeClient): Invoice = client.v1().invoices().retrieve(value)
 
 /** Fetches the current [Customer] from the Stripe API at the app's pinned SDK version. */
-suspend fun CustomerId.retrieve(client: StripeClient): Customer = withIoContext {
-    client.v1().customers().retrieve(value)
-}
+fun CustomerId.retrieve(client: StripeClient): Customer = client.v1().customers().retrieve(value)

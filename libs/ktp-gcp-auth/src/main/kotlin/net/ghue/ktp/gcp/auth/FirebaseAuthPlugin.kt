@@ -8,7 +8,6 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.plugin.MdcClearPlugin
 import org.koin.ktor.ext.inject
 import org.slf4j.MDC
 
@@ -49,10 +48,6 @@ val FirebaseAuthPlugin =
                     transform(ktpConfig.createSessionTransportTransformer())
                 }
             }
-        }
-
-        if (application.pluginOrNull(MdcClearPlugin) == null) {
-            application.install(MdcClearPlugin)
         }
 
         application.authentication {

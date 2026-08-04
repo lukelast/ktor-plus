@@ -4,8 +4,6 @@ dependencies {
     api(project(":libs:ktp-core"))
     api(project(":libs:ktp-config"))
 
-    api(libs.kotlinCoroutinesSlf4j)
-
     // Ktor
     api(platform(libs.ktor.bom))
     api(libs.ktor.core)
