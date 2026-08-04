@@ -1,5 +1,6 @@
 package net.ghue.ktp.ktor.plugin
 
+import com.sun.net.httpserver.HttpServer
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -8,9 +9,12 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
+import java.net.InetSocketAddress
 import java.net.ServerSocket
 import kotlin.io.path.Path
+import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
@@ -18,10 +22,7 @@ class ViteFrontendTest :
     StringSpec({
         "production mode serves index for missing specific resource" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -35,10 +36,7 @@ class ViteFrontendTest :
 
         "production mode serves non-existent static resources as 404" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -82,36 +80,42 @@ class ViteFrontendTest :
         }
 
         "dev mode proxies to Vite when localDev is true" {
-            testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "true")
-                }
+            val fakeVite = HttpServer.create(InetSocketAddress("localhost", 0), 0)
+            fakeVite.createContext("/") { exchange ->
+                val body = "<html>Fake Vite Response</html>".toByteArray()
+                exchange.responseHeaders.add("Content-Type", "text/html")
+                exchange.sendResponseHeaders(200, body.size.toLong())
+                exchange.responseBody.use { it.write(body) }
+            }
+            fakeVite.start()
+            try {
+                testApplication {
+                    val config = KtpConfig.create { env = Env(LOCAL_DEV_ENV_NAME) }
 
-                application {
-                    install(Koin) { modules(module { single { config } }) }
-                    install(ViteFrontendPlugin)
-                }
+                    application {
+                        install(Koin) { modules(module { single { config } }) }
+                        install(ViteFrontendPlugin) { vitePort = fakeVite.address.port }
+                    }
 
-                client.get("/").apply {
-                    status shouldBe HttpStatusCode.OK
-                    bodyAsText().shouldContain("Test Index Page")
-                }
+                    client.get("/").apply {
+                        status shouldBe HttpStatusCode.OK
+                        bodyAsText().shouldContain("Fake Vite Response")
+                    }
 
-                client.get("/p/some/page").apply {
-                    status shouldBe HttpStatusCode.OK
-                    bodyAsText().shouldContain("Test Index Page")
+                    client.get("/p/some/page").apply {
+                        status shouldBe HttpStatusCode.OK
+                        bodyAsText().shouldContain("Fake Vite Response")
+                    }
                 }
+            } finally {
+                fakeVite.stop(0)
             }
         }
 
         "dev mode starts even when frontend dist fallback is missing" {
             testApplication {
                 val unavailablePort = ServerSocket(0).use { it.localPort }
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "true")
-                }
+                val config = KtpConfig.create { env = Env(LOCAL_DEV_ENV_NAME) }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -127,10 +131,7 @@ class ViteFrontendTest :
 
         "production mode serves static resources correctly" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -148,10 +149,7 @@ class ViteFrontendTest :
 
         "production mode serves index HTML correctly" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -172,10 +170,7 @@ class ViteFrontendTest :
 
         "custom static URI routes are configured correctly" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
@@ -188,10 +183,7 @@ class ViteFrontendTest :
 
         "custom browser URI path prefix routes are configured correctly" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 application {
                     install(Koin) { modules(module { single { config } }) }

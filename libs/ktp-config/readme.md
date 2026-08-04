@@ -41,6 +41,11 @@ Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://gi
 5. `KTP_CONFIG` environment variable
 6. Config files (by priority, env, config name, alphabetically)
 
+Override keys are paths relative to the config root (e.g. `app.secret`) and must match a path that
+already exists in the merged config. `create()` fails fast on unknown keys because an override that
+nothing reads would be a silent no-op. The `env` path cannot be overridden; set `env` on the builder
+instead.
+
 ## Environment Detection
 
 Checks in order: `KTP_ENV` → `ENV` → `KUBERNETES_NAMESPACE` → `localDevEnv` in `0.conf` → default: `dev`

@@ -29,7 +29,9 @@ import java.util.Date
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
@@ -65,12 +67,7 @@ class FirebaseAuthPluginTest :
 
         "installs plugin with default configuration" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                    overrideValue("env.name", "test")
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -100,15 +97,22 @@ class FirebaseAuthPluginTest :
 
         "uses non-secure cookies in local dev environment" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "true")
-                    overrideValue("env.name", "test")
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { env = Env(LOCAL_DEV_ENV_NAME) }
 
-                val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
-                val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
+                val mockFirebaseAuth = mockk<FirebaseAuth>()
+                val mockLifecycle = mockk<AuthLifecycleHandler>()
+
+                every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns
+                    createMockFirebaseToken()
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserInfo(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                        extra = null,
+                    )
 
                 application {
                     install(KoinIsolated) {
@@ -126,13 +130,18 @@ class FirebaseAuthPluginTest :
                     }
 
                     install(FirebaseAuthPlugin)
-
-                    routing {
-                        authenticate(AuthProviderName.FIREBASE_SESSION) {
-                            get("/test") { call.respondText("OK") }
-                        }
-                    }
                 }
+
+                val response =
+                    client.post("/auth/login") {
+                        contentType(ContentType.Application.Json)
+                        setBody(Json.encodeToString(LoginRequest("valid-token")))
+                    }
+                response.status shouldBe HttpStatusCode.OK
+
+                val cookies = response.headers.getAll(HttpHeaders.SetCookie)
+                cookies shouldNotBe null
+                cookies?.none { it.contains("Secure") } shouldBe true
             }
         }
 
@@ -188,15 +197,14 @@ class FirebaseAuthPluginTest :
                 cookies?.any { it.contains("HttpOnly") } shouldBe true
                 cookies?.any { it.contains("SameSite=Lax") || it.contains("SameSite=lax") } shouldBe
                     true
+                // Outside local dev the default is auth.secureCookies = true.
+                cookies?.any { it.contains("Secure") } shouldBe true
             }
         }
 
         "unauthenticated user gets 401 on protected routes" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -233,10 +241,7 @@ class FirebaseAuthPluginTest :
 
         "login endpoint sets session cookie" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
@@ -292,9 +297,6 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                    overrideValue("env.name", "test")
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                     // The session cookie is named after the app, so a blank name breaks it.
                     overrideValue("app.name", "test.app")
                     // The test client talks plain HTTP and won't replay a Secure cookie.
@@ -359,12 +361,7 @@ class FirebaseAuthPluginTest :
 
         "invalid Firebase token returns error" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("env.localDev", "false")
-                    overrideValue("env.name", "test")
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -402,10 +399,7 @@ class FirebaseAuthPluginTest :
 
         "malformed login payload returns bad request" {
             testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                }
+                val config = KtpConfig.create { setUnitTestEnv() }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
@@ -443,7 +437,6 @@ class FirebaseAuthPluginTest :
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
-                    overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
                     overrideValue("auth.loginUrl", "/custom/signin")
                     overrideValue("auth.logoutUrl", "/custom/signout")
                 }

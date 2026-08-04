@@ -1,7 +1,9 @@
 package net.ghue.ktp.config
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class KtpConfigBuilderTest :
     StringSpec({
@@ -64,6 +66,44 @@ class KtpConfigBuilderTest :
             val config = buildConfig(Env.TEST_UNIT, files, mapOf("v" to "override"))
 
             config.getValue("v").unwrapped() shouldBe "override"
+        }
+
+        "build fails fast on an override key that matches no config path" {
+            val ex =
+                shouldThrow<IllegalArgumentException> {
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        overrideValue("data.app.secret", "value")
+                    }
+                }
+            ex.message shouldContain "data.app.secret"
+        }
+
+        "build fails fast on an override key under the env path" {
+            shouldThrow<IllegalArgumentException> {
+                KtpConfig.create {
+                    setUnitTestEnv()
+                    overrideValue("env.localDev", "true")
+                }
+            }
+        }
+
+        "build fails fast on overriding the env path itself" {
+            val ex =
+                shouldThrow<IllegalArgumentException> {
+                    KtpConfig.create {
+                        setUnitTestEnv()
+                        overrideValue("env", "prod")
+                    }
+                }
+            ex.message shouldContain "KtpConfigBuilder.env"
+        }
+
+        "buildConfig rejects override keys missing from config files" {
+            val files = listOf(fakeConfig(0, text = """v=file"""))
+            shouldThrow<IllegalArgumentException> {
+                buildConfig(Env.TEST_UNIT, files, mapOf("missing.path" to "x"))
+            }
         }
 
         "builder uses findEnvironment by default" {
