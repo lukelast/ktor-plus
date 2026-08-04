@@ -13,7 +13,7 @@ subprojects {
 tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {
     rejectVersionIf {
         fun String.isNonStable() = "^[0-9,.v-]+(-r)?$".toRegex().matches(this).not()
-        candidate.version.isNonStable()
+        candidate.version.isNonStable() && !currentVersion.isNonStable()
     }
 }
 

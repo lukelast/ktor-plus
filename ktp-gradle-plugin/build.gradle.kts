@@ -57,11 +57,13 @@ val versionGenTask =
         val koinVersion = libs.versions.koin.get()
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
+        val ktfmtVersion = libs.versions.ktfmt.get()
 
         inputs.property("version", projectVersion)
         inputs.property("koinVersion", koinVersion)
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
+        inputs.property("ktfmtVersion", ktfmtVersion)
         outputs.file(outputFile)
 
         doLast {
@@ -95,6 +97,9 @@ val versionGenTask =
 
                 /** Byte Buddy agent version this plugin preloads for MockK-friendly tests. */
                 const val BYTE_BUDDY = "$byteBuddyVersion"
+
+                /** ktfmt engine version used by the formatting tasks. */
+                const val KTFMT = "$ktfmtVersion"
 
                 /** Names of the ktor-plus library modules this plugin publishes. */
                 val libs = listOf(${libraryNames.joinToString { "\"$it\"" }})

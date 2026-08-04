@@ -105,12 +105,11 @@ class KtpStartTest :
         }
 
         "build does not accumulate config modules across repeated invocations" {
-            val updatedBuilder =
-                ktpAppCreate {
-                        createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
-                        addModule(module {})
-                    }
-                    .update { addModule(module {}) }
+            val updatedBuilder = ktpAppCreate {
+                createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+                addModule(module {})
+            }
+                .update { addModule(module {}) }
 
             val firstBuild = updatedBuilder().build()
             val secondBuild = updatedBuilder().build()

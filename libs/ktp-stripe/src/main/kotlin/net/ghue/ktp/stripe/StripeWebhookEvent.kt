@@ -53,9 +53,10 @@ data class StripeWebhookEvent(
 }
 
 internal fun Event.toWebhookEvent(): StripeWebhookEvent {
-    val dataObject =
-        runCatching { Json.parseToJsonElement(dataObjectDeserializer.rawJson).jsonObject }
-            .getOrNull()
+    val dataObject = runCatching {
+        Json.parseToJsonElement(dataObjectDeserializer.rawJson).jsonObject
+    }
+        .getOrNull()
 
     fun field(name: String): String? =
         (dataObject?.get(name) as? JsonPrimitive)?.contentOrNull?.takeUnless { it.isBlank() }

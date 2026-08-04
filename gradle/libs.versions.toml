@@ -1,32 +1,34 @@
 [versions]
-kotlin = "2.4.0"
-koin = "4.2.1"
-koinPlugin = "1.0.1"
-ktor = "3.5.0"
-versionCheck = "0.54.0"
+kotlin = "2.4.10"
+koin = "4.2.2"
+koinPlugin = "1.1.0"
+ktor = "3.5.2"
+ktorPlugin = "3.5.1"
+versionCheck = "0.58.0"
 kotlinCoroutines = "1.11.0"
 typesafeConfig = "1.4.9"
 config4k = "0.7.0"
-classgraph = "4.8.184"
+classgraph = "4.8.186"
 slf4j = "2.0.18"
 mockk = "1.14.11"
-byteBuddy = "1.18.10"
-stripe = "33.1.1"
-kotest = "6.1.11"
-gcpBom = "26.83.0"
-detekt = "2.0.0-alpha.3"
+byteBuddy = "1.18.11"
+stripe = "33.2.0"
+kotest = "6.2.3"
+gcpBom = "26.86.0"
+detekt = "2.0.0-alpha.5"
+ktfmt = "0.64"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-versionCheck = { id = "com.github.ben-manes.versions", version.ref = "versionCheck" }
+versionCheck = { id = "io.github.ben-manes.versions", version.ref = "versionCheck" }
 
 [libraries]
 # Gradle Plugins
 gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
+gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktorPlugin" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.26.0" }
-gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.4.2" }
+gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.6.1" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
 
@@ -89,10 +91,10 @@ gcpBom = { module = "com.google.cloud:libraries-bom", version.ref = "gcpBom" }
 gcpCore = { module = "com.google.cloud:google-cloud-core" }
 gcpFirestore = { module = "com.google.cloud:google-cloud-firestore" }
 # Firebase Admin SDK - manages its own version but uses GCP BOM for transitive deps
-firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.9.0" }
+firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.10.0" }
 
 # Logging dependencies
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.5.34" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.1" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version = "8.0.4" }
 slf4jJcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }

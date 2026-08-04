@@ -117,7 +117,12 @@ class ConfigFileTest :
                         fakeConfig(2, configName = "a", env = "", text = """v=2_a_all"""),
                         fakeConfig(2, configName = "", env = "test", text = """v=2_no_name_test"""),
                         fakeConfig(2, configName = "", env = "", text = """v=2_no_name_all"""),
-                        fakeConfig(6, configName = "b", env = "staging", text = """v=6_b_staging"""),
+                        fakeConfig(
+                            6,
+                            configName = "b",
+                            env = "staging",
+                            text = """v=6_b_staging""",
+                        ),
                     )
                     .shuffled()
 
