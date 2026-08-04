@@ -1,7 +1,7 @@
 on: [ push, workflow_dispatch ]
 
 env:
-  VERSION: 0.0.${{ github.run_number }}.${{ github.run_attempt }}
+  VERSION: 0.1.${{ github.run_number }}.${{ github.run_attempt }}
 
 
 permissions:
