@@ -241,7 +241,7 @@ class DebugEndpointsTest :
                     // Verify basic thread dump structure
                     body shouldContain "Full thread dump"
                     body shouldContain "Thread Summary:"
-                    body shouldContain "java.lang.Thread.State:"
+                    body shouldContain "Total threads (including virtual):"
                 }
             }
         }

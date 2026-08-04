@@ -2,8 +2,8 @@ package net.ghue.ktp.ktor.app.debug
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 
 class ThreadDumpGeneratorTest :
@@ -23,8 +23,8 @@ class ThreadDumpGeneratorTest :
         "thread dump contains thread summary" {
             val dump = generateThreadDump()
             dump shouldContain "Thread Summary:"
-            dump shouldContain "Total threads:"
-            dump shouldContain "RUNNABLE:"
+            dump shouldContain "Total threads (including virtual):"
+            dump shouldContain "Platform threads:"
         }
 
         "thread dump includes current thread" {
@@ -33,85 +33,61 @@ class ThreadDumpGeneratorTest :
             dump shouldContain "Test worker"
         }
 
-        "thread dump shows thread states" {
-            val dump = generateThreadDump()
-            dump shouldContain "java.lang.Thread.State:"
-        }
-
         "thread dump includes stack traces" {
             val dump = generateThreadDump()
-            // Should have 'at' keywords for stack frames
-            dump shouldContain "at "
+            // Stack frames are module-qualified in the plain text format
+            dump shouldContain "java.base/"
         }
 
-        "thread dump shows daemon threads correctly" {
-            // Create a daemon thread
-            val daemonThread =
-                thread(isDaemon = true, name = "test-daemon-thread") { Thread.sleep(2000) }
+        "thread dump includes virtual threads" {
+            val started = CountDownLatch(1)
+            val virtualThread =
+                Thread.ofVirtual().name("test-virtual-thread").start {
+                    started.countDown()
+                    try {
+                        Thread.sleep(10_000)
+                    } catch (_: InterruptedException) {
+                        // Expected on cleanup.
+                    }
+                }
 
             try {
-                Thread.sleep(100) // Let thread start
+                started.await()
                 val dump = generateThreadDump()
 
-                // Should contain our daemon thread marked as daemon
+                // ThreadMXBean-based dumps cannot see this thread; the new API must.
+                dump shouldContain "test-virtual-thread"
+            } finally {
+                virtualThread.interrupt()
+                virtualThread.join(1000)
+            }
+        }
+
+        "thread dump includes named platform threads" {
+            val started = CountDownLatch(1)
+            val daemonThread =
+                thread(isDaemon = true, name = "test-daemon-thread") {
+                    started.countDown()
+                    try {
+                        Thread.sleep(10_000)
+                    } catch (_: InterruptedException) {
+                        // Expected on cleanup.
+                    }
+                }
+
+            try {
+                started.await()
+                val dump = generateThreadDump()
                 dump shouldContain "test-daemon-thread"
-                dump shouldContain "daemon"
             } finally {
                 daemonThread.interrupt()
                 daemonThread.join(1000)
             }
         }
 
-        "thread dump includes CPU time when available" {
-            val dump = generateThreadDump()
-            val threadMXBean = java.lang.management.ManagementFactory.getThreadMXBean()
-
-            if (threadMXBean.isThreadCpuTimeEnabled) {
-                dump shouldContain "CPU time:"
-            }
-        }
-
-        "thread dump handles threads with no stack trace" {
-            val dump = generateThreadDump()
-            // Should not crash, may contain message about no stack trace
-            dump shouldNotBe null
-        }
-
         "thread dump shows coroutine debug status" {
             val dump = generateThreadDump()
             // Should contain some coroutine info section (even if just noting it's unavailable)
             dump shouldContain "Coroutine"
-        }
-
-        "thread dump detects waiting/blocked states" {
-            val lock = Object()
-
-            // Create a thread that holds a lock
-            val holder = thread(name = "lock-holder") { synchronized(lock) { Thread.sleep(5000) } }
-
-            // Create a thread that waits for the lock
-            val waiter =
-                thread(name = "lock-waiter") {
-                    Thread.sleep(100) // Let holder get lock first
-                    synchronized(lock) {
-                        // Won't get here during test
-                    }
-                }
-
-            try {
-                Thread.sleep(200) // Let both threads start
-                val dump = generateThreadDump()
-
-                // Should show the blocked/waiting state
-                dump shouldContain "lock-waiter"
-                dump shouldContain "lock-holder"
-                // One should be waiting/blocked
-                (dump.contains("BLOCKED") || dump.contains("WAITING")) shouldBe true
-            } finally {
-                holder.interrupt()
-                waiter.interrupt()
-                holder.join(1000)
-                waiter.join(1000)
-            }
         }
     })

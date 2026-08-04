@@ -1,23 +1,22 @@
 package net.ghue.ktp.ktor.app.debug
 
-import java.lang.management.LockInfo
+import com.sun.management.HotSpotDiagnosticMXBean
 import java.lang.management.ManagementFactory
-import java.lang.management.ThreadInfo
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.readText
 
 /**
- * Generates a comprehensive thread dump in JVM standard format.
+ * Generates a thread dump of all threads, including virtual threads.
  *
- * This includes:
- * - Thread state and priority
- * - Stack traces
- * - Lock and monitor information
- * - CPU time statistics
- * - Coroutine debug info (if available)
+ * [java.lang.management.ThreadMXBean] only reports platform threads, which would hide every request
+ * handler now that KTP runs each request on its own virtual thread.
+ * [HotSpotDiagnosticMXBean.dumpThreads] (JDK 21+) enumerates all threads, at the cost of the
+ * per-thread lock and CPU detail the old ThreadMXBean-based dump provided.
  */
 fun generateThreadDump(): String {
-    val threadMXBean = ManagementFactory.getThreadMXBean()
     val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
     val sb = StringBuilder()
 
@@ -34,25 +33,14 @@ fun generateThreadDump(): String {
     sb.appendLine("Processors: ${runtime.availableProcessors()}")
     sb.appendLine()
 
-    // Get all thread info with lock information
-    val threadInfos = threadMXBean.dumpAllThreads(true, true)
-
-    // Sort by thread ID for consistency
-    threadInfos.sortBy { it.threadId }
-
-    // Format each thread
-    for (threadInfo in threadInfos) {
-        sb.append(formatThreadInfo(threadInfo, threadMXBean))
-        sb.appendLine()
-    }
+    val allThreads = dumpAllThreads()
+    sb.append(allThreads)
 
     // Summary statistics
+    sb.appendLine()
     sb.appendLine("Thread Summary:")
-    sb.appendLine("  Total threads: ${threadInfos.size}")
-    val stateGroups = threadInfos.groupBy { it.threadState }
-    for ((state, threads) in stateGroups.entries.sortedByDescending { it.value.size }) {
-        sb.appendLine("  ${state.name}: ${threads.size}")
-    }
+    sb.appendLine("  Total threads (including virtual): ${countThreadEntries(allThreads)}")
+    sb.appendLine("  Platform threads: ${ManagementFactory.getThreadMXBean().threadCount}")
 
     // Coroutine info (experimental)
     collectCoroutineInfo()?.let {
@@ -64,87 +52,32 @@ fun generateThreadDump(): String {
     return sb.toString()
 }
 
-private const val NANOS_PER_MILLISECOND = 1_000_000
+/**
+ * Each thread entry in the [HotSpotDiagnosticMXBean.ThreadDumpFormat.TEXT_PLAIN] format starts a
+ * line with `#<tid>`.
+ */
+private val threadEntryRegex = Regex("""(?m)^#\d+ """)
 
-@Suppress("complexity")
-private fun formatThreadInfo(
-    threadInfo: ThreadInfo,
-    threadMXBean: java.lang.management.ThreadMXBean,
-): String {
-    val sb = StringBuilder()
+private fun countThreadEntries(dump: String): Int = threadEntryRegex.findAll(dump).count()
 
-    // Thread header: "thread-name" #id daemon? prio=X
-    sb.append("\"${threadInfo.threadName}\" #${threadInfo.threadId}")
-    if (threadInfo.isDaemon) {
-        sb.append(" daemon")
+/**
+ * [HotSpotDiagnosticMXBean.dumpThreads] refuses to overwrite an existing file, so dump into a fresh
+ * temp directory and clean it up after reading.
+ */
+private fun dumpAllThreads(): String {
+    val diagnostic = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean::class.java)
+    val dir = Files.createTempDirectory("ktp-thread-dump")
+    val file = dir.resolve("threads.txt")
+    return try {
+        diagnostic.dumpThreads(
+            file.toAbsolutePath().toString(),
+            HotSpotDiagnosticMXBean.ThreadDumpFormat.TEXT_PLAIN,
+        )
+        file.readText()
+    } finally {
+        file.deleteIfExists()
+        dir.deleteIfExists()
     }
-    sb.append(" prio=${threadInfo.priority}")
-    sb.appendLine()
-
-    // Thread state
-    sb.append("   java.lang.Thread.State: ${threadInfo.threadState}")
-
-    // Lock info if waiting/blocked
-    threadInfo.lockInfo?.let { lockInfo ->
-        sb.appendLine()
-        when (threadInfo.threadState) {
-            Thread.State.BLOCKED -> sb.append("   - waiting to lock ${formatLockInfo(lockInfo)}")
-            Thread.State.WAITING,
-            Thread.State.TIMED_WAITING -> sb.append("   - waiting on ${formatLockInfo(lockInfo)}")
-            else -> {}
-        }
-
-        threadInfo.lockOwnerName?.let { owner ->
-            sb.appendLine()
-            sb.append("   owned by \"$owner\" #${threadInfo.lockOwnerId}")
-        }
-    }
-    sb.appendLine()
-
-    // CPU time statistics
-    if (threadMXBean.isThreadCpuTimeEnabled) {
-        val cpuTime = threadMXBean.getThreadCpuTime(threadInfo.threadId)
-        val userTime = threadMXBean.getThreadUserTime(threadInfo.threadId)
-        if (cpuTime >= 0) {
-            sb.appendLine(
-                "   CPU time: ${cpuTime / NANOS_PER_MILLISECOND}ms (user: ${userTime / NANOS_PER_MILLISECOND}ms)"
-            )
-        }
-    }
-
-    // Stack trace
-    val stackTrace = threadInfo.stackTrace
-    if (stackTrace.isNotEmpty()) {
-        for (element in stackTrace) {
-            sb.appendLine("        at $element")
-
-            // Show locks held at this frame
-            for (monitor in threadInfo.lockedMonitors) {
-                if (monitor.lockedStackDepth == stackTrace.indexOf(element)) {
-                    sb.appendLine("        - locked ${formatLockInfo(monitor)}")
-                }
-            }
-        }
-    } else {
-        sb.appendLine("   (no stack trace available)")
-    }
-
-    // Locked synchronizers
-    val lockedSynchronizers = threadInfo.lockedSynchronizers
-    if (lockedSynchronizers.isNotEmpty()) {
-        sb.appendLine()
-        sb.appendLine("   Locked ownable synchronizers:")
-        for (sync in lockedSynchronizers) {
-            sb.appendLine("        - ${formatLockInfo(sync)}")
-        }
-    }
-
-    return sb.toString()
-}
-
-private fun formatLockInfo(lockInfo: LockInfo): String {
-    @Suppress("MagicNumber")
-    return "<${lockInfo.identityHashCode.toString(16)}> (a ${lockInfo.className})"
 }
 
 /**
