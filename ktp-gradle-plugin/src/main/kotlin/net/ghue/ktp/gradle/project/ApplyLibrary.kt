@@ -21,7 +21,8 @@ fun Project.applyLibrary() {
     pluginManager.apply(MavenPublishPlugin::class.java)
     applyKtfmt()
 
-    // Virtual threads require 21+.
+    // Bytecode target. Apps should RUN on JDK 24+ (JEP 491) because KTP executes each request on
+    // a virtual thread; 21 remains the compile target so published jars stay broadly consumable.
     val outputJavaVersion = JavaVersion.VERSION_21
 
     // Configure Java to include source JAR

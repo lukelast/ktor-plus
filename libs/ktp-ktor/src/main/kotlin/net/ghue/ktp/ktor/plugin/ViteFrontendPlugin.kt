@@ -17,6 +17,7 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import java.net.ConnectException
 import java.nio.file.Path
+import java.util.concurrent.Executors
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -109,6 +110,9 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
 }
 
 private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
+    // Without an explicit executor the JDK client creates its own cached pool of platform threads.
+    private val clientExecutor = Executors.newVirtualThreadPerTaskExecutor()
+
     // Create HTTP client with short timeout
     val client =
         HttpClient(Java) {
@@ -117,13 +121,17 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
                 // http. Vite's dev server routes any upgrade request to its HMR WebSocket
                 // handler, which ignores it and never responds, hanging the request forever.
                 protocolVersion = java.net.http.HttpClient.Version.HTTP_1_1
-                config { connectTimeout(500.milliseconds.toJavaDuration()) }
+                config {
+                    connectTimeout(500.milliseconds.toJavaDuration())
+                    executor(clientExecutor)
+                }
             }
             install(HttpTimeout) { requestTimeoutMillis = 10.seconds.inWholeMilliseconds }
         }
 
     override fun close() {
         client.close()
+        clientExecutor.shutdown()
     }
 
     fun registerRoutes(app: Application) {
