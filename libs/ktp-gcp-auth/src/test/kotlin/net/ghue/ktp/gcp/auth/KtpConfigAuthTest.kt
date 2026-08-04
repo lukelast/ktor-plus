@@ -33,13 +33,11 @@ class KtpConfigAuthTest :
                 setUnitTestEnv()
                 overrideValue("auth.loginUrl", "/custom/login")
                 overrideValue("auth.logoutUrl", "/custom/logout")
-                overrideValue("auth.redirectAfterLogout", "/dashboard")
                 overrideValue("auth.sessionTimeout", "14d")
             }
 
             config.auth.loginUrl shouldBe "/custom/login"
             config.auth.logoutUrl shouldBe "/custom/logout"
-            config.auth.redirectAfterLogout shouldBe "/dashboard"
             config.auth.sessionTimeout shouldBe "14d"
             config.auth.sessionTimeoutDuration shouldBe 14.days
         }

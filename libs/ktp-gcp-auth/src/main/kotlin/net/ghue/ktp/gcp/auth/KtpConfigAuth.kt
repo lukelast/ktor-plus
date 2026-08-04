@@ -10,7 +10,6 @@ val KtpConfig.auth: Auth
 data class Auth(
     val loginUrl: String,
     val logoutUrl: String,
-    val redirectAfterLogout: String,
     val sessionTimeout: String,
     val secureCookies: Boolean,
 ) {

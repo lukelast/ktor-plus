@@ -16,11 +16,9 @@ import io.ktor.server.sessions.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 
 class FirebaseAuthService(
-    private val ktpConfig: KtpConfig,
     private val firebaseAuth: FirebaseAuth,
     private val lifecycle: AuthLifecycleHandler,
 ) {
@@ -94,10 +92,15 @@ class FirebaseAuthService(
         }
     }
 
+    /**
+     * The session is stateless, so the Set-Cookie deletion carried by this response is the entire
+     * logout; the plain 204 lets fetch() clients verify it succeeded. Idempotent: with no session
+     * it still responds 204 and skips [AuthLifecycleHandler.onLogout].
+     */
     suspend fun RoutingContext.handleLogout() {
         val userSession = call.sessions.get<UserSession>()
         call.sessions.clear<UserSession>()
-        call.respondRedirect(ktpConfig.auth.redirectAfterLogout)
+        call.respond(HttpStatusCode.NoContent)
         if (userSession != null) {
             lifecycle.onLogout(userSession)
         }

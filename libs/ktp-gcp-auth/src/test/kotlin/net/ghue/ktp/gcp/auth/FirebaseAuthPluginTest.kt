@@ -11,6 +11,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
+import io.ktor.client.plugins.cookies.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -21,6 +22,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.testing.*
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Date
@@ -80,7 +82,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -116,7 +117,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -162,7 +162,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -209,7 +208,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -262,7 +260,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -291,21 +288,24 @@ class FirebaseAuthPluginTest :
             }
         }
 
-        "logout endpoint clears session and redirects" {
+        "logout endpoint clears the session cookie" {
             testApplication {
                 val config = KtpConfig.create {
                     setUnitTestEnv()
                     overrideValue("env.localDev", "false")
                     overrideValue("env.name", "test")
                     overrideValue("data.app.secret", "test-secret-key-for-encryption-purposes")
-                    overrideValue("auth.redirectAfterLogout", "/goodbye")
+                    // The session cookie is named after the app, so a blank name breaks it.
+                    overrideValue("app.name", "test.app")
+                    // The test client talks plain HTTP and won't replay a Secure cookie.
+                    overrideValue("auth.secureCookies", "false")
                 }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
                 val mockToken = createMockFirebaseToken()
 
-                every { mockFirebaseAuth.verifyIdToken(any()) } returns mockToken
+                every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
                 coEvery { mockLifecycle.onLogin(any()) } returns
                     UserInfo(
                         userId = UserId("test-user-id"),
@@ -324,7 +324,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -336,16 +335,25 @@ class FirebaseAuthPluginTest :
                     install(FirebaseAuthPlugin)
                 }
 
-                // Login first
-                client.post("/auth/login") {
-                    contentType(ContentType.Application.Json)
-                    setBody(Json.encodeToString(LoginRequest("valid-token")))
-                }
+                // Login first so the logout request carries a real session cookie.
+                val cookieClient = createClient { install(HttpCookies) }
+                val loginResponse =
+                    cookieClient.post("/auth/login") {
+                        contentType(ContentType.Application.Json)
+                        setBody(Json.encodeToString(LoginRequest("valid-token")))
+                    }
+                loginResponse.status shouldBe HttpStatusCode.OK
 
-                // Then logout
-                val logoutResponse = client.post("/auth/logout")
-                logoutResponse.status shouldBe HttpStatusCode.Found
-                logoutResponse.headers[HttpHeaders.Location] shouldBe "/goodbye"
+                val logoutResponse = cookieClient.post("/auth/logout")
+                logoutResponse.status shouldBe HttpStatusCode.NoContent
+
+                // The session is stateless, so the Set-Cookie deletion in this response is the
+                // entire logout mechanism.
+                val cookies = logoutResponse.headers.getAll(HttpHeaders.SetCookie)
+                cookies shouldNotBe null
+                cookies?.any { it.contains("01 Jan 1970") } shouldBe true
+
+                coVerify(exactly = 1) { mockLifecycle.onLogout(any()) }
             }
         }
 
@@ -371,7 +379,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -410,7 +417,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -465,7 +471,6 @@ class FirebaseAuthPluginTest :
                                 single { config }
                                 single {
                                     FirebaseAuthService(
-                                        ktpConfig = config,
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
                                     )
@@ -487,7 +492,7 @@ class FirebaseAuthPluginTest :
 
                 // Test custom logout URL
                 val logoutResponse = client.post("/custom/signout")
-                logoutResponse.status shouldBe HttpStatusCode.Found
+                logoutResponse.status shouldBe HttpStatusCode.NoContent
             }
         }
     })
