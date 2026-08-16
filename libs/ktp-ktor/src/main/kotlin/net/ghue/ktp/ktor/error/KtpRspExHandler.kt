@@ -1,6 +1,7 @@
 package net.ghue.ktp.ktor.error
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
@@ -47,10 +48,14 @@ suspend fun processKtpRspEx(call: ApplicationCall, ex: KtpRspEx) {
         }
     }
 
-    log {}
-        .error(ex) {
-            "Error processing ${call.request.httpMethod.value} on $requestPath: '${ex.message}' $problemJson"
-        }
+    val logMessage =
+        "Error processing ${call.request.httpMethod.value} on $requestPath: '${ex.message}' $problemJson"
+    if (ex.status.value >= HttpStatusCode.InternalServerError.value) {
+        log {}.error(ex) { logMessage }
+    } else {
+        // 4xx responses are client faults, not server problems.
+        log {}.info { logMessage }
+    }
 
     call.respondText(
         text = problemJson.toString(),

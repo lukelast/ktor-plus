@@ -1,9 +1,13 @@
 package net.ghue.ktp.ktor.plugin
 
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.cachingheaders.CachingHeaders
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.compression.Compression
@@ -58,6 +62,12 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
     }
     install(StatusPages) {
         exception<KtpRspEx>(::processKtpRspEx)
+        // Body-decode failures arrive as BadRequestException, except ContentTransformationException
+        // which escapes unwrapped when no converter runs (e.g. wrong Content-Type). Both are client
+        // faults: answer 400 instead of the 500 catch-all.
+        exception<BadRequestException>(::processRequestDecodingFailure)
+        exception<ContentTransformationException>(::processRequestDecodingFailure)
+
         exception<Throwable> { call, cause ->
             log {}
                 .warn(cause) {
@@ -69,4 +79,18 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
     }
     install(Resources)
     install(CachingHeaders)
+}
+
+private suspend fun processRequestDecodingFailure(call: ApplicationCall, cause: Throwable) {
+    processKtpRspEx(
+        call,
+        KtpRspEx(
+            // Logged server-side only, so serializer internals never leak to the client.
+            internalMessage = generateSequence(cause) { it.cause }.last().message,
+            status = HttpStatusCode.BadRequest,
+            title = "Bad Request",
+            detail = "The request body could not be parsed.",
+            cause = cause,
+        ),
+    )
 }
