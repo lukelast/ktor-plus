@@ -25,6 +25,7 @@ fun Project.applyKtor() {
     configureShadow()
     installKotest()
     applyViteDev()
+    registerVerifyTask()
 
     dependencies {
         //        add("implementation", "com.github.lukelast.ktor-plus:ktp-ktor:${KtpVersion.VERSION}")
