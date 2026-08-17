@@ -8,6 +8,16 @@ subprojects {
         group = "com.github.lukelast.ktor-plus"
         ext["ktp.mode"] = "library"
     }
+    // The plugin injects ktp-ktor/ktp-test by their external coordinates; build them from
+    // current sources here instead of resolving a previously published snapshot.
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("com.github.lukelast.ktor-plus:ktp-ktor"))
+                .using(project(":libs:ktp-ktor"))
+            substitute(module("com.github.lukelast.ktor-plus:ktp-test"))
+                .using(project(":libs:ktp-test"))
+        }
+    }
 }
 
 tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {

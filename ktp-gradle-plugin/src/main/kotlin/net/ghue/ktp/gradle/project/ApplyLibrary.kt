@@ -9,6 +9,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.tasks.GenerateModuleMetadata
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.withType
@@ -16,6 +17,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun Project.applyLibrary() {
+    applyDetekt()
     applyKotlin()
     pluginManager.apply(JavaLibraryPlugin::class.java)
     pluginManager.apply(MavenPublishPlugin::class.java)
@@ -23,17 +25,22 @@ fun Project.applyLibrary() {
 
     // Bytecode target. Apps should RUN on JDK 24+ (JEP 491) because KTP executes each request on
     // a virtual thread; 21 remains the compile target so published jars stay broadly consumable.
+    // Release semantics (not -source/-target): the compile is checked against the JDK 21 API
+    // model, so a newer daemon JDK cannot leak post-21 APIs into a jar that claims 21.
     val outputJavaVersion = JavaVersion.VERSION_21
 
     // Configure Java to include source JAR
-    extensions.configure<JavaPluginExtension> {
-        withSourcesJar()
-        sourceCompatibility = outputJavaVersion
-        targetCompatibility = outputJavaVersion
+    extensions.configure<JavaPluginExtension> { withSourcesJar() }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.release.set(outputJavaVersion.majorVersion.toInt())
     }
 
     project.tasks.withType<KotlinCompile>().configureEach {
-        compilerOptions { jvmTarget.set(JvmTarget.fromTarget(outputJavaVersion.majorVersion)) }
+        compilerOptions {
+            jvmTarget.set(JvmTarget.fromTarget(outputJavaVersion.majorVersion))
+            freeCompilerArgs.add("-Xjdk-release=${outputJavaVersion.majorVersion}")
+        }
     }
 
     configPublishJava()

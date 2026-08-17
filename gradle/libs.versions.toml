@@ -26,10 +26,12 @@ versionCheck = { id = "io.github.ben-manes.versions", version.ref = "versionChec
 gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktorPlugin" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
-gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.26.0" }
+gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.27.0" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.6.1" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
+# Toolchain resolver so consumers can auto-download a missing JDK.
+gradleFoojay = { module = "org.gradle.toolchains:foojay-resolver", version = "1.0.0" }
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }

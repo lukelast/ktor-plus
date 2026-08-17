@@ -11,11 +11,11 @@ val libsDir = "libs"
 
 includeBuild("ktp-gradle-plugin")
 
-/** Every directory in [libsDir] is included as a project. */
+/** Every project directory in [libsDir] is included as a project. */
 rootDir
     .resolve(libsDir)
     .listFiles()
-    ?.filter { it.isDirectory }
+    ?.filter { it.isDirectory && it.resolve("build.gradle.kts").exists() }
     ?.forEach { include("$libsDir:${it.name}") }
 
 include("examples:ktp-example")

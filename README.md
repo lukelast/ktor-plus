@@ -34,14 +34,10 @@ plugins { alias(libs.plugins.ktp) }
 // Or directly
 plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 
+// The plugin adds the ktp-ktor and ktp-test dependencies automatically.
+// Only the optional KTP libraries need declaring:
 dependencies {
-    // If using libs.versions.toml
-    implementation(libs.ktp.ktor)
-    testImplementation(libs.ktp.test)
-    
-    // Or directly
-    implementation("com.github.lukelast.ktor-plus:ktp-ktor:VERSION")
-    testImplementation("com.github.lukelast.ktor-plus:ktp-test:VERSION")
+    implementation("com.github.lukelast.ktor-plus:ktp-stripe:VERSION")
 }
 ```
 
@@ -50,8 +46,8 @@ dependencies {
 [versions]
 ktp-version = "{{LATEST_VERSION}}"
 [libraries]
-ktp-ktor = { module = "com.github.lukelast.ktor-plus:ktp-ktor", version.ref = "ktp-version" }
-ktp-test = { module = "com.github.lukelast.ktor-plus:ktp-test", version.ref = "ktp-version" }
+# Only optional KTP libraries need entries; ktp-ktor and ktp-test come from the plugin.
+ktp-stripe = { module = "com.github.lukelast.ktor-plus:ktp-stripe", version.ref = "ktp-version" }
 [plugins]
 ktp = { id = "com.github.lukelast.ktor-plus", version.ref = "ktp-version" }
 ```
@@ -166,13 +162,67 @@ Testing utilities and helpers for KTP applications:
 
 ## Gradle Plugins
 
-The `ktp-gradle-plugins` composite child project builds a Gradle plugin Jar with two plugins.
+The `ktp-gradle-plugin` composite child project builds a Gradle plugin Jar with three plugins.
 
 ### KTP Gradle Project Plugin
 
 Plugin ID: `com.github.lukelast.ktor-plus`
 
-This is a normal Gradle plugin and configures a project to follow the KTP Framework conventions.
+Configures a project to follow the KTP Framework conventions. The project mode is auto-detected,
+with the `ktp.mode` Gradle property as the explicit override:
+
+- `ktor` (default): a Ktor application. Adds the `ktp-ktor`/`ktp-test` dependencies and
+  configures formatting, detekt, testing, and the fat jar. The build script sets
+  `application { mainClass.set(...) }`.
+- `library`: a published JVM library targeting Java 21.
+- `frontend`: auto-detected by a `package.json` in the project directory. Lifecycle tasks only;
+  toolchain-specific tasks come from a stack plugin layered on top.
+- `root`: auto-detected as the root of a multi-project build.
+
+All modes get `check` (strict verification, what CI runs — fails on unformatted code) and
+`verify` (format the code, then run the full `check`; the local dev loop).
+
+### KTP Settings Plugin
+
+Plugin ID: `com.github.lukelast.ktor-plus.settings`
+
+Applied in `settings.gradle.kts`, which then needs nothing else:
+
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
+plugins { id("com.github.lukelast.ktor-plus.settings") version "VERSION" }
+```
+
+Features:
+
+- **Root project name** comes from a `rootProject.name` entry in `gradle.properties`, so it
+  survives checkouts into differently named directories (Docker build stages).
+- **Project auto-include**: every direct subdirectory containing a `build.gradle.kts` or a
+  `package.json` becomes a project. A conventional frontend needs no Gradle file at all.
+- **Version catalog**: a `ktp` catalog with every KTP library (`ktp.ktor`, `ktp.stripe`, ...)
+  and plugin (`ktp.plugins.lukestack`, ...), pinned to the settings plugin's own version — one
+  version declaration rules everything KTP, and library versions can never drift from the
+  plugin. The catalog is materialized as `gradle/ktp.versions.toml` (commit it) so the IDE can
+  resolve the accessors; the consumer's own `libs.versions.toml` stays untouched.
+- **Toolchain resolver**: the Foojay resolver is applied, so a missing JDK downloads on demand.
+- **Project plugin auto-apply**: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
+  plugin to every project — no per-project `plugins {}` blocks needed anywhere.
+
+### Lukestack Plugin
+
+Plugin ID: `com.github.lukelast.ktor-plus.lukestack`
+
+An opinionated personal stack layered on the base plugin: GCP deployment (Cloud Run +
+Infrastructure Manager), Docker image tasks, and a bun/Vite frontend whose dev server starts
+alongside `run`. Lukestack repos apply this ID instead of the base one in every project; other
+stacks should apply the base plugin and build their own layer.
 
 ## Releases
 

@@ -1,9 +1,9 @@
-package net.ghue.ktp.gradle.project.mods
+package net.ghue.ktp.gradle.lukestack
 
-import java.io.File
 import java.net.Socket
 import java.util.concurrent.TimeUnit
 import org.gradle.api.Project
+import org.gradle.api.logging.Logging
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -18,8 +18,8 @@ private const val FRONTEND_DIR = "frontend"
 private const val DEFAULT_PORT = 5173
 
 /**
- * Starts a frontend dev server (`<package manager> run dev`, typically Vite) alongside the Ktor
- * `run` task, so a single `gradlew run` brings up the full dev stack.
+ * Starts the frontend dev server (`bun run dev`, typically Vite) alongside the Ktor `run` task,
+ * so a single `gradlew run` brings up the full dev stack.
  *
  * The frontend always lives in `<root>/frontend`; this is a KTP convention, not configurable.
  * Enabled automatically when that directory contains a `package.json`. Configured through
@@ -27,7 +27,7 @@ private const val DEFAULT_PORT = 5173
  * - `ktp.vite`: `false` disables it, `true` requires it (the build fails if no frontend is found).
  * - `ktp.vite.port`: port checked to detect an externally started dev server. Default: `5173`.
  */
-fun Project.applyViteDev() {
+internal fun Project.applyViteDev() {
     val forced =
         when (val enabledProp = findProperty(ENABLED_KEY)?.toString()) {
             null -> null
@@ -68,31 +68,18 @@ fun Project.applyViteDev() {
         gradle.sharedServices.registerIfAbsent("ktpViteDev", ViteDevService::class.java) {
             parameters.frontendDir.set(frontendDir)
             parameters.port.set(port)
-            parameters.command.set(devServerCommand(frontendDir.asFile))
+            parameters.command.set(listOf("bun", "run", "dev"))
         }
 
     tasks.named<JavaExec>("run") {
         usesService(service)
+        // On a fresh clone the dev server would die instantly on missing node_modules; the
+        // install task only exists when the frontend is included as a project in this build.
+        if (findProject(":$FRONTEND_DIR") != null) {
+            dependsOn(":$FRONTEND_DIR:install")
+        }
         doFirst { service.get().start() }
     }
-}
-
-/**
- * Picks the package manager by lock file. On Windows npm/pnpm/yarn are `.cmd` shims which
- * [ProcessBuilder] cannot launch by their bare name, while bun ships a native executable.
- */
-private fun devServerCommand(frontendDir: File): List<String> {
-    val windows = System.getProperty("os.name").startsWith("Windows")
-    fun shim(name: String) = if (windows) "$name.cmd" else name
-    val packageManager =
-        when {
-            frontendDir.resolve("bun.lock").exists() || frontendDir.resolve("bun.lockb").exists() ->
-                "bun"
-            frontendDir.resolve("pnpm-lock.yaml").exists() -> shim("pnpm")
-            frontendDir.resolve("yarn.lock").exists() -> shim("yarn")
-            else -> shim("npm")
-        }
-    return listOf(packageManager, "run", "dev")
 }
 
 /**
@@ -107,13 +94,14 @@ abstract class ViteDevService : BuildService<ViteDevService.Params>, AutoCloseab
         val command: ListProperty<String>
     }
 
+    private val logger = Logging.getLogger(ViteDevService::class.java)
     private var process: Process? = null
 
     @Synchronized
     fun start() {
         if (process?.isAlive == true) return
         if (portInUse()) {
-            println("Vite dev server already running on port ${parameters.port.get()}")
+            logger.lifecycle("Vite dev server already running on port ${parameters.port.get()}")
             return
         }
         val proc =
@@ -122,11 +110,21 @@ abstract class ViteDevService : BuildService<ViteDevService.Params>, AutoCloseab
                 .redirectErrorStream(true)
                 .start()
         process = proc
-        Thread { proc.inputStream.bufferedReader().forEachLine { println("[vite] $it") } }
+        Thread { proc.inputStream.bufferedReader().forEachLine { logger.lifecycle("[vite] $it") } }
             .apply {
                 isDaemon = true
                 start()
             }
+        // A dev server that dies on startup (bad script, broken config) must fail the build
+        // loudly, not leave the backend running with a silently broken stack. A healthy server
+        // outlives this wait; the cost is a one-time pause while the backend is launching.
+        if (proc.waitFor(2, TimeUnit.SECONDS)) {
+            process = null
+            error(
+                "The dev server (${parameters.command.get().joinToString(" ")}) exited " +
+                    "immediately with code ${proc.exitValue()}. See the [vite] output above."
+            )
+        }
     }
 
     private fun portInUse(): Boolean = runCatching {
@@ -140,9 +138,11 @@ abstract class ViteDevService : BuildService<ViteDevService.Params>, AutoCloseab
         process = null
         val tree = proc.toHandle().descendants().toList() + proc.toHandle()
         tree.forEach { it.destroy() }
-        if (!proc.waitFor(3, TimeUnit.SECONDS)) {
+        if (proc.waitFor(3, TimeUnit.SECONDS)) {
+            logger.lifecycle("Stopped Vite dev server")
+        } else {
             tree.forEach { it.destroyForcibly() }
+            logger.lifecycle("Vite dev server did not stop gracefully; force-killed it")
         }
-        println("Stopped Vite dev server")
     }
 }

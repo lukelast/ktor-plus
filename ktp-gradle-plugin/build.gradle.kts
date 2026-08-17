@@ -1,6 +1,3 @@
-import kotlin.io.path.listDirectoryEntries
-import kotlin.io.path.name
-
 // https://stackoverflow.com/questions/75673923/build-config-for-developing-a-gradle-plugin-written-in-kotlin
 plugins {
     `kotlin-dsl`
@@ -25,10 +22,15 @@ dependencies {
     implementation(libs.gradleKtfmt)
     implementation(libs.gradleDetekt)
     implementation(libs.gradleKoinCompiler)
+    implementation(libs.gradleFoojay)
     // Must be on the runtime classpath (not compileOnly) to win over the older Shadow the
     // Ktor plugin pulls in: 9.1.0 has service-file merge regressions (GradleUp/shadow#1348).
     implementation(libs.gradleShadow)
+
+    testImplementation(kotlin("test"))
 }
+
+tasks.withType<Test>().configureEach { useJUnitPlatform() }
 
 kotlin { jvmToolchain(21) }
 
@@ -44,6 +46,10 @@ gradlePlugin {
             id = "$group.settings"
             implementationClass = "net.ghue.ktp.gradle.settings.SettingsPlugin"
         }
+        create("lukestackGradlePlugin") {
+            id = "$group.lukestack"
+            implementationClass = "net.ghue.ktp.gradle.lukestack.LukestackPlugin"
+        }
     }
 }
 
@@ -53,30 +59,34 @@ val sourceGenDir = "generated/version"
 val versionGenTask =
     tasks.register("generateVersionFile") {
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
+        val projectGroup = project.group.toString()
         val projectVersion = project.version.toString()
         val koinVersion = libs.versions.koin.get()
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
         val ktfmtVersion = libs.versions.ktfmt.get()
 
+        // Only real library projects; generated directories like libs/build must not leak in.
+        val libraryNames =
+            rootDir
+                .resolve("../libs")
+                .listFiles()
+                .orEmpty()
+                .filter { it.isDirectory && it.resolve("build.gradle.kts").exists() }
+                .map { it.name }
+                .sorted()
+
+        inputs.property("group", projectGroup)
         inputs.property("version", projectVersion)
         inputs.property("koinVersion", koinVersion)
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
         inputs.property("ktfmtVersion", ktfmtVersion)
+        inputs.property("libraryNames", libraryNames)
         outputs.file(outputFile)
 
         doLast {
             outputFile.get().asFile.parentFile.mkdirs()
-
-            val libraryNames =
-                layout.buildDirectory
-                    .dir("../../libs")
-                    .get()
-                    .asFile
-                    .toPath()
-                    .listDirectoryEntries()
-                    .map { it.name }
             outputFile
                 .get()
                 .asFile
@@ -86,6 +96,9 @@ val versionGenTask =
 
             /** Generated from `gradle/libs.versions.toml`; do not edit by hand. */
             object KtpVersion {
+                /** Maven group all ktor-plus artifacts are published under. */
+                const val GROUP = "$projectGroup"
+
                 /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
 
