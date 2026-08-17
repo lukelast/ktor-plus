@@ -24,6 +24,7 @@ fun Project.applyKtor() {
     applyKoinCompilerPlugin()
     configureShadow()
     installKotest()
+    applyViteDev()
 
     dependencies {
         //        add("implementation", "com.github.lukelast.ktor-plus:ktp-ktor:${KtpVersion.VERSION}")
