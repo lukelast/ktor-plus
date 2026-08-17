@@ -1,4 +1,4 @@
-plugins { id("com.github.lukelast.ktor-plus") }
+plugins { id("com.github.lukelast.ktor-plus.project") }
 
 dependencies {
     // GCP BOM for version management

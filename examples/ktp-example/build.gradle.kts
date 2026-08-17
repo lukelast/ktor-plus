@@ -1,4 +1,4 @@
-plugins { id("com.github.lukelast.ktor-plus") }
+plugins { id("com.github.lukelast.ktor-plus.project") }
 
 application { mainClass.set("ktp.example.KtpKt") }
 

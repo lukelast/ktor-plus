@@ -32,7 +32,7 @@ pluginManagement {
 plugins { alias(libs.plugins.ktp) }
 
 // Or directly
-plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
+plugins { id("com.github.lukelast.ktor-plus.project") version "VERSION" }
 
 // The plugin adds the ktp-ktor and ktp-test dependencies automatically.
 // Only the optional KTP libraries need declaring:
@@ -166,7 +166,7 @@ The `ktp-gradle-plugin` composite child project builds a Gradle plugin Jar with 
 
 ### KTP Gradle Project Plugin
 
-Plugin ID: `com.github.lukelast.ktor-plus`
+Plugin ID: `com.github.lukelast.ktor-plus.project`
 
 Configures a project to follow the KTP Framework conventions. The project mode is auto-detected,
 with the `ktp.mode` Gradle property as the explicit override:
@@ -184,7 +184,9 @@ All modes get `check` (strict verification, what CI runs — fails on unformatte
 
 ### KTP Settings Plugin
 
-Plugin ID: `com.github.lukelast.ktor-plus.settings`
+Plugin ID: `com.github.lukelast.ktor-plus` — the settings plugin owns the bare repo-group id
+because it is the entry point consumers resolve by plugin marker, and JitPack can only serve
+markers whose group equals the repo group.
 
 Applied in `settings.gradle.kts`, which then needs nothing else:
 
@@ -197,7 +199,7 @@ pluginManagement {
     }
 }
 
-plugins { id("com.github.lukelast.ktor-plus.settings") version "VERSION" }
+plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
 Features:

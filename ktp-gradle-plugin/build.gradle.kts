@@ -38,13 +38,16 @@ java { withSourcesJar() }
 
 gradlePlugin {
     plugins {
-        create("ktpGradleProjectPlugin") {
-            id = group.toString()
-            implementationClass = "net.ghue.ktp.gradle.project.ProjectPlugin"
-        }
+        // The settings plugin owns the bare repo-group id: it is the entry point consumers
+        // resolve by marker, and JitPack only serves markers whose group equals the repo group.
+        // The project plugins are normally auto-applied by class and rarely resolved by id.
         create("ktpGradleSettingsPlugin") {
-            id = "$group.settings"
+            id = group.toString()
             implementationClass = "net.ghue.ktp.gradle.settings.SettingsPlugin"
+        }
+        create("ktpGradleProjectPlugin") {
+            id = "$group.project"
+            implementationClass = "net.ghue.ktp.gradle.project.ProjectPlugin"
         }
         create("lukestackGradlePlugin") {
             id = "$group.lukestack"

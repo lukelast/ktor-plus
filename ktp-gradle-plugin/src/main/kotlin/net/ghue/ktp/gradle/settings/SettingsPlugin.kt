@@ -79,8 +79,8 @@ class SettingsPlugin @Inject constructor(private val objects: ObjectFactory) : P
         }
         appendLine()
         appendLine("[plugins]")
-        appendLine("ktp = { id = \"${KtpVersion.GROUP}\", version.ref = \"ktp\" }")
-        appendLine("settings = { id = \"${KtpVersion.GROUP}.settings\", version.ref = \"ktp\" }")
+        appendLine("settings = { id = \"${KtpVersion.GROUP}\", version.ref = \"ktp\" }")
+        appendLine("ktp = { id = \"${KtpVersion.GROUP}.project\", version.ref = \"ktp\" }")
         appendLine("lukestack = { id = \"${KtpVersion.GROUP}.lukestack\", version.ref = \"ktp\" }")
     }
 

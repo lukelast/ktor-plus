@@ -1,4 +1,4 @@
-plugins { id("com.github.lukelast.ktor-plus") }
+plugins { id("com.github.lukelast.ktor-plus.project") }
 
 dependencies {
     api(project(":libs:ktp-ktor"))
