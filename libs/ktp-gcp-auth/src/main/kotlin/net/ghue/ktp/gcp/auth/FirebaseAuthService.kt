@@ -75,6 +75,7 @@ class FirebaseAuthService(
                             extra = userInfo.extra,
                         )
                 )
+            // Gson rather than kotlinx because `extra` is an arbitrary Any.
             val rspText = Gson().toJson(response)
             call.respondText(rspText, Json, HttpStatusCode.OK)
         } catch (ex: AuthEx) {
@@ -91,9 +92,8 @@ class FirebaseAuthService(
     }
 
     /**
-     * The session is stateless, so the Set-Cookie deletion carried by this response is the entire
-     * logout; the plain 204 lets fetch() clients verify it succeeded. Idempotent: with no session
-     * it still responds 204 and skips [AuthLifecycleHandler.onLogout].
+     * Clearing the cookie is the whole logout (stateless session); 204 lets fetch() verify it.
+     * Idempotent: no session still gets 204, just without [AuthLifecycleHandler.onLogout].
      */
     suspend fun RoutingContext.handleLogout() {
         val userSession = call.sessions.get<UserSession>()
@@ -107,6 +107,7 @@ class FirebaseAuthService(
     @Throws(AuthEx::class)
     private fun verifyToken(firebaseIdToken: String): FirebaseToken =
         try {
+            // checkRevoked costs a Firebase round trip; acceptable once per login.
             firebaseAuth.verifyIdToken(firebaseIdToken, true)
                 ?: throw AuthEx(message = "Should not return null", userError = false)
         } catch (ex: IllegalArgumentException) {

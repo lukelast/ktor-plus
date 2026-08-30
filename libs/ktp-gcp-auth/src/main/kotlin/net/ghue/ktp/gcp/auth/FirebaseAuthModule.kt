@@ -10,6 +10,7 @@ import org.koin.dsl.module
 
 fun firebaseAuthModule() = module {
     single {
+        // initializeApp throws if the JVM-global default app exists (Koin rebuilt between tests).
         synchronized(FirebaseApp::class.java) {
             FirebaseApp.getApps().firstOrNull { it.name == FirebaseApp.DEFAULT_APP_NAME }
                 ?: FirebaseApp.initializeApp(

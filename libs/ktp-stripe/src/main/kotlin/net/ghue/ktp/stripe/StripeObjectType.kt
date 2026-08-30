@@ -1,17 +1,14 @@
 package net.ghue.ktp.stripe
 
 /**
- * The Stripe object types this library models, as they appear in the `data.object.object` field of
- * a webhook event. Webhooks can carry any Stripe object, so values without a dedicated entry map to
- * [UNKNOWN] rather than failing; the raw string remains available via
- * [StripeWebhookEvent.objectTypeRaw].
+ * Stripe object types this library models, as spelled in a webhook's `data.object.object` field;
+ * other objects map to [UNKNOWN], with the raw string in [StripeWebhookEvent.objectTypeRaw].
  */
 enum class StripeObjectType(val value: String?) {
     CHECKOUT_SESSION("checkout.session"),
     SUBSCRIPTION("subscription"),
     INVOICE("invoice"),
     CUSTOMER("customer"),
-    /** Any object type without a dedicated entry. */
     UNKNOWN(null);
 
     companion object {

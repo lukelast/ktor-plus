@@ -19,16 +19,10 @@ import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
 
-/**
- * A function that creates a new [KtpAppBuilder] instance. This is used because each application run
- * needs to generate its own [KtpAppBuilder] instance.
- */
+/** Lazily supplies the [KtpAppBuilder] to run; may return the same instance on every call. */
 typealias KtpAppBuilderFactory = () -> KtpAppBuilder
 
-/**
- * Creates a KTP application. This is a mutable builder used to build an instance of the immutable
- * [KtpApp] which is used to run KTP.
- */
+/** Mutable builder for the immutable [KtpApp]. */
 class KtpAppBuilder {
     init {
         installSlf4jBridge()
@@ -38,37 +32,30 @@ class KtpAppBuilder {
     internal val koinConfigs = mutableListOf<KoinConfiguration>()
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
 
-    /** Can be used to override the default [KtpConfig] instance. */
     var createKtpConfig: () -> KtpConfig = { KtpConfig.create() }
 
-    /** Add a KOIN [Module]. */
     fun addModule(module: Module) {
         modules.add(module)
     }
 
-    /**
-     * Add a generated KOIN Configuration from the compiler plugin. Example
-     * `koinConfiguration<MyApp>()`
-     */
+    /** Adds a compiler-plugin-generated Koin config, e.g. `koinConfiguration<MyApp>()`. */
     fun addKoinConfig(config: KoinConfiguration) {
         koinConfigs.add(config)
     }
 
-    /** Build and add a KOIN [Module] from a DSL block. */
     fun addModule(configModule: Module.() -> Unit) {
         addModule(module { configModule() })
     }
 
-    /** Register a KTOR application init block. */
     fun addAppInit(appInit: suspend Application.(KtpConfig) -> Unit) {
         appInits.add(appInit)
     }
 
-    /** Remove all previously added app init blocks. */
     fun clearAppInits() {
         appInits.clear()
     }
 
+    // Must not mutate this builder: [update] factories reuse one instance across builds.
     fun build(): KtpApp {
         val config = createKtpConfig()
         val allModules = buildList {
@@ -123,7 +110,6 @@ fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBu
     return { ktpAppBuilder }
 }
 
-/** Start the KTP application. */
 fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
     val ktpApp = ktpAppBuilder().build()
     if (ktpApp.config.env.isLocalDev) {
@@ -156,7 +142,7 @@ fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
         .addShutdownHook(
             Thread {
                 log {}.info { "Received shutdown signal. Shutting down" }
-                // Grace period is the time ktor waits for in progress requests to finish.
+                // Grace period: how long Ktor waits for in-flight requests to finish.
                 server.stop(4.seconds.inWholeMilliseconds, 8.seconds.inWholeMilliseconds)
                 log {}.info { "Server is shut down" }
             }

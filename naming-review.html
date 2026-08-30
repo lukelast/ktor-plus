@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naming Consistency Review</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-soft: #475569;
+    --accent: #0f766e;
+    --misleading: #dc2626;
+    --misleading-bg: #fef2f2;
+    --misleading-border: #fecaca;
+    --inconsistent: #b45309;
+    --inconsistent-bg: #fffbeb;
+    --inconsistent-border: #fde68a;
+    --unclear: #2563eb;
+    --unclear-bg: #eff6ff;
+    --unclear-border: #bfdbfe;
+    --code-bg: #f1f5f9;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 80px; }
+
+  header.page {
+    padding: 48px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  header.page h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.02em; }
+  header.page .sub { color: var(--text-muted); margin: 0 0 18px; max-width: 70ch; }
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    min-width: 110px;
+  }
+  .stat .num { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat .lbl { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat.m .num { color: var(--misleading); }
+  .stat.i .num { color: var(--inconsistent); }
+  .stat.u .num { color: var(--unclear); }
+
+  .controls {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .chip {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text-soft);
+    transition: all .12s ease;
+  }
+  .chip:hover { border-color: #94a3b8; }
+  .chip.active { border-color: var(--text); background: var(--text); color: #fff; }
+  .chip.m.active { background: var(--misleading); border-color: var(--misleading); }
+  .chip.i.active { background: var(--inconsistent); border-color: var(--inconsistent); }
+  .chip.u.active { background: var(--unclear); border-color: var(--unclear); }
+  #count { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+
+  h2.section {
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 40px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  h2.section.m { color: var(--misleading); border-color: var(--misleading-border); }
+  h2.section.i { color: var(--inconsistent); border-color: var(--inconsistent-border); }
+  h2.section.u { color: var(--unclear); border-color: var(--unclear-border); }
+  h2.section .def { color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 13px; margin-left: 8px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .card .head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .card .idx {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .card h3 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; flex: 1; }
+  .badge {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 2px 9px; border-radius: 999px;
+    flex-shrink: 0; align-self: center;
+  }
+  .badge.m { color: var(--misleading); background: var(--misleading-bg); border: 1px solid var(--misleading-border); }
+  .badge.i { color: var(--inconsistent); background: var(--inconsistent-bg); border: 1px solid var(--inconsistent-border); }
+  .badge.u { color: var(--unclear); background: var(--unclear-bg); border: 1px solid var(--unclear-border); }
+  .badge.x { color: var(--accent); background: #f0fdfa; border: 1px solid #99f6e4; }
+
+  .field { margin: 7px 0; font-size: 14px; }
+  .field .k {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    display: block; margin-bottom: 2px;
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: #f5f7fa;
+    border: 1px solid #e3e8ef;
+    border-radius: 5px;
+    padding: 1px 5px;
+    color: #364152;
+    overflow-wrap: anywhere;
+  }
+  .rename {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin: 10px 0;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .rename code { font-size: 12.5px; padding: 2px 8px; }
+  .rename .from code { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+  .rename .to code { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+  .rename .arr { color: var(--text-muted); }
+  .locs { margin: 6px 0 0; padding: 0; list-style: none; }
+  .locs li {
+    position: relative;
+    display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 1px;
+    padding: 3px 0 3px 14px;
+    font-size: 13px;
+  }
+  .locs li::before {
+    content: "";
+    position: absolute; left: 0; top: 7px; bottom: 7px;
+    width: 3px; border-radius: 3px;
+    background: #cbd5e1;
+  }
+  .loc-path { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .loc-dir { color: var(--text-muted); }
+  .loc-file { color: var(--text); font-weight: 650; }
+  .loc-ann { color: var(--text-muted); overflow-wrap: anywhere; }
+  .loc-ann code { background: none; border: none; padding: 0; color: var(--text-soft); font-size: 12.5px; }
+  .issue { color: var(--text-soft); margin: 8px 0 0; }
+
+  .prompt-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 4px;
+  }
+  .pp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pp-head h2 { margin: 0; font-size: 16px; letter-spacing: -0.01em; }
+  #sel-info { color: var(--text-muted); font-size: 13px; flex: 1; }
+  .btn {
+    border: 1px solid var(--border); background: var(--surface);
+    border-radius: 8px; padding: 6px 14px; font-size: 13px;
+    cursor: pointer; color: var(--text-soft); transition: all .12s ease;
+  }
+  .btn:hover { border-color: #94a3b8; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.primary.copied { background: #15803d; border-color: #15803d; }
+  #prompt-text {
+    margin: 12px 0 0; padding: 12px 14px;
+    background: var(--code-bg); border-radius: 8px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 300px; overflow: auto;
+  }
+  #prompt-text.pp-empty {
+    font-family: inherit; font-style: italic; color: var(--text-muted);
+    background: transparent; padding: 8px 0 0; margin-top: 4px;
+  }
+  .fix-toggle {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700; color: var(--text-soft);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 12px; cursor: pointer; align-self: center; flex-shrink: 0;
+    user-select: none; transition: all .12s ease;
+  }
+  .fix-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .fix-toggle input { accent-color: var(--accent); margin: 0; }
+  .card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card.selected .fix-toggle { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .opts label.opt {
+    display: flex; gap: 8px; align-items: baseline;
+    margin: 4px 0; font-size: 13.5px; color: var(--text-soft); cursor: pointer;
+  }
+  .opts input { accent-color: var(--accent); flex-shrink: 0; transform: translateY(1px); }
+  .opt-tag {
+    font-size: 10px; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border: 1px solid #99f6e4; background: #f0fdfa;
+    border-radius: 4px; padding: 0 5px;
+  }
+
+  .obs {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: var(--text-soft);
+  }
+  footer { margin-top: 48px; color: var(--text-muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .hidden { display: none; }
+  @media (max-width: 640px) {
+    .card .head { flex-wrap: wrap; }
+    header.page h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="page">
+  <h1>Naming Consistency Review</h1>
+  <p class="sub">Reviewed 138 Kotlin source and build files across all 9 modules of the ktor-plus repo — the 8 libraries under libs/ plus ktp-gradle-plugin (main and test sources and Gradle build scripts) — via nine parallel per-module reviews merged with a cross-module consistency pass; build outputs, generated code, and non-Kotlin resources were excluded, and 61 nit-level items were collected but omitted.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">70</div><div class="lbl">Findings</div></div>
+    <div class="stat m"><div class="num">28</div><div class="lbl">Misleading</div></div>
+    <div class="stat i"><div class="num">25</div><div class="lbl">Inconsistent</div></div>
+    <div class="stat u"><div class="num">17</div><div class="lbl">Unclear</div></div>
+    <div class="stat"><div class="num" id="sel-count" style="color:var(--accent);">0</div><div class="lbl">Selected</div></div>
+  </div>
+</header>
+
+<section class="prompt-panel">
+  <div class="pp-head">
+    <h2>Fix prompt</h2>
+    <span id="sel-info">No issues selected</span>
+    <button class="btn" id="select-visible">Select visible</button>
+    <button class="btn" id="clear-sel">Clear</button>
+    <button class="btn primary" id="copy-prompt">Copy prompt</button>
+  </div>
+  <pre id="prompt-text" class="pp-empty">Check "Fix" on the findings below to build a follow-up prompt here. Where a finding has alternatives, pick the option to apply.</pre>
+</section>
+
+<div class="controls">
+  <button class="chip active" data-sev="all">All</button>
+  <button class="chip m" data-sev="misleading">Misleading</button>
+  <button class="chip i" data-sev="inconsistent">Inconsistent</button>
+  <button class="chip u" data-sev="unclear">Unclear</button>
+  <span id="count" style="margin-left:auto;"></span>
+</div>
+
+<main id="report"></main>
+
+<section id="observations">
+  <h2 class="section" style="color:var(--text-soft);">Non-Naming Observations</h2>
+  <div class="obs"><strong>ktp-gcp</strong> — Auth.kt:37: cron auth reads <code>jws.payload.get("email") as String</code>; a token without an email claim throws NPE/ClassCastException (an HTTP 500) instead of responding 401 — only <code>TokenVerifier.VerificationException</code> is caught.</div>
+  <div class="obs"><strong>ktp-gcp</strong> — Neither cron test exercises the real auth path (both force the localdev bypass), so token verification in <code>GcpCronPlugin</code> has zero coverage. Both GET and POST are also registered for <code>/api/cron/hourly</code>; Cloud Scheduler uses one method, so one handler is likely dead surface.</div>
+  <div class="obs"><strong>ktp-gcp</strong> — CoroutineUtil.kt:21: <code>cont.resume(result as T)</code> is an unchecked cast; a null future result with non-null <code>T</code> resumes with null smuggled past the type system, deferring the NPE to the caller instead of failing at the boundary.</div>
+  <div class="obs"><strong>ktp-core</strong> — <code>Path.removePrefix</code> silently drops the root of absolute paths and throws <code>IllegalArgumentException</code> when removing the only component; PathTest codifies both behaviors, but they look accidental rather than designed.</div>
+  <div class="obs"><strong>ktp-core</strong> — <code>LazyWithExpiration</code>'s headline behaviors (refresh-after threshold, stale serving, 2x hard expiration) are untested; the only test covers load-once caching.</div>
+  <div class="obs"><strong>ktp-core</strong> — <code>IsCloudRun</code> (a logback condition class) calls <code>installSlf4jBridge()</code> in its init block, so config evaluation silently mutates global JUL handlers; it is also Cloud-Run-specific code living in the otherwise generic core module — worth checking against the ktor-plus/lukestack layering rule.</div>
+  <div class="obs"><strong>ktp-config</strong> — <code>extractChild</code> has no direct test even though ktp-stripe and ktp-gcp-firestore build on it; the test named after it exercises the <code>data</code> property instead (see finding #3).</div>
+  <div class="obs"><strong>ktp-config</strong> — <code>KtpConfig.cache</code> is shared by <code>extractChild</code> (extracted data classes) and <code>get</code>/<code>createInstance</code> (constructor-injected sub-configs), both keyed by KClass; if one class ever went through both entry points, whichever ran first would silently win.</div>
+  <div class="obs"><strong>ktp-config</strong> — Likely dead or duplicative exports: <code>parseDuration</code> (duplicates HOCON's native duration parsing), <code>renderTemplate</code>, <code>App.nameShortOrDerived</code>, and <code>Env.isDefault</code> have no callers in the repo outside their own tests. ConfigFile.kt's doc examples cite <code>default.config.conf</code>, a filename <code>ConfigFile.create</code> now rejects.</div>
+  <div class="obs"><strong>ktp-gcp-auth</strong> — FirebaseAuthService.kt:49: <code>"Email not verified: $firebaseToken.email"</code> is missing interpolation braces — it logs the entire token object followed by the literal text ".email", risking token contents in logs.</div>
+  <div class="obs"><strong>ktp-gcp-auth</strong> — <code>userOrError</code>'s error message claims "redirected to login" but the code responds 401 with no redirect (stale after the redirect was removed). Login also decodes requests with kotlinx.serialization but encodes responses with Gson — two JSON stacks for one endpoint pair.</div>
+  <div class="obs"><strong>ktp-gcp-firestore</strong> — FirestoreSerializeTest.kt:13-16: four <code>shouldBe</code> assertions sit at spec-initialization level outside any named test block; they run during instantiation and are never reported as test cases.</div>
+  <div class="obs"><strong>ktp-gcp-firestore</strong> — <code>T.serialize()</code> is unconstrained, so <code>"str".serialize()</code> compiles and fails only at runtime. Firestore config also nests under a <code>google { }</code> wrapper block while sibling modules use top-level blocks (<code>auth</code>, <code>stripe</code>) — a config-layout inconsistency to decide deliberately.</div>
+  <div class="obs"><strong>ktp-ktor</strong> — Likely bug: <code>ViteFrontendConfig.staticDir</code> and <code>staticRootPath</code> are initialized eagerly from <code>staticPathSegment</code>, so overriding the segment at install time leaves routes mounted at <code>/static</code> and files read from <code>static/</code>. The "custom static URI routes are configured correctly" test cannot catch this — it asserts only a 404 that holds either way.</div>
+  <div class="obs"><strong>ktp-ktor</strong> — <code>respondGcLog</code> hard-codes <code>/tmp/gc.log</code> (inert on Windows, not configurable). <code>KtpAppBuilderFactory.update</code> returns a factory that memoizes one mutated builder forever while the original yields a fresh builder per call — pinned by tests, but a subtle asymmetry for API users.</div>
+  <div class="obs"><strong>ktp-stripe</strong> — <code>PaymentStatus.fromString</code> catches bare <code>Exception</code> where its siblings catch <code>IllegalArgumentException</code>, converting unrelated failures into HTTP 400. The webhook route also logs the handler exception at warn and rethrows, which likely double-logs once Ktor's status handling reports it too.</div>
+  <div class="obs"><strong>ktp-test</strong> — <code>ProjectConfigIntegration</code> sets <code>retries = 2</code> project-wide, which can mask flaky integration tests; KtpTestStartTest also carries an unused <code>io.kotest.core.start</code> import.</div>
+  <div class="obs"><strong>ktp-gradle-plugin</strong> — Detekt.kt:15 loads the bundled <code>detekt.yml</code> via the Detekt plugin's classloader; if any other jar on the build classpath ships a <code>detekt.yml</code>, the wrong resource can win. Anchoring to a class from this plugin's own jar would be safer.</div>
+  <div class="obs"><strong>ktp-gradle-plugin</strong> — Kotlin.kt:34 uses task-level <code>freeCompilerArgs.set(...)</code> while ApplyKtor.kt:33 and ApplyLibrary.kt:42 <code>add</code> <code>-Xjdk-release</code> via the extension's <code>compilerOptions</code>; depending on KGP wiring the <code>set</code> may clobber the added flag — verify <code>-Xjdk-release</code> actually reaches the compiler.</div>
+  <div class="obs"><strong>ktp-gradle-plugin</strong> — UnitTesting.kt:42's comment "Runs test classes in separate JVM processes" annotates <code>maxParallelForks = 1</code>, which controls parallelism, not per-class forking (<code>forkEvery</code>). ApplyKtor.kt:16's KDoc says JEP 491 needs "24+" while <code>MIN_JAVA_VERSION</code> is 25, with no explanation for the gap.</div>
+  <div class="obs"><strong>repo root</strong> — Version-catalog alias <code>kotlinJson</code> (gradle/libs.versions.toml:48) actually maps <code>kotlinx-serialization-json</code>; the name suggests a Kotlin JSON library rather than kotlinx.serialization in every consumer build script.</div>
+</section>
+
+<footer>
+  Generated by the <code>naming-consistency-review</code> skill · 2026-08-30
+</footer>
+</div>
+
+<script>
+const F = [
+// __FINDINGS__ — one object per finding, ordered misleading > inconsistent > unclear, numbered sequentially.
+// Schema (strings are double-quoted JS; escape inner double quotes; `backticks` render as inline code):
+// {
+//   n: 1,                            // issue number; stable, referenced in the fix prompt
+//   sev: "misleading",               // "misleading" | "inconsistent" | "unclear"
+//   cross: true,                     // OPTIONAL: cross-file finding (renders Concept + Locations, hides Current)
+//   title: "Short problem title",
+//   concept: "Shared concept being named.",   // cross-file findings only
+//   locs: ["path/to/file.ext:12 (`SymbolName`)", "..."],  // "path (annotation)" gets dir/file/annotation styling
+//   cur: "currentName",              // single-file findings only
+//   issue: "Why the name is misleading, inconsistent, or unclear (1-2 sentences).",
+//   from: "oldName", to: "newName",  // the ONE default rename; omit both only if no single rename exists
+//   rec: "Extra recommendation detail.",                  // OPTIONAL; REQUIRED when from/to are omitted
+//   alts: ["`optionB` — one-line reason"],                // OPTIONAL: only genuinely defensible alternatives
+// },
+{
+  n: 1, sev: "misleading",
+  title: "`createInstance` hides caching — returns existing instances",
+  locs: ["libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/KtpConfig.kt:74 (`createInstance`)"],
+  cur: "createInstance",
+  issue: "The name promises a fresh instance per call, but the function is a get-or-create backed by `cache` — repeated calls return the same object (verified by the test `sub-config lookup caches instances`). Callers relying on 'create' semantics would be wrong.",
+  from: "createInstance", to: "getInstance",
+  alts: ["`getOrCreateInstance` — spells out the memoization explicitly at the cost of length"],
+},
+{
+  n: 2, sev: "misleading",
+  title: "`getAllConfig` returns masked, truncated display values",
+  locs: ["libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/KtpConfig.kt:90 (`getAllConfig`)"],
+  cur: "getAllConfig",
+  issue: "The name reads like a raw dump of all config values, but secret-like paths are replaced with \"N chars\" and values are truncated at 200 chars (via `toRecords`/`maskConfigDisplayValue`). A caller using it programmatically would silently get masked secrets.",
+  from: "getAllConfig", to: "getAllConfigMasked",
+  rec: "`Config.toRecords()` (libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/ConfigRecord.kt:12) has the same property; if renamed too, `toMaskedRecords` keeps the pair consistent.",
+  alts: ["`getAllConfigForDisplay` — emphasizes the informational/display purpose rather than the mechanism"],
+},
+{
+  n: 3, sev: "misleading",
+  title: "Test name claims `extractChild` but exercises `data`",
+  locs: ["libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/KtpConfigTest.kt:59 (`\"extractChild deserializes nested config\"`)"],
+  cur: "extractChild deserializes nested config",
+  issue: "The test body never calls `extractChild`; it reads `config.data.app.*`, which goes through the `data` property (full-config `extract()`). The name claims coverage of an API the test does not touch — and no other test in the module covers `extractChild`.",
+  from: "extractChild deserializes nested config", to: "data property deserializes nested config",
+  rec: "Consider adding a real `extractChild` test, since it is the API ktp-stripe and ktp-gcp-firestore depend on.",
+},
+{
+  n: 4, sev: "misleading",
+  title: "Test name asserts the opposite of its body",
+  locs: ["libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/BuildConfigFromEnvVarTest.kt:118 (`\"buildConfigFromEnvVar returns null for duplicate key at same level\"`)"],
+  cur: "buildConfigFromEnvVar returns null for duplicate key at same level",
+  issue: "The name says the parse fails (returns null), but the body asserts `shouldNotBeNull` and last-value-wins; the inline comment even admits HOCON parses this successfully. The name documents behavior that is false.",
+  from: "buildConfigFromEnvVar returns null for duplicate key at same level", to: "buildConfigFromEnvVar parses duplicate keys with last value winning",
+},
+{
+  n: 5, sev: "misleading",
+  title: "Test name says 'flag' for an env-name lookup",
+  locs: ["libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/EnvTest.kt:21 (`\"localDev flag comes from config file override\"`)"],
+  cur: "localDev flag comes from config file override",
+  issue: "'Flag' suggests the boolean `isLocalDev`, but the test asserts that `findEnvironment()` reads the environment name (\"123\") from the `localDevEnv` key in the test-resource `ktp/0.conf`. Neither a flag nor an override mechanism is involved.",
+  from: "localDev flag comes from config file override", to: "findEnvironment reads env name from localDevEnv config key",
+},
+{
+  n: 6, sev: "misleading",
+  title: "`fakeConfig` builds a ConfigFile, not a Config",
+  locs: ["libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/ConfigFileFixtures.kt:3 (`fakeConfig`)"],
+  cur: "fakeConfig",
+  issue: "Throughout the module an unqualified 'config' means a Typesafe `Config` (`buildConfig` returns one), but this fixture returns a `ConfigFile`. At call sites like `buildConfig(env, listOf(fakeConfig(...)))` the name blurs the two types.",
+  from: "fakeConfig", to: "fakeConfigFile",
+},
+{
+  n: 7, sev: "misleading",
+  title: "`envVarNames` are also read as system properties",
+  locs: ["libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/Env.kt:5 (`envVarNames`)"],
+  cur: "envVarNames",
+  issue: "`findEnvironment()` (Env.kt:35) checks each name against both `System.getenv` and `System.getProperty`; the name hides half the lookup scope, and EnvTest relies specifically on the system-property path.",
+  from: "envVarNames", to: "envLookupKeys",
+},
+{
+  n: 8, sev: "misleading",
+  title: "`removePrefix` collides with stdlib and hides component semantics",
+  locs: ["libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/Path.kt:5 (`Path.removePrefix`)"],
+  cur: "removePrefix",
+  issue: "The name mirrors Kotlin's `String.removePrefix`, implying general prefix-stripping, but the function only drops the first path name component when it exactly equals `folder` — a multi-component argument like \"static/assets\" silently never matches, absolute paths lose their root, and removing the only component throws. The stdlib association makes every one of those surprises worse.",
+  from: "removePrefix", to: "removeFirstFolder",
+  rec: "Keeps the honest `folder` parameter vocabulary and stops readers from importing `String.removePrefix` expectations onto `java.nio.file.Path`.",
+  alts: ["`dropLeadingFolder` — reads slightly better if you think of the match-or-return-unchanged behavior as 'dropping'"],
+},
+{
+  n: 9, sev: "misleading",
+  title: "`install...` function installs nothing",
+  locs: ["libs/ktp-core/src/main/kotlin/net/ghue/ktp/log/Debug.kt:8 (`installLocalDevConsoleLogger`)"],
+  cur: "installLocalDevConsoleLogger",
+  issue: "The name promises to install a console logger, but the function neither installs nor creates anything: it only rewrites the pattern of an already-configured console appender, and is a silent no-op when none exists. The sibling `installSlf4jBridge` genuinely installs a handler, so the shared `install` verb teaches readers the wrong meaning here.",
+  from: "installLocalDevConsoleLogger", to: "configureLocalDevConsoleLogFormat",
+  alts: ["`applyLocalDevConsolePattern` — 'pattern' matches logback's own vocabulary for what is being changed"],
+},
+{
+  n: 10, sev: "misleading",
+  title: "Test name says 'handles' but behavior is a thrown exception",
+  locs: ["libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/PathTest.kt:25 (`\"removePrefix handles single component path that matches\"`)"],
+  cur: "removePrefix handles single component path that matches",
+  issue: "\"Handles\" implies the case is dealt with gracefully, but the test asserts an `IllegalArgumentException` is thrown. The name actively hides the one crashing edge case of the API from anyone scanning test output.",
+  from: "removePrefix handles single component path that matches", to: "removePrefix throws when removing the only path component",
+},
+{
+  n: 11, sev: "misleading",
+  title: "Test name claims authorization that is actually bypassed",
+  locs: ["libs/ktp-gcp/src/test/kotlin/net/ghue/ktp/gcp/cron/ApiCronTest.kt:24 (`\"authorized request runs cron handler\"`)"],
+  cur: "authorized request runs cron handler",
+  issue: "The test stubs `KtpConfig.env` to `Env(\"localdev\")`, which makes `GcpCronPlugin` skip auth entirely, and the request carries no Authorization header. Nothing is 'authorized'; the name claims coverage of the auth path that the test does not exercise.",
+  from: "authorized request runs cron handler", to: "localdev request bypasses auth and runs cron handler",
+  rec: "The second test (`\"run again returns 429\"`) also runs in localdev mode; if the auth path is meant to be covered, that needs its own test — no current test verifies token validation.",
+},
+{
+  n: 12, sev: "misleading",
+  title: "Auth-only plugin named as if it were the whole cron feature",
+  locs: ["libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/cron/Auth.kt:14 (`GcpCronPlugin`)"],
+  cur: "GcpCronPlugin",
+  issue: "The plugin only verifies the Cloud Scheduler OIDC token (and rejects unauthenticated calls); it implements no cron behavior. `GcpCronPlugin` claims broader scope than it has, and hides the reject-request side effect that its sibling `authenticateGcpCron` names honestly.",
+  from: "GcpCronPlugin", to: "GcpCronAuthPlugin",
+  rec: "Also update the plugin name string `name = \"GcpCronPlugin\"` on line 15 to match.",
+},
+{
+  n: 13, sev: "misleading",
+  title: "Constant name hides byte units",
+  locs: ["libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/AuthUtil.kt:13 (`AES128_KEY_SIZE`)"],
+  cur: "AES128_KEY_SIZE",
+  issue: "The value is 16 (bytes), but the name puts `128` next to `KEY_SIZE`, so readers naturally parse the size as 128. The unit (bits vs bytes) is exactly the detail AES key handling gets wrong.",
+  from: "AES128_KEY_SIZE", to: "AES128_KEY_BYTES",
+},
+{
+  n: 14, sev: "misleading",
+  title: "Name hides HTTP response side effect",
+  locs: ["libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/AuthUtil.kt:28 (`ApplicationCall.userOrError`)"],
+  cur: "userOrError",
+  issue: "`OrError` suggests it merely throws when no principal exists, but the function also writes a 401 response to the call before throwing — a significant side effect invisible at call sites.",
+  from: "userOrError", to: "userOrRespondUnauthorized",
+  alts: ["`requireUser` — cleaner Kotlin idiom, but only honest if the `respond(Unauthorized)` moves out into a status-page/exception handler"],
+},
+{
+  n: 15, sev: "misleading",
+  title: "`HasRoles` interface secretly requires user identity",
+  locs: ["libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/UserSession.kt:15 (`HasRoles`)", "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/RbacPlugin.kt:63 (only consumer of `HasRoles.userId`)"],
+  cur: "HasRoles",
+  issue: "The name promises a roles-only capability, but the interface also demands `userId: UserId`, so any implementer must supply identity the name never mentions.",
+  rec: "Remove `userId` from `HasRoles` so the name is honest — it is used only for one denial log line in `RbacPlugin`, and `UserPrincipal` already re-declares it. If identity must stay part of the contract, rename instead (see alternative).",
+  alts: ["`UserRoles` — keeps `userId` in the contract and names the pairing of identity + roles"],
+},
+{
+  n: 16, sev: "misleading",
+  title: "Config accessor named `firestore` returns the `google` block",
+  locs: ["libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/KtpConfigFirestore.kt:6 (`KtpConfig.firestore`)"],
+  cur: "firestore",
+  issue: "The property returns the whole `Google` config block, not the firestore section, so callers must write `config.firestore.firestore` to reach it — `firestoreModule()` ends up as `firestore.firestore.firestore()`. It also breaks the repo-wide convention where the accessor name equals the decapitalized block type (`KtpConfig.auth: Auth` in ktp-gcp-auth, `KtpConfig.stripe: Stripe` in ktp-stripe).",
+  from: "firestore", to: "google",
+  rec: "The `Google`/`Firestore` class names are locked to config keys by `extractChild`, but the extension property is freely renamable.",
+  alts: ["keep the name `firestore` but retarget it to return `Google.Firestore` (`extractChild<Google>().firestore`) — the name then matches what it yields and call sites shorten to `config.firestore.dbId`"],
+},
+{
+  n: 17, sev: "misleading",
+  title: "Client factory named like a getter and like its own class",
+  locs: ["libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/KtpConfigFirestore.kt:12 (`Google.Firestore.firestore()`)"],
+  cur: "firestore",
+  issue: "A noun-named function on a class itself named `Firestore` reads as a cheap accessor, but every call builds a brand-new `com.google.cloud.firestore.Firestore` client via `FirestoreOptions.newBuilder()`. Combined with the accessor above it produces the `firestore.firestore.firestore()` chain in `FirestoreModule.kt:6`.",
+  from: "firestore", to: "createClient",
+  alts: ["`createFirestore` — keeps the product type in the name at the cost of repeating the enclosing class name"],
+},
+{
+  n: 18, sev: "misleading",
+  title: "`serialize()` extension silently strips `id` and DocTimes fields",
+  locs: ["libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreSerialize.kt:75 (`T.serialize()`)"],
+  cur: "serialize",
+  issue: "The KDoc and name promise \"serializes any object\", but the extension removes `id` and `DocTimes` metadata and throws for anything that doesn't serialize to a Map — while `FirestoreSerializer.serialize` in the same file is a different contract (any value, nothing stripped) under the same name. A reader of `document.serialize()` cannot tell which contract applies.",
+  from: "serialize", to: "toDocumentData",
+  rec: "`toDocumentData` mirrors `DocumentSnapshot.data`, the exact shape it produces, and separates the document-level operation from the value-level `FirestoreSerializer.serialize`.",
+  alts: ["`serializeDocument` — stays grep-adjacent to the serialize family"],
+},
+{
+  n: 19, sev: "misleading",
+  title: "File name narrower than its contents",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/debug/GcInfo.kt:7 (`collectGcInfo`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/debug/GcInfo.kt:23 (`collectMaxHeapMib`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/debug/GcInfo.kt:33 (`collectCpuCores`)"
+  ],
+  cur: "GcInfo.kt",
+  issue: "The file is named after GC, but two of its three collectors (max heap, CPU cores) have nothing to do with garbage collection. A reader hunting for the heap/CPU records will not look in GcInfo.kt.",
+  from: "GcInfo.kt", to: "RuntimeInfo.kt",
+  rec: "Matches the \"Runtime Info\" table these `ConfigRecord`s populate in RespondConfigHtml.kt (lines 17-23) and the `runtimeRecords` variable there.",
+},
+{
+  n: 20, sev: "misleading",
+  title: "Test locals named `*App` hold builders, not apps",
+  locs: [
+    "libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/start/KtpStartTest.kt:23 (`originalApp`)",
+    "libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/start/KtpStartTest.kt:24 (`updatedApp`)",
+    "libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/start/KtpStartTest.kt:66 (`finalApp`)"
+  ],
+  cur: "originalApp / updatedApp / finalApp",
+  issue: "Invoking a `KtpAppBuilderFactory` returns a `KtpAppBuilder`, not a `KtpApp` (that requires `.build()`, as line 114 shows). Calling these builders `*App` misstates the type in tests that exist precisely to pin builder-vs-app lifecycle semantics — while the factory-typed vals are meanwhile named `*Builder`, shifting every name one level off.",
+  rec: "Rename the factory-typed vals `originalBuilder`/`updatedBuilder` to `originalFactory`/`updatedFactory`, and the invoked-builder vals `originalApp`/`updatedApp`/`finalApp` to `originalBuilder`/`updatedBuilder`/`finalBuilder`.",
+},
+{
+  n: 21, sev: "misleading", cross: true,
+  title: "Same `fromString` name, three different failure contracts",
+  concept: "enum companion string-to-enum parsing in ktp-stripe",
+  locs: [
+    "libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/PaymentStatus.kt:23 (`fromString`)",
+    "libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/SubscriptionStatus.kt:21 (`fromString`)",
+    "libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/StripeAction.kt:44 (`fromString`)"
+  ],
+  issue: "The identical name `fromString` carries three contracts: `SubscriptionStatus.fromString` throws `IllegalArgumentException`, `StripeAction.fromString` silently returns `UNKNOWN`, and `PaymentStatus.fromString` throws an HTTP 400 via `ktpRspError` — a web-layer side effect completely hidden by a plain parser name.",
+  rec: "Align `PaymentStatus.fromString` with the sibling contract (throw `IllegalArgumentException`, map to HTTP 400 at call sites); if the HTTP-aware behavior is intentional, rename it `fromStringOrBadRequest` instead. `StripeAction.fromString`'s lenient contract is acceptable as-is because the enum's `UNKNOWN` entry advertises it.",
+},
+{
+  n: 22, sev: "misleading",
+  title: "StripeAction coverage test hidden in StripeWebhookEventTest",
+  locs: ["libs/ktp-stripe/src/test/kotlin/net/ghue/ktp/stripe/StripeWebhookEventTest.kt:58 (`\"maps all documented invoice actions\"`)"],
+  cur: "StripeWebhookEventTest",
+  issue: "This case tests `StripeAction.fromString` directly and never touches `StripeWebhookEvent`, so the test class name misstates the file's scope; someone auditing `StripeAction` coverage will not look here, and there is no `StripeActionTest` at all.",
+  rec: "Move the case into a new `StripeActionTest` alongside the other per-enum test files (`PaymentStatusTest`, `SubscriptionStatusTest`).",
+},
+{
+  n: 23, sev: "misleading",
+  title: "Helper named 'Start' but starting is optional",
+  locs: ["libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:11 (`testKtpStart`)"],
+  cur: "testKtpStart",
+  issue: "The helper's real job is to build and wire a KTP test application; starting it is optional via the `start` parameter, and 5 of the module's own 6 tests pass `start = false`, so call sites read `testKtpStart(start = false)` — the name promises the very thing being disabled.",
+  from: "testKtpStart", to: "ktpTestApp",
+  rec: "Follows the project's `ktp` prefix convention (`ktpAppCreate`, `KtpConfig`) and Ktor's noun idiom `testApplication` which this wraps. Rename the file to `KtpTestApp.kt` and the test class to `KtpTestAppTest`, which also dissolves finding #47.",
+  alts: ["`testKtpApplication` — mirrors Ktor's `testApplication` word order, sits next to the framework idiom in autocomplete"],
+},
+{
+  n: 24, sev: "misleading",
+  title: "File name claims the Kotest Tag type",
+  locs: ["libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/config/Tag.kt:6 (`Integration`)"],
+  cur: "Tag.kt",
+  issue: "`Tag.kt` declares no `Tag` — its only declaration is the `Integration` tag object; `Tag` is the imported `io.kotest.core.Tag`. A reader hunting for the `Integration` tag will not find it by file name, and the name suggests the module defines its own Tag type.",
+  from: "Tag.kt", to: "Tags.kt",
+  rec: "Plural signals 'the tags this library offers' and leaves room for future tags.",
+  alts: ["`Integration.kt` — Kotlin's single-top-level-declaration file convention; downside: reads like integration-test utilities rather than a tag definition"],
+},
+{
+  n: 25, sev: "misleading",
+  title: "Builder local named as the app",
+  locs: [
+    "libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:22 (`ktpApp`)",
+    "libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:29 (`ktpInstance`)"
+  ],
+  cur: "ktpApp",
+  issue: "`ktpApp` holds the builder returned by the factory (it is mutated via `createKtpConfig` and then `.build()` is called), while the actual built application lands in `ktpInstance` — the 'app' name sits on the wrong object, and `Instance` says nothing about what the value is.",
+  from: "ktpApp", to: "appBuilder",
+  rec: "Also rename `ktpInstance` to `app` so the built application carries the app name.",
+},
+{
+  n: 26, sev: "misleading",
+  title: "Test local calls KtpConfig a manager",
+  locs: ["libs/ktp-test/src/test/kotlin/net/ghue/ktp/test/KtpTestStartTest.kt:34 (`configManager`)"],
+  cur: "configManager",
+  issue: "`val configManager by inject<KtpConfig>()` injects the `KtpConfig` value itself, not a manager; the suffix implies a service/lifecycle role the object does not have and looks stale from an earlier type name — the test's own title even says 'injects KtpConfig'.",
+  from: "configManager", to: "ktpConfig",
+},
+{
+  n: 27, sev: "misleading",
+  title: "UnitTesting.kt also sets up integration tests",
+  locs: [
+    "ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/mods/UnitTesting.kt:15 (`installKotest`)",
+    "ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/mods/UnitTesting.kt:50 (`integrationTest` registration)"
+  ],
+  cur: "UnitTesting.kt",
+  issue: "The file name claims unit-testing scope, but the file registers the `integrationTest` task, creates the `ktpTestJavaAgent` configuration, and wires the Byte Buddy agent. It is also the only file in `mods/` whose name shares no vocabulary with its function (`Detekt.kt` has `applyDetekt`, `Ktfmt.kt` has `applyKtfmt`, but `UnitTesting.kt` has `installKotest`).",
+  from: "UnitTesting.kt", to: "Kotest.kt",
+  rec: "Matches the per-tool file convention of `mods/` and the `installKotest` entry point, and avoids a lookalike with the existing `lukestack/Testing.kt`. Optionally split the `integrationTest` registration into its own `registerIntegrationTestTask` so `installKotest` stops hiding it.",
+},
+{
+  n: 28, sev: "misleading",
+  title: "find* prefix implies a nullable lookup",
+  locs: ["ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/ProjectMode.kt:15 (`findProjectMode`)"],
+  cur: "findProjectMode",
+  issue: "In Gradle idiom (`findProperty`, `findProject`, `findByName` vs `getByName`), `find*` signals a lookup that may return null. This function always returns a mode — it validates, falls back to auto-detection, and throws on bad input — so the prefix miscommunicates its contract, in code that sits right next to real `findProperty` calls.",
+  from: "findProjectMode", to: "resolveProjectMode",
+  rec: "`resolve` captures the explicit-property-with-detection-fallback semantics. Callers to update: `ProjectPlugin.kt:10`, `LukestackPlugin.kt:18`, `ProjectModeTest.kt`.",
+},
+{
+  n: 29, sev: "inconsistent", cross: true,
+  title: "Version-catalog aliases mix camelCase and dotted hierarchy styles",
+  concept: "Gradle version-catalog aliases for third-party library groups, defined once at the repo root and visible in every module's build script",
+  locs: [
+    "gradle/libs.versions.toml:78 (`koinBom`, plus `koinCore`, `koinAnnotations`, `koinKtor`, `koinLoggerSlf4j`, `koinTest` on 79-83)",
+    "gradle/libs.versions.toml:90 (`gcpBom`, with `gcpCore` nearby)",
+    "libs/ktp-gcp/build.gradle.kts:4 (`libs.gcpBom` directly beside `libs.ktor.bom`)",
+    "libs/ktp-ktor/build.gradle.kts:27 (`libs.koinBom` beside `libs.ktor.bom`)",
+    "libs/ktp-test/build.gradle.kts:7 (`libs.koinBom` beside `libs.kotest.bom`)"
+  ],
+  issue: "The same concept — an alias for a third-party library — reads dotted/nested for Ktor and Kotest (`libs.ktor.bom`, `libs.kotest.bom`, `libs.ktor.client.core`) but flat camelCase for Koin and GCP (`libs.koinBom`, `libs.koinCore`, `libs.gcpBom`). Three of the nine module reviews flagged this independently; consumers must remember which style each library uses.",
+  from: "koinBom", to: "koin-bom",
+  rec: "Rename the whole Koin group (`koin-bom`, `koin-core`, `koin-annotations`, `koin-ktor`, `koin-logger-slf4j`, `koin-test`) and the GCP aliases (`gcp-bom`, `gcp-core`) in `gradle/libs.versions.toml` so accessors read `libs.koin.bom`, `libs.gcp.bom`, matching the `libs.ktor.*` hierarchy. One root-file change; touches every module's build script.",
+},
+{
+  n: 30, sev: "inconsistent", cross: true,
+  title: "Test names call the test environment 'CI'",
+  concept: "test environment (`Env.isTest`)",
+  locs: [
+    "libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/EnvTest.kt:36 (`\"TEST_UNIT is recognised as CI environment\"`)",
+    "libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/ConfigFileTest.kt:261 (`\"appliesTo filters out unnamed local files in CI test environments\"`)",
+    "libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/ConfigFileTest.kt:266 (`\"appliesTo filters out local named files in CI test environments\"`)",
+    "libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/ConfigFileTest.kt:271 (`\"appliesTo allows named non-local files in CI test environments\"`)"
+  ],
+  issue: "Production code consistently says 'test' (`isTest`, `TEST_UNIT`, `test-unit`), but these four test names say 'CI'. `isTest` is true for local test runs too, so 'CI' is both a second vocabulary for the same concept and factually wrong.",
+  rec: "Replace 'CI environment(s)' with 'test environment(s)' in all four test names, e.g. `appliesTo filters out unnamed local files in test environments`.",
+},
+{
+  n: 31, sev: "inconsistent", cross: true,
+  title: "Scanner test class name doesn't match the scan function or file",
+  concept: "classpath config-file discovery",
+  locs: [
+    "libs/ktp-config/src/test/kotlin/net/ghue/ktp/config/ConfigFileScannerTest.kt:6 (`ConfigFileScannerTest`)",
+    "libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/ScanConfigFiles.kt:7 (`scanConfigFiles`)"
+  ],
+  issue: "The module's other test files are named after the function or file under test (`BuildConfigFromEnvVarTest`, `FindMissingConfigFieldTest`, `DurationParsingTest`), but this one invents a `ConfigFileScanner` noun that exists nowhere in main code, breaking test-to-source discoverability.",
+  from: "ConfigFileScannerTest", to: "ScanConfigFilesTest",
+  rec: "Rename the file to `ScanConfigFilesTest.kt` along with the class.",
+},
+{
+  n: 32, sev: "inconsistent", cross: true,
+  title: "Config-path constants use different suffix conventions",
+  concept: "constants holding HOCON config paths",
+  locs: [
+    "libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/Env.kt:6 (`LOCAL_DEV_PATH`)",
+    "libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/KtpConfig.kt:17 (`ENV_CONFIG_PATH`)"
+  ],
+  issue: "Both constants hold config-key paths, but one is `*_CONFIG_PATH` and the other bare `*_PATH`, which reads like a filesystem path. `LOCAL_DEV_PATH` (value \"localDevEnv\") also sits directly beside the lookalike `LOCAL_DEV_ENV_NAME` (value \"localdev\") while dropping the `ENV` that distinguishes them.",
+  from: "LOCAL_DEV_PATH", to: "LOCAL_DEV_ENV_CONFIG_PATH",
+  alts: ["`LOCAL_DEV_ENV_PATH` — shorter, still restores the `ENV` token that matches the key's value"],
+},
+{
+  n: 33, sev: "inconsistent", cross: true,
+  title: "Mixed `KtTest` / `Test` suffix for the same kind of test class",
+  concept: "test class naming for a file of top-level extension functions",
+  locs: [
+    "libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/EnumKtTest.kt:6 (`EnumKtTest`)",
+    "libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/string/StringKtTest.kt:6 (`StringKtTest`)",
+    "libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/HashTest.kt:8 (`HashTest`)",
+    "libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/PathTest.kt:9 (`PathTest`)"
+  ],
+  issue: "`Hash.kt` and `Path.kt` also contain only top-level extension functions yet their suites are `HashTest`/`PathTest`, while `Enum.kt` and `String.kt` get `EnumKtTest`/`StringKtTest`. The `Kt` suffix carries no information and is applied to a random half of the identical situation.",
+  rec: "Rename `EnumKtTest` to `EnumTest` and `StringKtTest` to `StringTest` (files included) to match the dominant `XTest` convention used by the other five suites.",
+},
+{
+  n: 34, sev: "inconsistent", cross: true,
+  title: "String extensions isolated in a subpackage other type extensions don't get",
+  concept: "package placement of JDK/stdlib-type extension files",
+  locs: [
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/string/String.kt:1 (`net.ghue.ktp.core.string`)",
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/Hash.kt:1 (`net.ghue.ktp.core`)",
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/Path.kt:1 (`net.ghue.ktp.core`)",
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/Enum.kt:1 (`net.ghue.ktp.core`)"
+  ],
+  issue: "String extensions live in a dedicated `net.ghue.ktp.core.string` subpackage while the equivalent Path, Enum, and Hash (String!) extensions sit in the root `net.ghue.ktp.core` package — consumers need two import styles for one concept, and `sha256()` (a String extension) is not even in the `string` package.",
+  from: "net.ghue.ktp.core.string", to: "net.ghue.ktp.core",
+  rec: "Fold `string/String.kt` into the root package alongside the other extension files (source-breaking for the import line only).",
+},
+{
+  n: 35, sev: "inconsistent", cross: true,
+  title: "ApiFuture adapters split across two vaguely named Util files",
+  concept: "coroutine/blocking adapters for Google `ApiFuture`",
+  locs: [
+    "libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/CoroutineUtil.kt:12 (`ApiFuture<T>.await`)",
+    "libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/FutureUtil.kt:12 (`ApiFuture<T>.join`)"
+  ],
+  issue: "Two sibling files each hold one `ApiFuture` extension under unrelated grab-bag names: neither `CoroutineUtil` nor `FutureUtil` says the content is `ApiFuture` bridging, and the split forces readers to remember which -Util holds which adapter. 'Util' is a red-flag vague name in both.",
+  rec: "Merge both extensions into a single file named for the receiver, `ApiFutureExt.kt` (the extension function names `await`/`join` themselves are fine and match kotlinx-coroutines conventions).",
+},
+{
+  n: 36, sev: "inconsistent", cross: true,
+  title: "Tenant ID property named `tenId` and `tenantId`",
+  concept: "tenant identifier carried on user models",
+  locs: [
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/UserSession.kt:12 (`UserSession.tenId`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/UserSession.kt:24 (`UserPrincipal.tenId`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/Model.kt:14 (`UserInfo.tenantId`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/FirebaseAuthService.kt:59 (`tenId = userInfo.tenantId`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/DummyAuthProvider.kt:11 (`tenId = TenantId(\"\")`)"
+  ],
+  issue: "The same concept is `tenantId` on `UserInfo` but `tenId` on `UserSession`/`UserPrincipal` — the mapping line `tenId = userInfo.tenantId` shows the collision directly. `tenId` is also a nonstandard abbreviation that reads like the number ten, and the type is already spelled out as `TenantId`.",
+  from: "tenId", to: "tenantId",
+  rec: "Rename in `UserPrincipal`, `UserSession`, and all construction sites (session cookies are ephemeral, so the serialized field-name change only invalidates live sessions).",
+},
+{
+  n: 37, sev: "inconsistent", cross: true,
+  title: "Full name is `name` server-side but `nameFull` on the wire",
+  concept: "user's full display name",
+  locs: [
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/Model.kt:16 (`UserInfo.name`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/UserSession.kt:10 (`UserSession.name`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/UserSession.kt:26 (`UserPrincipal.name`, alongside derived `nameFirst`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/Model.kt:29 (`LoginResponseUser.nameFull`, mapped from `userSession.name`)"
+  ],
+  issue: "One value flows `UserInfo.name` to `UserSession.name` to `LoginResponseUser.nameFull`. Bare `name` is also ambiguous next to `nameFirst` (full? last?), which the wire model already solves with the `nameFull`/`nameFirst` pair.",
+  from: "name", to: "nameFull",
+  rec: "Adopt the wire model's vocabulary server-side (`UserInfo`, `UserSession`, `UserPrincipal`); this direction leaves the browser-facing JSON contract untouched.",
+},
+{
+  n: 38, sev: "inconsistent", cross: true,
+  title: "Batch upsert named `batchWrite`",
+  concept: "merge-write keyed by the document's `id` property (upsert)",
+  locs: [
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExt.kt:146 (`batchWrite`)",
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExt.kt:22 (`upsert`)",
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/KtpCollection.kt:34 (`upsert`)",
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreTransaction.kt:37 (`upsert`)"
+  ],
+  issue: "The operation is exactly the module's `upsert` semantics in chunks of 500 — its own KDoc says \"Upserts [items] with [upsert]'s merge semantics\" — but the name says generic \"write\", which could equally mean replace or delete.",
+  from: "batchWrite", to: "batchUpsert",
+},
+{
+  n: 39, sev: "inconsistent", cross: true,
+  title: "Identical test helper named three ways",
+  concept: "completed ApiFuture stub for mocked SDK calls",
+  locs: [
+    "libs/ktp-gcp-firestore/src/test/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExtTest.kt:378 (`completedFuture`)",
+    "libs/ktp-gcp-firestore/src/test/kotlin/net/ghue/ktp/gcp/firestore/KtpCollectionTest.kt:124 (`colFuture`)",
+    "libs/ktp-gcp-firestore/src/test/kotlin/net/ghue/ktp/gcp/firestore/FirestoreTransactionTest.kt:122 (`transactionFuture`)"
+  ],
+  issue: "Three byte-identical private helpers carry three names; `colFuture` and `transactionFuture` imply collection- or transaction-specific behavior that does not exist. The helpers are file-private, so the same name would not clash.",
+  rec: "Name all three `completedFuture` (matching FirestoreExtTest and JDK `CompletableFuture.completedFuture` precedent), or hoist a single shared helper into `:libs:ktp-test`.",
+},
+{
+  n: 40, sev: "inconsistent",
+  title: "Stored object called `document` in most APIs but `item` in two",
+  locs: [
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExt.kt:101 (`idFieldValue(item)`)",
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExt.kt:146 (`batchWrite(collection, items)`)",
+    "libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/FirestoreExt.kt:22 (`upsert(document)`)"
+  ],
+  cur: "item / items",
+  issue: "The data object being persisted is `document` throughout FirestoreExt.kt, KtpCollection.kt, and FirestoreTransaction.kt, but `idFieldValue` and `batchWrite` call the same concept `item`/`items`.",
+  rec: "Rename `idFieldValue`'s parameter `item` to `document` and `batchWrite`'s `items` to `documents`.",
+},
+{
+  n: 41, sev: "inconsistent", cross: true,
+  title: "Plugin registration name drops the `Plugin` suffix in one of three plugins",
+  concept: "Ktor `createApplicationPlugin(name = ...)` registration name",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/debug/DebugEndpointsPlugin.kt:99 (`name = \"DebugEndpoints\"`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/RequestVirtualThreadPlugin.kt:24 (`name = \"RequestVirtualThreadPlugin\"`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/ViteFrontendPlugin.kt:74 (`name = \"ViteFrontendPlugin\"`)"
+  ],
+  issue: "Two plugins register under a name identical to their `val` (`RequestVirtualThreadPlugin`, `ViteFrontendPlugin`); the third registers as `DebugEndpoints` while its `val` is `DebugEndpointsPlugin`. Anyone grepping logs or duplicate-install errors for the val name misses the debug plugin.",
+  from: "\"DebugEndpoints\"", to: "\"DebugEndpointsPlugin\"",
+  alts: ["drop the `Plugin` suffix from all three registration names — matches Ktor built-ins (`CallLogging`, `StatusPages`), but then registration names diverge from the public `val` names"],
+},
+{
+  n: 42, sev: "inconsistent",
+  title: "Liveness probe parameter named `healthCheck`",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/Health.kt:14 (`healthCheck`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/Health.kt:8 (`K8S_LIVENESS_PATH`)"
+  ],
+  cur: "healthCheck",
+  issue: "The same probe is called `K8S_LIVENESS_PATH` two lines up but `healthCheck` as the parameter, while its sibling is correctly `readinessCheck`. \"Health check\" is also ambiguous — readiness is equally a health check — so the pair does not read as liveness-vs-readiness.",
+  from: "healthCheck", to: "livenessCheck",
+},
+{
+  n: 43, sev: "inconsistent",
+  title: "Test class name matches neither its file nor the module's `KtpRspEx` vocabulary",
+  locs: ["libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/error/KtpRspExHandlerTest.kt:21 (`KtorErrorResponseHandlerTest`)"],
+  cur: "KtorErrorResponseHandlerTest",
+  issue: "The file is `KtpRspExHandlerTest.kt` but the class inside is `KtorErrorResponseHandlerTest` — a third vocabulary (`KtorErrorResponse*`) that appears nowhere else; every related symbol uses the `KtpRspEx*` family. Test reports and file search disagree about what this suite is.",
+  from: "KtorErrorResponseHandlerTest", to: "KtpRspExHandlerTest",
+},
+{
+  n: 44, sev: "inconsistent", cross: true,
+  title: "Debug-endpoint test sits outside the `debug` package of its subject",
+  concept: "test package mirrors subject package",
+  locs: [
+    "libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/app/DebugEndpointsTest.kt:1 (`package net.ghue.ktp.ktor.app`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/app/debug/DebugEndpointsPlugin.kt:1 (`package net.ghue.ktp.ktor.app.debug`)",
+    "libs/ktp-ktor/src/test/kotlin/net/ghue/ktp/ktor/app/debug/ThreadDumpGeneratorTest.kt:1 (`package net.ghue.ktp.ktor.app.debug`)"
+  ],
+  issue: "Everything it tests lives in `net.ghue.ktp.ktor.app.debug`, and the sibling `ThreadDumpGeneratorTest` correctly sits in that package. `DebugEndpointsTest` alone sits one package up, so the debug feature's tests are split across two directories.",
+  from: "net.ghue.ktp.ktor.app.DebugEndpointsTest", to: "net.ghue.ktp.ktor.app.debug.DebugEndpointsTest",
+},
+{
+  n: 45, sev: "inconsistent",
+  title: "Two vocabularies for the same kind of URI segment in one config class",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/ViteFrontendPlugin.kt:48 (`browserUriPathPrefix`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/ViteFrontendPlugin.kt:42 (`staticPathSegment`)"
+  ],
+  cur: "browserUriPathPrefix",
+  issue: "Both properties are a single slash-free URI segment mounted at the root, but one is a `*PathSegment` and the other a `*UriPathPrefix`. \"browser\" also names the concept differently from the rest of the class, which says \"frontend\" (`frontendDist`, `frontendRoute` — which is built from this very property).",
+  from: "browserUriPathPrefix", to: "frontendPathSegment",
+  alts: ["`pagesPathSegment` — stresses that it serves page routes as opposed to static assets"],
+},
+{
+  n: 46, sev: "inconsistent",
+  title: "Log-context key missing the `stripe-` prefix",
+  locs: ["libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/InstallStripeWebhook.kt:39 (`\"event-type\"`)"],
+  cur: "event-type",
+  issue: "The two sibling keys set in the same `withLoggingContext` call are `stripe-event-id` and `stripe-object-id`, but the event-type key is bare `event-type`; log queries filtering on a `stripe-` namespace will silently miss it.",
+  from: "event-type", to: "stripe-event-type",
+},
+{
+  n: 47, sev: "inconsistent", cross: true,
+  title: "Same helper spelled with two word orders",
+  concept: "the KTP test-application bootstrap helper",
+  locs: [
+    "libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:11 (`testKtpStart` declared in file `KtpTestStart.kt`)",
+    "libs/ktp-test/src/test/kotlin/net/ghue/ktp/test/KtpTestStartTest.kt:20 (`KtpTestStartTest`)"
+  ],
+  issue: "The function is `testKtpStart` but its file is `KtpTestStart.kt` and its test class `KtpTestStartTest` — two permutations of the same three words for one concept, forcing readers to remember which ordering applies where (grep for one misses the other).",
+  rec: "Name the file after the capitalized function name and the test class `<File>Test`. With finding #23's `ktpTestApp` rename this becomes `KtpTestApp.kt`/`KtpTestAppTest` automatically; if the function name is kept, the file should become `TestKtpStart.kt` and the class `TestKtpStartTest`.",
+},
+{
+  n: 48, sev: "inconsistent",
+  title: "\"type\" vs \"mode\" for the same concept",
+  locs: ["ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/ProjectMode.kt:12 (`PROJECT_TYPE_DEFAULT`)"],
+  cur: "PROJECT_TYPE_DEFAULT",
+  issue: "Everything else in this file and module says \"mode\" (`ProjectMode`, `MODE_KEY = \"ktp.mode\"`, `findProjectMode`); this one constant switches to \"type\" for the identical concept.",
+  from: "PROJECT_TYPE_DEFAULT", to: "DEFAULT_MODE",
+  rec: "`DEFAULT_MODE` pairs naturally with the adjacent `MODE_KEY`.",
+},
+{
+  n: 49, sev: "inconsistent",
+  title: "Mixed casing in the gcp.* property namespace",
+  locs: [
+    "ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/lukestack/Gcloud.kt:83 (`gcp.github_owner`)",
+    "ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/lukestack/Gcloud.kt:84 (`gcp.github_repo`)"
+  ],
+  cur: "gcp.github_owner / gcp.github_repo",
+  issue: "The user-facing `gcp.*` config surface mixes camelCase (`gcp.projectId`, `gcp.appName`) with snake_case (`gcp.github_owner`, `gcp.github_repo`). The snake_case cannot be excused as mirroring terraform variable names, because `gcp.projectId` and `gcp.appName` also map to snake_case terraform vars (`project_id`, `app_name`) yet are camelCase.",
+  from: "gcp.github_owner", to: "gcp.githubOwner",
+  rec: "Rename `gcp.github_repo` to `gcp.githubRepo` likewise, and update the KDoc list at Gcloud.kt:25-26. Breaking change for consumer gradle.properties; per the fail-fast preference, consider erroring on the old keys rather than silently ignoring them.",
+},
+{
+  n: 50, sev: "inconsistent",
+  title: "gcloud task family breaks its own word order",
+  locs: ["ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/lukestack/Gcloud.kt:73 (`gcloudDeployInfra`)"],
+  cur: "gcloudDeployInfra",
+  issue: "Three sibling tasks follow `gcloudInfra<Action>` (`gcloudInfraIam`, `gcloudInfraBind`, `gcloudInfraEnable`); the fourth flips to `gcloudDeployInfra`, so the family no longer sorts or tab-completes together.",
+  from: "gcloudDeployInfra", to: "gcloudInfraDeploy",
+},
+{
+  n: 51, sev: "inconsistent",
+  title: "Abbreviated `config` verb breaks the configure* convention",
+  locs: ["ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/ApplyLibrary.kt:52 (`configPublishJava`)"],
+  cur: "configPublishJava",
+  issue: "The module consistently spells the verb out (`configureShadow`, `configureTesting`, `configureGcpEnvironment`); this is the lone `config` abbreviation, and `PublishJava` reads as noun soup for what is Maven-publishing setup of the java component.",
+  from: "configPublishJava", to: "configureJavaPublishing",
+},
+{
+  n: 52, sev: "inconsistent",
+  title: "Plugin registration handles use two naming schemes",
+  locs: [
+    "ktp-gradle-plugin/build.gradle.kts:44 (`ktpGradleSettingsPlugin`)",
+    "ktp-gradle-plugin/build.gradle.kts:48 (`ktpGradleProjectPlugin`)",
+    "ktp-gradle-plugin/build.gradle.kts:52 (`lukestackGradlePlugin`)"
+  ],
+  cur: "lukestackGradlePlugin",
+  issue: "Two handles follow `ktpGradle<Role>Plugin` while the third flips to `<name>GradlePlugin` in the same block; the handles feed derived task/publication names, so the scheme leaks out of this file.",
+  from: "lukestackGradlePlugin", to: "ktpGradleLukestackPlugin",
+  alts: ["`lukestackPlugin` — if the intent is that lukestack is its own brand outside the ktp prefix, drop `Gradle` instead so the outlier is at least minimal"],
+},
+{
+  n: 53, sev: "inconsistent",
+  title: "Generated `libs` overloads an already-taken term",
+  locs: [
+    "ktp-gradle-plugin/build.gradle.kts:149 (generated `KtpVersion.libs`)",
+    "ktp-gradle-plugin/build.gradle.kts:73 (`libraryNames`)"
+  ],
+  cur: "KtpVersion.libs",
+  issue: "The generator calls this data `libraryNames` (module-name strings), but emits it as `KtpVersion.libs` — colliding with the sibling generated object `KtpLibs` (dependency coordinates, a different concept) and with `libs`, the version-catalog accessor every consumer build script already has in scope.",
+  from: "libs", to: "libraryNames",
+  rec: "Rename in the generated template at build.gradle.kts:149 so the generated API reuses the generator's own vocabulary.",
+},
+{
+  n: 54, sev: "unclear",
+  title: "File name `Debug.kt` doesn't describe its content",
+  locs: ["libs/ktp-core/src/main/kotlin/net/ghue/ktp/log/Debug.kt:1 (`Debug.kt`)"],
+  cur: "Debug.kt",
+  issue: "The file has nothing to do with debug-level logging or debugging utilities; it holds the local-dev console log formatting setup. Every sibling file in the module is named for its primary concept.",
+  from: "Debug.kt", to: "LocalDevConsole.kt",
+  rec: "Pick the file name to match whatever the function is renamed to (see finding #9).",
+},
+{
+  n: 55, sev: "unclear",
+  title: "Stale test name references an obsolete fix and duplicates another test",
+  locs: ["libs/ktp-core/src/test/kotlin/net/ghue/ktp/core/PathTest.kt:138 (`\"removePrefix works correctly with relative paths after absolute path fix\"`)"],
+  cur: "removePrefix works correctly with relative paths after absolute path fix",
+  issue: "\"After absolute path fix\" leaks a historical change that means nothing to a reader today, and the test body is byte-for-byte identical to the first test in the file (line 11).",
+  rec: "Delete the test — it duplicates \"removePrefix removes matching first path component\" exactly. If kept for some reason, name it for behavior, not history.",
+},
+{
+  n: 56, sev: "unclear",
+  title: "API named for expiration but its parameter controls refresh",
+  locs: [
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/LazyWithExpiration.kt:41 (`lazyWithExpiration`)",
+    "libs/ktp-core/src/main/kotlin/net/ghue/ktp/core/LazyWithExpiration.kt:14 (`LazyWithExpiration`)"
+  ],
+  cur: "lazyWithExpiration",
+  issue: "A positional call `lazyWithExpiration(5.minutes) { ... }` reads as \"value expires after 5 minutes\", but 5 minutes is the refresh threshold (`refreshAfter`) — hard expiration is a hidden `2x` later, with stale values served in between. The API name and its only duration parameter use different concepts for the same number.",
+  from: "lazyWithExpiration", to: "lazyWithRefresh",
+  rec: "Rename the class to `LazyWithRefresh` to match; the honest `refreshAfter` parameter then agrees with the API name. Also unify the file's internal `reload` wording (`reloadExecutor`, KDoc \"background reload\") onto `refresh`.",
+  alts: ["`refreshingLazy` — reads as a noun phrase describing what the delegate is"],
+},
+{
+  n: 57, sev: "unclear",
+  title: "Top-level `Result` collides with `kotlin.Result` and names nothing",
+  locs: ["libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/cron/CronHandler.kt:7 (`Result`)"],
+  cur: "Result",
+  issue: "A public library export named bare `Result` says nothing about what it is the result of, and any consumer file importing it shadows the ubiquitous `kotlin.Result`, forcing qualified names elsewhere in that file.",
+  from: "Result", to: "CronResult",
+  alts: ["`CronHandler.Result` (nest it inside the interface) — scopes the name without inventing a new word, at the cost of a longer import"],
+},
+{
+  n: 58, sev: "unclear", cross: true,
+  title: "Cron hour parameter hides UTC hour-of-day semantics",
+  concept: "UTC hour-of-day (0-23) passed to the cron handler",
+  locs: [
+    "libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/cron/CronHandler.kt:4 (`hour`)",
+    "libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/cron/InstallApiCronRoutes.kt:21 (`hourNumber`)"
+  ],
+  issue: "`CronHandler.hourly(hour: Int)` is the public contract app authors implement, but nothing in the name says the value is the hour-of-day in UTC (the route computes `Instant.now().atOffset(ZoneOffset.UTC).hour`); implementers guessing local time would ship timezone bugs. The two files also call the same value `hour` vs `hourNumber`.",
+  from: "hour", to: "utcHour",
+  rec: "Rename the local `hourNumber` in `installApiCronRoutes` to `utcHour` as well so the concept has one name.",
+},
+{
+  n: 59, sev: "unclear",
+  title: "Library exports a generic top-level `Api` resource claiming the `/api` root",
+  locs: ["libs/ktp-gcp/src/main/kotlin/net/ghue/ktp/gcp/cron/InstallApiCronRoutes.kt:38 (`Api`)"],
+  cur: "Api",
+  issue: "`net.ghue.ktp.gcp.cron.Api` is a public export whose name is maximally generic: it will collide with any consuming app's own `Api` resource root, and it implies this cron library owns the whole `/api` surface when it only defines `/api/cron/hourly`.",
+  rec: "No single rename fixes the nesting: flatten the three nested resource classes into one `@Resource(\"/api/cron/hourly\") class ApiCronHourly` (call sites change from `Api.Cron.Hourly()` to `ApiCronHourly()`), or at minimum rename the root class so the library's claim is scoped, e.g. `CronApi`.",
+},
+{
+  n: 60, sev: "unclear",
+  title: "Grab-bag file name `Model.kt`",
+  locs: ["libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/Model.kt:1 (`Model.kt`)"],
+  cur: "Model.kt",
+  issue: "`Model` names no concept: the file mixes the app-facing SPI (`AuthLifecycleHandler`, `UserInfo`), internal wire DTOs (`LoginRequest`/`LoginResponse`/`LoginResponseUser`), ID value classes, and `FirebaseToken` extensions. It is also the repo's only `Model.kt`, so no convention protects it.",
+  rec: "Split by concept rather than renaming: `AuthLifecycleHandler.kt` (interface + `UserInfo`), `LoginApi.kt` (the three wire DTOs, or move them into `FirebaseAuthService.kt` where they are used), and the ID value classes plus `FirebaseToken` extensions into an ids/extensions file.",
+},
+{
+  n: 61, sev: "unclear",
+  title: "Strategy lambda named like the boolean it computes",
+  locs: [
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/FirebaseAuthPlugin.kt:19 (`FirebaseAuthPluginConfig.secureCookies`)",
+    "libs/ktp-gcp-auth/src/main/kotlin/net/ghue/ktp/gcp/auth/KtpConfigAuth.kt:14 (`Auth.secureCookies: Boolean`)"
+  ],
+  cur: "secureCookies",
+  issue: "The plugin-config property is a `(KtpConfig, Env) -> Boolean` decision function, but it shares its exact name with the plain `Boolean` config key it consults — both appear in the same file (`ktpConfig.auth.secureCookies` vs `pluginConfig.secureCookies(...)`), forcing readers to track which `secureCookies` is a value and which is a policy.",
+  from: "secureCookies", to: "secureCookiesProvider",
+},
+{
+  n: 62, sev: "unclear",
+  title: "Test name says 'works correctly' instead of the behavior",
+  locs: ["libs/ktp-gcp-auth/src/test/kotlin/net/ghue/ktp/gcp/auth/RbacPluginTest.kt:276 (`\"requireRole helper function works correctly\"`)"],
+  cur: "requireRole helper function works correctly",
+  issue: "\"Works correctly\" states no behavior; the test actually verifies that a `requireRole` block guards all nested routes, not just direct children.",
+  from: "requireRole helper function works correctly", to: "requireRole applies to all nested routes",
+  rec: "Same pattern at RbacPluginTest.kt:314: `\"works within authentication block\"` actually verifies that sibling `requireRole` blocks enforce their roles independently.",
+},
+{
+  n: 63, sev: "unclear",
+  title: "Public API abbreviation `sub`",
+  locs: ["libs/ktp-gcp-firestore/src/main/kotlin/net/ghue/ktp/gcp/firestore/KtpCollection.kt:59 (`KtpCollection.sub`)"],
+  cur: "sub",
+  issue: "`sub` is a bare abbreviation on a public API; nothing else in the module abbreviates \"collection\", and the Firestore SDK itself uses full words. `users.sub<Item>(...)` forces the reader to expand it mentally.",
+  from: "sub", to: "subCollection",
+},
+{
+  n: 64, sev: "unclear", cross: true,
+  title: "Lookalike names for two different extension-field mechanisms",
+  concept: "RFC 9457 extension members: reflected subclass properties vs the explicit `extraFields` map",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/error/KtpRspExHandler.kt:67 (`extractExtendedFields`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/error/KtpRspExHandler.kt:27 (`reflectedFields`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/error/KtpRspEx.kt:19 (`extraFields`)"
+  ],
+  issue: "`extractExtendedFields` (reflection over subclass properties) and `extraFields` (explicit map on `KtpRspEx`) are distinct mechanisms with near-identical names, forcing readers to memorize the extended-vs-extra distinction. The call site already uses the clearer word: its result is stored in `reflectedFields`.",
+  from: "extractExtendedFields", to: "extractReflectedFields",
+},
+{
+  n: 65, sev: "unclear",
+  title: "Plural `frontendFiles` names a single directory Path",
+  locs: [
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/ViteFrontendPlugin.kt:175 (`frontendFilesOrNull`)",
+    "libs/ktp-ktor/src/main/kotlin/net/ghue/ktp/ktor/plugin/ViteFrontendPlugin.kt:158 (`serveFromFrontendFiles`)"
+  ],
+  cur: "frontendFilesOrNull",
+  issue: "The function returns one `Path?` — the resolved `frontendDist` directory — but the plural name suggests a collection of files. The config property it locates is already named `frontendDist`, so the vocabulary exists.",
+  from: "frontendFilesOrNull", to: "frontendDistDirOrNull",
+  rec: "Rename the caller `serveFromFrontendFiles` to `serveFromFrontendDist` to match.",
+},
+{
+  n: 66, sev: "unclear",
+  title: "Enum name hides checkout-session scope",
+  locs: ["libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/PaymentStatus.kt:10 (`PaymentStatus`)"],
+  cur: "PaymentStatus",
+  issue: "The enum models exactly the Checkout `Session.payment_status` field (PAID/UNPAID/NO_PAYMENT_REQUIRED), but the bare name reads as a general Stripe payment status; Stripe has several other payment-status vocabularies (e.g. `PaymentIntent.status`, `Invoice.status`) with different values, so the name invites misapplication in consumer signatures.",
+  from: "PaymentStatus", to: "CheckoutSessionPaymentStatus",
+  rec: "Rename the file to match; the `Session.paymentStatusEnum` extension can keep its name. Matches the module's existing `CheckoutSessionId`/`CHECKOUT_SESSION` vocabulary.",
+  alts: ["`CheckoutPaymentStatus` — shorter while still scoping to checkout"],
+},
+{
+  n: 67, sev: "unclear",
+  title: "Config class `Stripe` is a lookalike of the SDK's `com.stripe.Stripe`",
+  locs: ["libs/ktp-stripe/src/main/kotlin/net/ghue/ktp/stripe/KtpConfigStripe.kt:8 (`Stripe`)"],
+  cur: "Stripe",
+  issue: "`net.ghue.ktp.stripe.Stripe` shares its simple name with `com.stripe.Stripe`, the SDK's global entry point, in the one module whose consumers also import Stripe SDK types; a bare `Stripe` reference or import is ambiguous and easy to misread.",
+  from: "Stripe", to: "StripeConfig",
+  rec: "Constrained: `KtpConfig.extractChild()` derives the config key from the class simple name (libs/ktp-config/src/main/kotlin/net/ghue/ktp/config/KtpConfig.kt:48), so this rename changes the HOCON key to `stripeConfig` unless `extractChild` gains an explicit-key overload. Sibling modules (`Auth`, `Google`) follow the same class-name-equals-key convention, so this may be accepted as intentional — flagged only because here the name collides with the SDK's own class.",
+},
+{
+  n: 68, sev: "unclear",
+  title: "Parameter named after the project acronym",
+  locs: ["libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:12 (`ktp`)"],
+  cur: "ktp",
+  issue: "`ktp: KtpAppBuilderFactory` — every symbol in this codebase is KTP-something, so the bare acronym conveys nothing about the parameter's role; it is the factory that produces the app builder, and `val ktpApp = ktp()` reads as a mystery call.",
+  from: "ktp", to: "appFactory",
+  rec: "Public API: named-argument callers (`ktp = ...`) would need updating.",
+},
+{
+  n: 69, sev: "unclear",
+  title: "Override parameter names its container, not its domain",
+  locs: ["libs/ktp-test/src/main/kotlin/net/ghue/ktp/test/KtpTestStart.kt:18 (`overrideMap`)"],
+  cur: "overrideMap",
+  issue: "The entries are config-value overrides applied via `KtpConfig.overrideValue`, but the name says only 'a map of overrides' — overrides of what is left to the function body, and the `Map` suffix restates the type instead of the meaning.",
+  from: "overrideMap", to: "configOverrides",
+},
+{
+  n: 70, sev: "unclear",
+  title: "Package name `mods` is an ambiguous abbreviation",
+  locs: ["ktp-gradle-plugin/src/main/kotlin/net/ghue/ktp/gradle/project/mods/ (package `net.ghue.ktp.gradle.project.mods`)"],
+  cur: "mods",
+  issue: "`mods` does not say whether it means modules, modifications, or something else; the package actually holds reusable per-tool build-feature configurators (`applyDetekt`, `applyKtfmt`, `installKotest`, ...) shared by the mode appliers.",
+  from: "mods", to: "features",
+  alts: ["`conventions` — the standard Gradle-ecosystem term for shared convention fragments, though it stutters slightly inside a convention plugin"],
+},
+];
+
+const SEV_META = {
+  misleading:   {cls:"m", label:"Misleading",   def:"name communicates something false about scope, units, ownership, or side effects"},
+  inconsistent: {cls:"i", label:"Inconsistent", def:"same concept named differently across locations"},
+  unclear:      {cls:"u", label:"Unclear",      def:"name fails to convey intent"},
+};
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+// escape, then convert `code` spans
+function fmt(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+// dim the directory part, emphasize the file name (incl. :line)
+function pathHTML(p) {
+  const t = p.endsWith("/") ? p.slice(0, -1) : p;
+  const i = t.lastIndexOf("/");
+  const dir = i >= 0 ? p.slice(0, i + 1) : "";
+  const file = i >= 0 ? p.slice(i + 1) : p;
+  return (dir ? `<span class="loc-dir">${esc(dir)}</span>` : "") + `<span class="loc-file">${esc(file)}</span>`;
+}
+
+// "path (annotation)" → styled path + muted annotation; anything else → formatted text
+function locHTML(l) {
+  const isPath = (s) => /[\/.]/.test(s) && !s.includes("`");
+  const m = l.match(/^(\S+?)\s+\((.*)\)$/s);
+  if (m && isPath(m[1])) {
+    return `<li><span class="loc-path">${pathHTML(m[1])}</span><span class="loc-ann">${fmt(m[2])}</span></li>`;
+  }
+  if (/^\S+$/.test(l) && isPath(l)) {
+    return `<li><span class="loc-path">${pathHTML(l)}</span></li>`;
+  }
+  return `<li><span class="loc-ann">${fmt(l)}</span></li>`;
+}
+
+function cardHTML(f) {
+  const m = SEV_META[f.sev];
+  let h = `<article class="card" id="f-${f.n}" data-sev="${f.sev}">`;
+  h += `<div class="head"><span class="idx">#${f.n}</span><h3>${fmt(f.title)}</h3>`;
+  if (f.cross) h += `<span class="badge x">cross-file</span>`;
+  h += `<span class="badge ${m.cls}">${m.label}</span>`;
+  h += `<label class="fix-toggle"><input type="checkbox" class="fix-cb" data-n="${f.n}">Fix</label></div>`;
+  if (f.concept) h += `<div class="field"><span class="k">Concept</span>${fmt(f.concept)}</div>`;
+  h += `<div class="field"><span class="k">${f.cross ? "Locations" : "Location"}</span><ul class="locs">` +
+       f.locs.map(l => locHTML(l)).join("") + `</ul></div>`;
+  if (f.cur && !f.cross) h += `<div class="field"><span class="k">Current</span>${fmt("`"+f.cur+"`")}</div>`;
+  h += `<p class="issue">${fmt(f.issue)}</p>`;
+  if (f.from && f.to) h += `<div class="rename"><span class="from"><code>${esc(f.from)}</code></span><span class="arr">→</span><span class="to"><code>${esc(f.to)}</code></span></div>`;
+  if (f.rec) h += `<div class="field"><span class="k">Recommendation</span>${fmt(f.rec)}</div>`;
+  if (f.alts) {
+    const defLabel = f.from && f.to ? `${f.from} → ${f.to}` : "as recommended above";
+    h += `<div class="field opts"><span class="k">Option to apply</span>`;
+    h += `<label class="opt"><input type="radio" class="opt-radio" name="opt-${f.n}" data-n="${f.n}" value="0" checked><span class="opt-tag">default</span><span><code>${esc(defLabel)}</code></span></label>`;
+    f.alts.forEach((a, i) => {
+      h += `<label class="opt"><input type="radio" class="opt-radio" name="opt-${f.n}" data-n="${f.n}" value="${i + 1}"><span>${fmt(a)}</span></label>`;
+    });
+    h += `</div>`;
+  }
+  h += `</article>`;
+  return h;
+}
+
+function render() {
+  const root = document.getElementById("report");
+  let h = "";
+  for (const sev of ["misleading", "inconsistent", "unclear"]) {
+    const m = SEV_META[sev];
+    const items = F.filter(f => f.sev === sev);
+    if (!items.length) continue;
+    h += `<section class="sev-group" data-sev="${sev}">`;
+    h += `<h2 class="section ${m.cls}">${m.label} · ${items.length}<span class="def">${m.def}</span></h2>`;
+    h += items.map(cardHTML).join("");
+    h += `</section>`;
+  }
+  root.innerHTML = h;
+}
+
+let sevFilter = "all";
+function applyFilters() {
+  let visible = 0;
+  document.querySelectorAll(".card").forEach(card => {
+    const show = sevFilter === "all" || card.dataset.sev === sevFilter;
+    card.classList.toggle("hidden", !show);
+    if (show) visible++;
+  });
+  document.querySelectorAll(".sev-group").forEach(g => {
+    const any = g.querySelectorAll(".card:not(.hidden)").length > 0;
+    g.classList.toggle("hidden", !any);
+  });
+  document.getElementById("count").textContent = `${visible} of ${F.length} shown`;
+}
+
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    sevFilter = chip.dataset.sev;
+    applyFilters();
+  });
+});
+
+// ---- selection + fix-prompt builder ----
+// Scope persisted selections to this exact report instance: same-origin pages
+// (e.g. other reports opened via file://) share localStorage, and a regenerated
+// report can renumber findings — so key on the findings content + page path.
+function reportKey() {
+  const s = location.pathname + "|" + JSON.stringify(F);
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+  return "naming-review-selections:" + h.toString(36);
+}
+const STORAGE_KEY = reportKey();
+const sel = new Map(); // issue n -> chosen option index (0 = default recommendation, 1.. = alternatives)
+try {
+  for (const [n, o] of JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")) sel.set(+n, +o);
+} catch {}
+
+function buildPrompt() {
+  const chosen = F.filter(f => sel.has(f.n));
+  if (!chosen.length) return "";
+  const lines = [
+    "Apply the following renames from the naming-consistency review (naming-review.html). For each item, apply the change everywhere it appears — definitions, file names, imports, call sites, and tests — then run the typecheck and test suite to confirm.",
+    ""
+  ];
+  chosen.forEach((f, i) => {
+    const opt = sel.get(f.n) || 0;
+    lines.push(`${i + 1}. [Issue #${f.n}, ${f.sev}] ${f.title}`);
+    lines.push(`   Where: ${f.locs.join(" ; ")}`);
+    if (opt === 0) {
+      if (f.from && f.to) lines.push(`   Fix: rename ${f.from} → ${f.to}`);
+      if (f.rec) lines.push(`   Detail: ${f.rec}`);
+      if (!(f.from && f.to) && !f.rec) lines.push(`   Fix: ${f.issue}`);
+    } else {
+      lines.push(`   Fix (chosen alternative, NOT the default): ${f.alts[opt - 1]}`);
+    }
+    lines.push("");
+  });
+  lines.push("If a rename conflicts with code that changed since the review, flag it instead of forcing it.");
+  return lines.join("\n");
+}
+
+function syncSelection() {
+  document.querySelectorAll(".card").forEach(card => {
+    const n = +card.id.slice(2);
+    const on = sel.has(n);
+    card.classList.toggle("selected", on);
+    const cb = card.querySelector(".fix-cb");
+    if (cb) cb.checked = on;
+    if (on) {
+      const r = card.querySelector(`.opt-radio[value="${sel.get(n)}"]`);
+      if (r) r.checked = true;
+    }
+  });
+  const count = sel.size;
+  document.getElementById("sel-info").textContent =
+    count ? `${count} issue${count === 1 ? "" : "s"} selected` : "No issues selected";
+  document.getElementById("sel-count").textContent = count;
+  const pre = document.getElementById("prompt-text");
+  const text = buildPrompt();
+  if (text) {
+    pre.textContent = text;
+    pre.classList.remove("pp-empty");
+  } else {
+    pre.textContent = "Check \"Fix\" on the findings below to build a follow-up prompt here. Where a finding has alternatives, pick the option to apply.";
+    pre.classList.add("pp-empty");
+  }
+  try {
+    const json = JSON.stringify([...sel]);
+    if (localStorage.getItem(STORAGE_KEY) !== json) localStorage.setItem(STORAGE_KEY, json);
+  } catch {}
+}
+
+// live-sync selections from other open tabs of this same report
+window.addEventListener("storage", (e) => {
+  if (e.key !== STORAGE_KEY) return;
+  sel.clear();
+  try {
+    for (const [n, o] of JSON.parse(e.newValue || "[]")) sel.set(+n, +o);
+  } catch {}
+  syncSelection();
+});
+
+document.getElementById("report").addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.classList.contains("fix-cb")) {
+    const n = +t.dataset.n;
+    if (t.checked) sel.set(n, sel.get(n) ?? 0);
+    else sel.delete(n);
+    syncSelection();
+  } else if (t.classList.contains("opt-radio")) {
+    const n = +t.dataset.n;
+    sel.set(n, +t.value); // picking an option also selects the issue
+    syncSelection();
+  }
+});
+document.getElementById("select-visible").addEventListener("click", () => {
+  document.querySelectorAll(".card:not(.hidden)").forEach(c => {
+    const n = +c.id.slice(2);
+    if (!sel.has(n)) sel.set(n, 0);
+  });
+  syncSelection();
+});
+document.getElementById("clear-sel").addEventListener("click", () => {
+  sel.clear();
+  syncSelection();
+});
+document.getElementById("copy-prompt").addEventListener("click", async () => {
+  const text = buildPrompt();
+  const btn = document.getElementById("copy-prompt");
+  if (!text) {
+    btn.textContent = "Nothing selected";
+    setTimeout(() => { btn.textContent = "Copy prompt"; }, 1500);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+  btn.textContent = "Copied ✓";
+  btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = "Copy prompt"; btn.classList.remove("copied"); }, 1500);
+});
+
+render();
+applyFilters();
+syncSelection();
+</script>
+</body>
+</html>

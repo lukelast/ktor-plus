@@ -43,11 +43,8 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         )
         default()
     }
-    // GCP's frontend (Cloud Run / GFE) appends the real client IP as the LAST entry of
-    // X-Forwarded-For and does not sanitize earlier, client-supplied entries. Ktor's default
-    // useFirstProxy() would trust the spoofable first entry. The RFC 7239 Forwarded header is
-    // never set or sanitized by GCP, so installing ForwardedHeaders would let clients poison
-    // call.request.origin — deliberately not installed.
+    // GCP appends the real client IP last to X-Forwarded-For without sanitizing earlier ones, so
+    // useFirstProxy() is spoofable; ForwardedHeaders is omitted as GCP never sanitizes Forwarded.
     install(XForwardedHeaders) { useLastProxy() }
     install(ConditionalHeaders)
     if (!config.env.isLocalDev) {
@@ -62,9 +59,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
     }
     install(StatusPages) {
         exception<KtpRspEx>(::processKtpRspEx)
-        // Body-decode failures arrive as BadRequestException, except ContentTransformationException
-        // which escapes unwrapped when no converter runs (e.g. wrong Content-Type). Both are client
-        // faults: answer 400 instead of the 500 catch-all.
+        // Decode errors arrive as BadRequestException unless no converter ran (wrong Content-Type).
         exception<BadRequestException>(::processRequestDecodingFailure)
         exception<ContentTransformationException>(::processRequestDecodingFailure)
 

@@ -21,6 +21,7 @@ fun Route.installApiCronRoutes() {
         val hourNumber = Instant.now().atOffset(ZoneOffset.UTC).hour
         val result = handler.hourly(hourNumber)
         if (result.runAgain) {
+            // Any non-2xx makes Cloud Scheduler retry; 429 is the closest semantic fit.
             call.respond(HttpStatusCode.TooManyRequests)
         } else {
             call.respond(HttpStatusCode.OK)

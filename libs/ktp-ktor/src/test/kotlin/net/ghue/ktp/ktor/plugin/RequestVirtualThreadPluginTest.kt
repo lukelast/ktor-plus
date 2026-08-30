@@ -83,8 +83,6 @@ class RequestVirtualThreadPluginTest :
                 application {
                     install(RequestVirtualThreadPlugin)
                     routing {
-                        // Each handler sets its own MDC value, then waits until the other request
-                        // is also in flight before reading it back.
                         get("/a") {
                             MDC.put("who", "a")
                             readyA.complete(Unit)
@@ -119,7 +117,8 @@ class RequestVirtualThreadPluginTest :
                     routing {
                         get("/blocker") {
                             blockerRunning.complete(Unit)
-                            // Thread.sleep parks only this request's virtual thread.
+                            // Deliberately blocking; this parks only the request's own virtual
+                            // thread.
                             while (!release.isCompleted) {
                                 Thread.sleep(5)
                             }

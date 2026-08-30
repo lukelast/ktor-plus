@@ -9,10 +9,8 @@ import kotlinx.serialization.json.jsonObject
 @JvmInline value class StripeEventId(val value: String)
 
 /**
- * A version-stable view of a Stripe webhook event. Webhook payloads arrive at the API version the
- * webhook endpoint was created with, which may not match this app's pinned SDK version, so only
- * fields that survive version drift are exposed: ids and type strings read from the raw JSON.
- * Handlers that need the full object should re-fetch it at the app's SDK version, e.g. via
+ * Version-stable view of a Stripe webhook event: payloads arrive at the endpoint's API version, not
+ * the SDK's, so only raw ids and type strings are exposed; re-fetch full objects via
  * [CheckoutSessionId.retrieve].
  */
 data class StripeWebhookEvent(
@@ -36,10 +34,7 @@ data class StripeWebhookEvent(
     val objectType: StripeObjectType
         get() = StripeObjectType.fromString(objectTypeRaw)
 
-    /**
-     * The strongly typed [objectIdRaw] for object types this library models, or null when the event
-     * should be routed to [StripeWebhookHandler.onOther].
-     */
+    /** Typed [objectIdRaw] for modeled types; null routes to [StripeWebhookHandler.onOther]. */
     val objectId: StripeId?
         get() = objectIdRaw?.let { id ->
             when (objectType) {
@@ -53,6 +48,7 @@ data class StripeWebhookEvent(
 }
 
 internal fun Event.toWebhookEvent(): StripeWebhookEvent {
+    // Not dataObjectDeserializer.object: it's an empty Optional when api_version != SDK version.
     val dataObject = runCatching {
         Json.parseToJsonElement(dataObjectDeserializer.rawJson).jsonObject
     }

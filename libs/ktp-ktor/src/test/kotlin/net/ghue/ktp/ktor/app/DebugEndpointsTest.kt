@@ -124,10 +124,7 @@ class DebugEndpointsTest :
                             }
                         )
                     }
-                    install(DebugEndpointsPlugin) {
-                        // Block all access
-                        accessControl = { false }
-                    }
+                    install(DebugEndpointsPlugin) { accessControl = { false } }
                 }
                 with(client.get("/debug/version")) { status shouldBe HttpStatusCode.Forbidden }
                 with(client.get("/debug/config")) { status shouldBe HttpStatusCode.Forbidden }
@@ -150,13 +147,10 @@ class DebugEndpointsTest :
                         )
                     }
                     install(DebugEndpointsPlugin) {
-                        // Allow only requests with specific header
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
-                // Without token - forbidden
                 with(client.get("/debug/version")) { status shouldBe HttpStatusCode.Forbidden }
-                // With token - allowed
                 with(client.get("/debug/version") { header("X-Debug-Token", "secret") }) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldBe "1.0.0"
@@ -208,9 +202,7 @@ class DebugEndpointsTest :
                     }
                     install(DebugEndpointsPlugin) { routePrefix = "/admin/debug" }
                 }
-                // Old route doesn't work
                 with(client.get("/debug/version")) { status shouldBe HttpStatusCode.NotFound }
-                // New route works
                 with(client.get("/admin/debug/version")) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldBe "1.0.0"
@@ -238,7 +230,6 @@ class DebugEndpointsTest :
                 with(client.get("/debug${DebugEndpoints.THREADS}")) {
                     status shouldBe HttpStatusCode.OK
                     val body = bodyAsText()
-                    // Verify basic thread dump structure
                     body shouldContain "Full thread dump"
                     body shouldContain "Thread Summary:"
                     body shouldContain "Total threads (including virtual):"
@@ -265,11 +256,9 @@ class DebugEndpointsTest :
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
-                // Without token - forbidden
                 with(client.get("/debug${DebugEndpoints.THREADS}")) {
                     status shouldBe HttpStatusCode.Forbidden
                 }
-                // With token - allowed
                 with(
                     client.get("/debug${DebugEndpoints.THREADS}") {
                         header("X-Debug-Token", "secret")
@@ -360,12 +349,10 @@ class DebugEndpointsTest :
                 with(client.get("/debug")) {
                     status shouldBe HttpStatusCode.OK
                     val body = bodyAsText()
-                    // Should show all endpoints
                     body shouldContain "/debug${DebugEndpoints.CONFIG}"
                     body shouldContain "/debug${DebugEndpoints.VERSION}"
                     body shouldContain "/debug${DebugEndpoints.GC_LOG}"
                     body shouldContain "/debug${DebugEndpoints.THREADS}"
-                    // Check for status indicators
                     body shouldContain "Enabled"
                     body shouldContain "Disabled"
                 }
@@ -391,9 +378,7 @@ class DebugEndpointsTest :
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
-                // Without token - forbidden
                 with(client.get("/debug")) { status shouldBe HttpStatusCode.Forbidden }
-                // With token - allowed
                 with(client.get("/debug") { header("X-Debug-Token", "secret") }) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldContain "Debug Endpoints"
@@ -418,9 +403,7 @@ class DebugEndpointsTest :
                     }
                     install(DebugEndpointsPlugin) { routePrefix = "/admin/debug" }
                 }
-                // Old route doesn't work
                 with(client.get("/debug")) { status shouldBe HttpStatusCode.NotFound }
-                // New route works and shows correct paths
                 with(client.get("/admin/debug")) {
                     status shouldBe HttpStatusCode.OK
                     val body = bodyAsText()
@@ -447,12 +430,10 @@ class DebugEndpointsTest :
                     }
                     install(DebugEndpointsPlugin)
                 }
-                // Index works
                 with(client.get("/debug")) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldContain "Debug Endpoints"
                 }
-                // Child routes still work
                 with(client.get("/debug${DebugEndpoints.VERSION}")) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldBe "2.0.0"

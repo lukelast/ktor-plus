@@ -8,7 +8,7 @@ private val secretPathWords = listOf("secret", "applicationKey", "password")
 
 private const val MAX_VALUE_SIZE = 200
 
-/** List all configuration values for informational purposes. Make sure secrets are hidden. */
+/** Lists every config value for display, with secrets masked. */
 fun Config.toRecords(): List<ConfigRecord> =
     entrySet()
         .map {
@@ -36,6 +36,10 @@ fun Config.toRecords(): List<ConfigRecord> =
         }
         .sortedBy { it.path }
 
+/**
+ * Also used for env vars and system properties, so [path] may be a plain variable name;
+ * `KTP_CONFIG` is masked because it holds an entire config document.
+ */
 fun maskConfigDisplayValue(path: String, value: String): String =
     if (
         path.equals(KtpConfig.KTP_CONFIG_ENV_VAR, ignoreCase = true) ||

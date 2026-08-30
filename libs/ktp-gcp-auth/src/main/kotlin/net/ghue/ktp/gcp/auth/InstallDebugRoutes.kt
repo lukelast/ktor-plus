@@ -15,7 +15,6 @@ fun Application.installDebugRoutes(role: Role = Role("admin")) {
         authenticateFirebase {
             requireRole(role) {
                 route(DebugEndpoints.BASE) {
-                    // Create default config for index page
                     val defaultConfig = DebugEndpointsConfig()
 
                     get(DebugEndpoints.CONFIG) { call.respondConfigHtml() }
@@ -23,7 +22,6 @@ fun Application.installDebugRoutes(role: Role = Role("admin")) {
                     get(DebugEndpoints.THREADS) { call.respondThreadDump() }
                     get(DebugEndpoints.VERSION) { call.respondVersion() }
 
-                    // Index route registered last
                     get("") { call.respondDebugIndex(defaultConfig) }
                 }
             }

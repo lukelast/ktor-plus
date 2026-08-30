@@ -13,6 +13,7 @@ import net.ghue.ktp.ktor.error.ktpRspError
 object FirestoreDeserializer {
     private val customDeserializers = mutableMapOf<Class<*>, (Any) -> Any?>()
 
+    // Also run by FirestoreSerializer so either may init first; re-registration is idempotent.
     init {
         FirestoreTypes.registerDefaults()
     }
@@ -169,8 +170,8 @@ object FirestoreDeserializer {
 }
 
 /**
- * Null only when the document does not exist; otherwise a [kClass] built with `id` from the document
- * id and, for [DocTimes] types, `createTime`/`updateTime` from snapshot metadata over stored fields.
+ * Null if the document is missing; otherwise [kClass] built with `id` from the document id and, for
+ * [DocTimes] types, `createTime`/`updateTime` from snapshot metadata overriding stored fields.
  */
 fun <T : Any> DocumentSnapshot.deserialize(kClass: KClass<T>): T? {
     val rawData = data ?: return null

@@ -25,18 +25,11 @@ class LazyWithExpiration<T : Any> internal constructor(refreshAfter: Duration, l
 }
 
 /**
- * Creates a [LazyWithExpiration] delegate:
- * ```
- * val config by lazyWithExpiration(5.minutes) { fetchConfig() }
- * ```
- *
- * @param refreshAfter How long a loaded value stays fresh. A read past this age returns the stale
- *   value immediately and starts one background reload on a virtual thread. Past twice this age the
- *   value is gone and reads block until one of them reloads it.
- * @param loader Produces the value, on the calling thread for the first read and for any expired
- *   read, on a virtual thread for background reloads. A failure in a blocking load propagates to
- *   that caller and the next read retries; a failed background reload is logged by Caffeine and the
- *   stale value is served until it expires.
+ * Creates a [LazyWithExpiration] delegate whose value stays fresh for [refreshAfter]. A read past
+ * that age returns the stale value and starts one background reload on a virtual thread; past twice
+ * that age reads block until a reload completes. Blocking loads run [loader] on the caller and
+ * propagate failures (the next read retries); a failed background reload is logged by Caffeine and
+ * the stale value is served until it expires.
  */
 fun <T : Any> lazyWithExpiration(refreshAfter: Duration, loader: () -> T): LazyWithExpiration<T> =
     LazyWithExpiration(refreshAfter, loader)

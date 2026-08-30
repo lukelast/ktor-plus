@@ -7,11 +7,9 @@ import com.stripe.model.Subscription
 import com.stripe.model.checkout.Session
 
 /**
- * A Stripe object id extracted from a webhook event. Ids are stable across Stripe API versions, so
- * they are safe to read from any event regardless of the SDK version the app is pinned to.
- *
- * Adding support for a new object type: add a value class here, add a [StripeObjectType] entry, map
- * it in [StripeWebhookEvent.objectId], and add a default method to [StripeWebhookHandler].
+ * A Stripe object id from a webhook event; ids are stable across API versions, unlike the payload.
+ * New types: value class here, [StripeObjectType] entry, [StripeWebhookEvent.objectId] mapping,
+ * [StripeWebhookHandler] method, and [installStripeWebhook] branch.
  */
 sealed interface StripeId {
     val value: String

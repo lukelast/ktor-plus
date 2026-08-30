@@ -37,6 +37,7 @@ val FirebaseAuthPlugin =
         val authConfig = ktpConfig.auth
         val useSecureCookies = pluginConfig.secureCookies(ktpConfig, ktpConfig.env)
 
+        // An app that installs Sessions itself must register cookie<UserSession>, or login throws.
         if (application.pluginOrNull(Sessions) == null) {
             application.install(Sessions) {
                 cookie<UserSession>(ktpConfig.data.app.name.replace('.', '_').uppercase()) {
@@ -59,11 +60,8 @@ val FirebaseAuthPlugin =
                 }
                 challenge {
                     call.sessions.clear<UserSession>()
-                    // API endpoints need an error response.
-                    // Browser requests would be better served with a redirect.
-                    // Maybe attempt to detect browser requests some day.
+                    // APIs need an error; a browser would prefer a redirect (not detected yet).
                     call.respond(HttpStatusCode.Unauthorized)
-                    // call.respondRedirect(authConfig.loginUrl)
                 }
             }
         }

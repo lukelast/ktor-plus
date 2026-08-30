@@ -15,7 +15,7 @@
             <version>[ignore]</version>
             <levelValue>[ignore]</levelValue>
           </fieldNames>
-          <!-- Include stack traces in the message field for proper grouping -->
+          <!-- Cap stack traces so one exception cannot exceed Cloud Logging's entry size limit -->
           <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
             <maxDepthPerThrowable>30</maxDepthPerThrowable>
             <maxLength>8192</maxLength>

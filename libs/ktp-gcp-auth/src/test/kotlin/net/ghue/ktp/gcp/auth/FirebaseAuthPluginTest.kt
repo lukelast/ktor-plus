@@ -89,7 +89,6 @@ class FirebaseAuthPluginTest :
 
                     install(FirebaseAuthPlugin)
 
-                    // Verify Sessions plugin was installed
                     pluginOrNull(Sessions) shouldNotBe null
                 }
             }
@@ -182,7 +181,6 @@ class FirebaseAuthPluginTest :
                     install(FirebaseAuthPlugin)
                 }
 
-                // Login to get a session cookie
                 val loginResponse =
                     client.post("/auth/login") {
                         contentType(ContentType.Application.Json)
@@ -191,7 +189,6 @@ class FirebaseAuthPluginTest :
 
                 loginResponse.status shouldBe HttpStatusCode.OK
 
-                // Check that cookie was set
                 val cookies = loginResponse.headers.getAll(HttpHeaders.SetCookie)
                 cookies shouldNotBe null
                 cookies?.any { it.contains("HttpOnly") } shouldBe true
@@ -233,7 +230,6 @@ class FirebaseAuthPluginTest :
                     }
                 }
 
-                // Try to access protected route without login
                 val response = client.get("/protected")
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
@@ -287,7 +283,6 @@ class FirebaseAuthPluginTest :
                 responseBody.contains("test-user-id") shouldBe true
                 responseBody.contains("test@example.com") shouldBe true
 
-                // Verify cookie was set
                 val cookies = response.headers.getAll(HttpHeaders.SetCookie)
                 cookies shouldNotBe null
             }
@@ -349,8 +344,7 @@ class FirebaseAuthPluginTest :
                 val logoutResponse = cookieClient.post("/auth/logout")
                 logoutResponse.status shouldBe HttpStatusCode.NoContent
 
-                // The session is stateless, so the Set-Cookie deletion in this response is the
-                // entire logout mechanism.
+                // Stateless sessions: this Set-Cookie deletion is the entire logout mechanism.
                 val cookies = logoutResponse.headers.getAll(HttpHeaders.SetCookie)
                 cookies shouldNotBe null
                 cookies?.any { it.contains("01 Jan 1970") } shouldBe true
@@ -393,6 +387,7 @@ class FirebaseAuthPluginTest :
                         setBody(Json.encodeToString(LoginRequest("invalid-token")))
                     }
 
+                // Only FirebaseAuthException maps to a 4xx; any other failure is a 500.
                 response.status shouldBe HttpStatusCode.InternalServerError
             }
         }
@@ -475,7 +470,6 @@ class FirebaseAuthPluginTest :
                     install(FirebaseAuthPlugin)
                 }
 
-                // Test custom login URL
                 val loginResponse =
                     client.post("/custom/signin") {
                         contentType(ContentType.Application.Json)
@@ -483,7 +477,6 @@ class FirebaseAuthPluginTest :
                     }
                 loginResponse.status shouldBe HttpStatusCode.OK
 
-                // Test custom logout URL
                 val logoutResponse = client.post("/custom/signout")
                 logoutResponse.status shouldBe HttpStatusCode.NoContent
             }

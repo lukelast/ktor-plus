@@ -9,7 +9,7 @@ import net.ghue.ktp.config.maskConfigDisplayValue
 import net.ghue.ktp.config.toRecords
 import org.koin.ktor.ext.inject
 
-/** Creates an HTML table with all the configuration values. */
+/** HTML page of config, JVM runtime, env, and system property records with secrets masked. */
 suspend fun RoutingCall.respondConfigHtml() {
     val ktpConfig: KtpConfig by inject()
 

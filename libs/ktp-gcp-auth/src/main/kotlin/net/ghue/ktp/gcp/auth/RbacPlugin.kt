@@ -7,33 +7,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import net.ghue.ktp.log.log
 
-/**
- * Configuration for the RBAC (Role-Based Access Control) plugin.
- *
- * @property requiredRole The role required to access the route
- */
+/** Configuration for the RBAC (Role-Based Access Control) plugin. */
 class RbacConfig {
+    /** Role required for the route; leaving it [emptyRole] makes the plugin deny every request. */
     var requiredRole: Role = emptyRole
 }
 
 /**
- * Route-scoped plugin for Role-Based Access Control (RBAC).
- *
- * This plugin checks if the authenticated user has the required role before allowing access to the
- * route. Must be used within an authentication context.
- *
- * Example usage:
- * ```kotlin
- * routing {
- *     authenticateFirebase {
- *         requireRole("admin") {
- *             get("/admin") {
- *                 // Only users with 'admin' role can access this
- *             }
- *         }
- *     }
- * }
- * ```
+ * Route-scoped RBAC plugin that rejects callers lacking [RbacConfig.requiredRole]; see
+ * [requireRole].
  */
 val RbacPlugin =
     createRouteScopedPlugin(name = "RbacPlugin", createConfiguration = ::RbacConfig) {
@@ -70,24 +52,12 @@ val RbacPlugin =
     }
 
 /**
- * Requires that the user has the specified role.
- *
- * Must be used within an authentication context (e.g., inside `authenticateFirebase {}`).
- *
- * Example:
- * ```kotlin
- * routing {
- *     authenticateFirebase {
- *         requireRole(Role("admin")) {
- *             get("/admin") {
- *                 // Only users with 'admin' role can access this
- *             }
- *         }
- *     }
- * }
- * ```
+ * Restricts routes built by [build] to users holding [role]; must be nested inside an
+ * authentication block such as `authenticateFirebase {}`.
  */
 fun Route.requireRole(role: Role, build: Route.() -> Unit): Route {
+    // A child route scopes the plugin to this block so sibling requireRole calls can demand
+    // different roles.
     val route =
         createChild(
             object : RouteSelector() {

@@ -1,10 +1,9 @@
 package net.ghue.ktp.stripe
 
 /**
- * The verb suffix of a Stripe event type, e.g. the `updated` in `customer.subscription.updated`.
- * Entries cover the event types documented for the object types in [StripeObjectType]. The full set
- * of Stripe verbs is open, so unrecognized values map to [UNKNOWN] rather than failing; the raw
- * string remains available via [StripeWebhookEvent.actionRaw].
+ * Verb suffix of a Stripe event type, e.g. `updated` in `customer.subscription.updated`, for the
+ * events of each [StripeObjectType]; Stripe's verb set is open, so other verbs map to [UNKNOWN],
+ * with the raw string in [StripeWebhookEvent.actionRaw].
  */
 enum class StripeAction {
     ASYNC_PAYMENT_FAILED,
@@ -33,7 +32,6 @@ enum class StripeAction {
     UPDATED,
     VOIDED,
     WILL_BE_DUE,
-    /** Any verb without a dedicated entry. */
     UNKNOWN;
 
     override fun toString(): String {

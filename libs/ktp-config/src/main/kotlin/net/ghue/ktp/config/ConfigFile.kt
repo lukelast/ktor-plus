@@ -1,23 +1,15 @@
 package net.ghue.ktp.config
 
 data class ConfigFile(
-    /** Resource URI for the config file. Could be in a jar. */
+    /** Resource URI of the config file; may point inside a jar. */
     val resourceUri: String,
-    /** Name of the original file like `default.config.conf`. */
+    /** Name of the original file like `5.database.prod.conf`. */
     val fileName: String,
-    /**
-     * The priority is the first dot-separated token of the file name (a digit 0-9) like `5` in
-     * `5.database.prod.conf`. Lower values have higher precedence when configs are merged.
-     */
+    /** First name token, 0-9, like `5` in `5.database.prod.conf`; lower value wins on merge. */
     val priority: Int,
-    /**
-     * The optional config name of the file like `config` in `default.config.conf`. If not present,
-     * this will be an empty string.
-     */
+    /** Second name token, like `database` in `5.database.prod.conf`; empty in `0.conf`. */
     val configName: String,
     val envName: String,
-
-    /** The text content of the config file. */
     val text: String,
 ) : Comparable<ConfigFile> {
     override fun compareTo(other: ConfigFile): Int =
@@ -27,9 +19,9 @@ data class ConfigFile(
             { it.priority },
             // Files with an env come first, sorted by env name.
             { it.envName.ifEmpty { Char.MAX_VALUE.toString() } },
-            // Then files with a base name, sorted by base name.
+            // Then files with a config name, sorted by config name.
             { it.configName.ifEmpty { Char.MAX_VALUE.toString() } },
-            // Fallback to path for stable sort
+            // Fall back to the resource URI so the order is deterministic.
             { it.resourceUri.reversed() },
         )
 
@@ -64,15 +56,15 @@ data class ConfigFile(
     /** Does this [ConfigFile] belong in the given [env]? */
     @Suppress("ReturnCount")
     fun appliesTo(env: Env): Boolean {
-        // Prevent unit tests from picking up local dev override configs.
+        // Keep test envs (unit and integration) from picking up local dev override configs.
         if (env.isTest && envName.isEmpty() && (configName == "local" || configName.isEmpty())) {
             return false
         }
         if (envName.isEmpty()) {
-            return true // No specific environment, so it applies to all.
+            return true
         }
         if (envName == env.name) {
-            return true // Exact match
+            return true
         }
         return false
     }

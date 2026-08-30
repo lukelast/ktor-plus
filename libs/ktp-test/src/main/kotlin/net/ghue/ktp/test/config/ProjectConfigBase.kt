@@ -4,6 +4,10 @@ import io.kotest.core.config.AbstractProjectConfig
 import io.kotest.core.spec.SpecExecutionOrder
 import net.ghue.ktp.log.log
 
+/**
+ * Not auto-discovered: the KTP Gradle plugin sets `kotest.framework.config.fqn` per task to
+ * [ProjectConfigUnit] (`test`) or [ProjectConfigIntegration] (`integrationTest`).
+ */
 abstract class ProjectConfigBase : AbstractProjectConfig() {
     override val specExecutionOrder = SpecExecutionOrder.Random
 

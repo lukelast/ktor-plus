@@ -38,6 +38,7 @@ fun findEnvironment(): Env {
             return Env(it)
         }
     try {
+        // Read 0.conf directly; KtpConfig can't load until the env that selects its files is known.
         val configFileName = "${KtpConfig.CONFIG_FILE_DIR}/0.${KtpConfig.CONFIG_FILE_EXT}"
         val localConfigFile = ConfigFactory.parseResources(configFileName)
         val localDevEnv = localConfigFile.getString(LOCAL_DEV_PATH)
@@ -45,8 +46,7 @@ fun findEnvironment(): Env {
             return Env(localDevEnv)
         }
     } catch (_: Exception) {
-        // Doesn't exist, ignore.
+        // No config file, or no localDevEnv key in it; fall through to the default.
     }
-    // If nothing is configured.
     return Env(LOCAL_DEV_ENV_NAME)
 }

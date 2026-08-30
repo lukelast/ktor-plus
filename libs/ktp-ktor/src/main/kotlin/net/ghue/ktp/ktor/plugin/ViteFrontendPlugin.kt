@@ -36,8 +36,7 @@ class ViteFrontendConfig {
     var vitePort: Int = DEFAULT_VITE_PORT
     var indexFile: Path = Path("src", "index.html")
     /**
-     * The URI path segment under which all static files are served. Should match the `base` setting
-     * in vite.config.ts. No leading or trailing slashes.
+     * URI segment static files are served under; no slashes, must match `base` in vite.config.ts.
      */
     var staticPathSegment: String = "static"
     /** The directory on the production backend where static files are stored. */
@@ -64,7 +63,7 @@ class ViteFrontendConfig {
             ?: error("$indexFile not found")
     }
 
-    /** The Ktor route that serves the frontend React pages. */
+    /** Catch-all under [browserUriPathPrefix] so client-side routes load on direct navigation. */
     val frontendRoute: String
         get() = "/${browserUriPathPrefix}/{...}"
 }
@@ -113,15 +112,14 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
     // Without an explicit executor the JDK client creates its own cached pool of platform threads.
     private val clientExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
-    // Create HTTP client with short timeout
     val client =
         HttpClient(Java) {
             engine {
-                // The JDK client defaults to HTTP_2, which sends `Connection: Upgrade` on plain
-                // http. Vite's dev server routes any upgrade request to its HMR WebSocket
-                // handler, which ignores it and never responds, hanging the request forever.
+                // Default HTTP_2 sends `Connection: Upgrade`; Vite routes that to its HMR WebSocket
+                // handler, which never responds and hangs the request.
                 protocolVersion = java.net.http.HttpClient.Version.HTTP_1_1
                 config {
+                    // Short so requests fall back to built files quickly when Vite is down.
                     connectTimeout(500.milliseconds.toJavaDuration())
                     executor(clientExecutor)
                 }
@@ -172,6 +170,7 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
         }
     }
 
+    // Under Gradle the working dir is the server subproject, so the frontend may be a sibling.
     private fun frontendFilesOrNull(): Path? =
         listOf(config.frontendDist, Path("..").resolve(config.frontendDist))
             .map { it.normalize() }

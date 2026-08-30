@@ -21,6 +21,7 @@ fun installLocalDevConsoleLogger() {
         val patternEncode = consoleAppender.encoder as? PatternLayoutEncoder
         if (patternEncode != null) {
             patternEncode.pattern = pattern
+            // Encoders compile the pattern only in start(); setting it alone keeps the old layout.
             patternEncode.start()
         }
     }

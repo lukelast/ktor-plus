@@ -7,7 +7,7 @@ import java.nio.charset.StandardCharsets
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-/** Standard URL decode. */
+/** Decodes as application/x-www-form-urlencoded, so `+` becomes a space, not just `%20`. */
 fun String.decodeUrlEncoded(): String =
     try {
         URLDecoder.decode(this, StandardCharsets.UTF_8)
@@ -15,7 +15,6 @@ fun String.decodeUrlEncoded(): String =
         throw IllegalArgumentException("Could not URL decode encoded string '$this'", ex)
     }
 
-/** Remove characters from a string. */
 fun String.remove(vararg chars: Char): String = this.filter { it !in chars }
 
 fun String.toSnakeCase(): String {

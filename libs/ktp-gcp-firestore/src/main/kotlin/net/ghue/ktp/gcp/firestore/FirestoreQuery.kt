@@ -1,4 +1,4 @@
-// A cohesive typed query DSL; many small delegating functions is its natural shape.
+// A typed query DSL is naturally many small delegating functions.
 @file:Suppress("TooManyFunctions")
 
 package net.ghue.ktp.gcp.firestore
@@ -36,10 +36,8 @@ fun <T> Query.whereNull(property: KProperty1<T, *>): Query = whereEqualTo(fieldN
 fun <T> Query.whereNotNull(property: KProperty1<T, *>): Query =
     whereNotEqualTo(fieldName(property), null)
 
-/** Orders results by [property], ascending. */
 fun <T> Query.orderByAsc(property: KProperty1<T, *>): Query = orderBy(fieldName(property))
 
-/** Orders results by [property], descending. */
 fun <T> Query.orderByDesc(property: KProperty1<T, *>): Query =
     orderBy(fieldName(property), Query.Direction.DESCENDING)
 

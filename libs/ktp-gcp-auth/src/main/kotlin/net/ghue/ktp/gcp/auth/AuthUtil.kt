@@ -13,6 +13,7 @@ import net.ghue.ktp.core.sha512
 const val AES128_KEY_SIZE = 128 / 8
 
 fun KtpConfig.createSessionTransportTransformer(): SessionTransportTransformer {
+    // Mixing in the env name blocks cookie replay across environments sharing an app secret.
     val secret = this.data.app.secret + this.env.name
 
     return SessionTransportTransformerEncrypt(

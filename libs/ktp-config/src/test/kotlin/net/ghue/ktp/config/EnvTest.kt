@@ -19,6 +19,7 @@ class EnvTest :
         }
 
         "localDev flag comes from config file override" {
+            // Expects the localDevEnv value from src/test/resources/ktp/0.conf.
             val env = findEnvironment()
             env.name shouldBe "123"
         }

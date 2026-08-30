@@ -3,6 +3,7 @@ package net.ghue.ktp.log
 import ch.qos.logback.core.boolex.PropertyConditionBase
 
 class IsCloudRun : PropertyConditionBase() {
+    // Runs while Logback parses config, the earliest hook, so JUL is bridged before anything logs.
     init {
         installSlf4jBridge()
     }

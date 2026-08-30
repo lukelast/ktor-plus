@@ -57,10 +57,8 @@ class BuildConfigFromEnvVarTest :
             val result = buildConfigFromEnvVar(configText)
 
             result.shouldNotBeNull()
-            // Note: The config is not resolved by buildConfigFromEnvVar itself
-            // Substitutions are resolved later in buildConfig()
+            // Substitutions stay unresolved until buildConfig() calls resolve(), so resolve here.
             result.getString("baseUrl") shouldBe "https://example.com"
-            // After resolve(), apiUrl will be evaluated
             val resolved = result.resolve()
             resolved.getString("apiUrl") shouldBe "https://example.com/api"
         }
@@ -102,7 +100,6 @@ class BuildConfigFromEnvVarTest :
         }
 
         "buildConfigFromEnvVar allows trailing comma in object" {
-            // HOCON allows trailing commas
             val configText = "app { name = \"test\", }"
             val result = buildConfigFromEnvVar(configText)
             result.shouldNotBeNull()
@@ -116,10 +113,9 @@ class BuildConfigFromEnvVarTest :
         }
 
         "buildConfigFromEnvVar returns null for duplicate key at same level" {
-            // HOCON typically allows duplicate keys (last wins), but some strict parsers may reject
+            // Typesafe Config accepts duplicate keys at the same level; the last value wins.
             val configText = "key = \"value1\"\nkey = \"value2\""
             val result = buildConfigFromEnvVar(configText)
-            // This should actually parse successfully in HOCON - last value wins
             result.shouldNotBeNull()
             result.getString("key") shouldBe "value2"
         }
@@ -131,7 +127,6 @@ class BuildConfigFromEnvVarTest :
         }
 
         "buildConfigFromEnvVar parses unquoted strings as valid HOCON" {
-            // HOCON allows unquoted strings for simple values
             val configText = "key = value"
             val result = buildConfigFromEnvVar(configText)
             result.shouldNotBeNull()
@@ -224,8 +219,7 @@ class BuildConfigFromEnvVarTest :
         }
 
         "buildConfigFromEnvVar reads from system environment by default" {
-            // When no parameter is passed, it should read from KTP_CONFIG env var
-            // This will pass if the env var is not set (returns null)
+            // Can't control the process env, so this only asserts when KTP_CONFIG is unset.
             val envValue = System.getenv(KtpConfig.KTP_CONFIG_ENV_VAR)
             if (envValue.isNullOrBlank()) {
                 val result = buildConfigFromEnvVar()

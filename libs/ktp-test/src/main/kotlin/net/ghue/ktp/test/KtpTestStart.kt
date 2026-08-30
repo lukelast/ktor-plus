@@ -10,10 +10,7 @@ import net.ghue.ktp.ktor.start.ktpAppCreate
 
 fun testKtpStart(
     ktp: KtpAppBuilderFactory = ktpAppCreate {},
-    /**
-     * Should the application be started. Disable this if you want to do more configuration before
-     * it is started.
-     */
+    /** Set false to do more configuration before the application is started. */
     start: Boolean = true,
     overrideMap: Map<String, Any> = emptyMap(),
     test: suspend ApplicationTestBuilder.() -> Unit,

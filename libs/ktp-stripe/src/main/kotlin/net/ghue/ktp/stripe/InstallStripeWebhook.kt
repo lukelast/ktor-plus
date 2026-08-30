@@ -47,8 +47,7 @@ fun Routing.installStripeWebhook() {
                     is InvoiceId -> handler.onInvoice(webhookEvent, id)
                     is CustomerId -> handler.onCustomer(webhookEvent, id)
                     null -> {
-                        // An empty object type means the data object could not be parsed, so the
-                        // event is acked without any typed handler seeing it.
+                        // An empty object type means the data object could not be parsed.
                         if (webhookEvent.objectTypeRaw.isEmpty()) {
                             log {}.warn { "Stripe event data object is unreadable" }
                         }
@@ -56,6 +55,7 @@ fun Routing.installStripeWebhook() {
                     }
                 }
             } catch (ex: Exception) {
+                // Log while MDC fields are still set; rethrow so Stripe gets a 5xx and retries.
                 log {}.warn(ex) { ex.message }
                 throw ex
             }
@@ -65,14 +65,9 @@ fun Routing.installStripeWebhook() {
 }
 
 /**
- * Webhook handlers grouped by Stripe object type. Use [StripeWebhookEvent.type] or
- * [StripeWebhookEvent.action] to distinguish e.g. `completed` from `expired`. Dedicated handlers
- * guarantee a non-null object id. The few Stripe events whose objects intentionally have no id,
- * notably `invoice.upcoming`, arrive at [onOther]; this keeps the common handler API non-null while
- * preserving those special cases through the raw event fields.
- *
- * Handlers receive only version-stable ids. To read the full object, re-fetch it with the app's
- * [com.stripe.StripeClient], e.g. `id.retrieve(client)`.
+ * Handlers keyed by Stripe object type; distinguish e.g. `completed` from `expired` via
+ * [StripeWebhookEvent.action]. Events whose object has no id (notably `invoice.upcoming`) go to
+ * [onOther]. Ids are version-stable; fetch the full object with `id.retrieve(client)`.
  */
 interface StripeWebhookHandler {
     suspend fun onCheckoutSession(event: StripeWebhookEvent, id: CheckoutSessionId) {}

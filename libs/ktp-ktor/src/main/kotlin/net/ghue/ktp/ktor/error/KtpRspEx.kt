@@ -10,6 +10,10 @@ class KtpRspExNotFound(name: String, val id: String, cause: Throwable? = null) :
         cause = cause,
     )
 
+/**
+ * [processKtpRspEx] sends every public property a subclass declares (and its class name) to the
+ * client as Problem JSON members, so never expose sensitive data as a public property.
+ */
 open class KtpRspEx(
     val internalMessage: String? = null,
     val status: HttpStatusCode = HttpStatusCode.InternalServerError,
@@ -21,58 +25,37 @@ open class KtpRspEx(
 ) : RuntimeException(internalMessage, cause)
 
 /**
- * DSL builder for [ktpRspError]. Fields map to an
- * [RFC 7807](https://www.rfc-editor.org/rfc/rfc7807) Problem JSON response:
- * ```json
- * {
- *   "type":     <type>,            // defaults to "about:blank"
- *   "title":    <title>,           // defaults to the status reason phrase
- *   "status":   <status code>,     // e.g. 500
- *   "detail":   <detail>,          // omitted when blank
- *   "instance": <request path>     // set automatically from the request
- * }
- * ```
+ * DSL builder for [ktpRspError]. Fields map to RFC 7807 Problem JSON members; `instance` is set
+ * from the request path, and [extra] keys that collide with a standard member are silently dropped.
  */
 class KtpRspExBuilder {
-    /** HTTP status code for the response. Default: `500 Internal Server Error`. */
     var status: HttpStatusCode = HttpStatusCode.InternalServerError
 
-    /** A URI identifying the problem type. Default: `"about:blank"`. */
+    /** Problem type URI; `"about:blank"` when blank. */
     var type: String = ""
 
-    /**
-     * A short, human-readable summary of the problem type. When blank the status reason phrase is
-     * used (e.g. "Internal Server Error").
-     */
+    /** Short summary of the problem type; the status reason phrase when blank. */
     var title: String = ""
 
-    /**
-     * A human-readable explanation specific to this occurrence of the problem. Omitted from the
-     * response when blank.
-     */
+    /** Occurrence-specific explanation; omitted from the response when blank. */
     var detail: String = ""
 
-    /**
-     * Logged server-side but **never** sent to the client. Passed as [RuntimeException.message].
-     */
+    /** Logged server-side but never sent to the client; becomes [RuntimeException.message]. */
     var internalMessage: String = ""
 
-    /** Optional underlying exception. Logged server-side but not included in the response. */
+    /** Never sent to the client; its stack trace is logged only for 5xx (4xx are client faults). */
     var cause: Throwable? = null
 
     private val extraFields = mutableMapOf<String, Any>()
 
-    /** Adds a custom extension field to the Problem JSON response. */
     fun extra(key: String, value: String) {
         extraFields[key] = value
     }
 
-    /** Adds a custom extension field to the Problem JSON response. */
     fun extra(key: String, value: Int) {
         extraFields[key] = value
     }
 
-    /** Adds a custom extension field to the Problem JSON response. */
     fun extra(key: String, value: Boolean) {
         extraFields[key] = value
     }

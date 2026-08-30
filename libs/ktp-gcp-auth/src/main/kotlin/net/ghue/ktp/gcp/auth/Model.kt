@@ -21,6 +21,7 @@ data class UserInfo(
 
 @Serializable internal data class LoginRequest(val idToken: String)
 
+// Encoded with Gson, not @Serializable: [LoginResponseUser.extra] is an arbitrary object.
 internal data class LoginResponse(val user: LoginResponseUser? = null)
 
 internal data class LoginResponseUser(

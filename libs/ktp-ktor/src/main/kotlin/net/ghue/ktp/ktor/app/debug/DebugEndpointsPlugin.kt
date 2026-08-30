@@ -15,85 +15,30 @@ object DebugEndpoints {
     const val VERSION = "/version"
 }
 
-/**
- * Configuration for the DebugEndpoints plugin.
- *
- * Example usage with access control (localhost only):
- * ```
- * install(DebugEndpointsPlugin) {
- *     accessControl = {
- *         request.local.remoteHost == "127.0.0.1"
- *     }
- * }
- * ```
- *
- * Example usage with custom route prefix:
- * ```
- * install(DebugEndpointsPlugin) {
- *     routePrefix = "/admin/debug"
- * }
- * ```
- *
- * Example usage with selective endpoints:
- * ```
- * install(DebugEndpointsPlugin) {
- *     enableConfigEndpoint = true
- *     enableVersionEndpoint = true
- *     enableGcLogEndpoint = false  // Disable GC log endpoint
- * }
- * ```
- */
+/** Configuration for [DebugEndpointsPlugin]. */
 class DebugEndpointsConfig {
-    /** Route prefix for debug endpoints. Default: "/debug" */
+    /** Prefix under which all debug routes are mounted. */
     var routePrefix: String = DebugEndpoints.BASE
 
-    /** Whether to enable the configuration info endpoint. Default: true */
+    /** Serves the config page at [DebugEndpoints.CONFIG]. */
     var enableConfigEndpoint: Boolean = true
 
-    /** Whether to enable the garbage collection endpoint. Default: true */
+    /** Serves the GC log at [DebugEndpoints.GC_LOG]. */
     var enableGcLogEndpoint: Boolean = true
 
-    /** Whether to enable the version endpoint. Default: true */
+    /** Serves the version at [DebugEndpoints.VERSION]. */
     var enableVersionEndpoint: Boolean = true
 
-    /** Whether to enable the thread dump endpoint. Default: true */
+    /** Serves the thread dump at [DebugEndpoints.THREADS]. */
     var enableThreadDumpEndpoint: Boolean = true
 
-    /**
-     * Custom access control logic for all debug endpoints. Return true to allow access, false to
-     * deny (returns 403 Forbidden).
-     *
-     * Examples:
-     * ```
-     * // Only allow localhost
-     * accessControl = { request.local.remoteHost == "127.0.0.1" }
-     *
-     * // Check for a specific header
-     * accessControl = { request.headers["X-Debug-Token"] == "secret-token" }
-     *
-     * // Integrate with Ktor authentication (requires ktor-server-auth dependency)
-     * accessControl = { principal<UserPrincipal>()?.roles?.contains("admin") == true }
-     * ```
-     */
+    /** Guards all debug endpoints; false yields 403 Forbidden, null (default) allows everyone. */
     var accessControl: (suspend ApplicationCall.() -> Boolean)? = null
 }
 
 /**
- * Modern Ktor plugin for exposing debug information endpoints.
- *
- * This plugin provides the following endpoints:
- * - GET /debug - HTML index page listing all debug endpoints with their status
- * - GET /debug/config - HTML page showing all configuration values, GC info, and system info
- * - GET /debug/gclog - Raw GC log file contents (if available at /tmp/gc.log)
- * - GET /debug/threads - Comprehensive thread dump with stack traces, locks, and CPU stats
- * - GET /debug/version - Plain text application version
- *
- * The index page is always enabled when the plugin is installed. Individual endpoints can be
- * individually disabled via configuration flags. All endpoints are protected with custom access
- * control if configured.
- *
- * **Security Warning**: These endpoints expose sensitive application information. Always use
- * `accessControl` to restrict access in production environments.
+ * Serves debug index, config, GC log, thread dump, and version pages; they expose sensitive data,
+ * so set [DebugEndpointsConfig.accessControl] in production.
  */
 val DebugEndpointsPlugin =
     createApplicationPlugin(name = "DebugEndpoints", createConfiguration = ::DebugEndpointsConfig) {
@@ -151,7 +96,7 @@ private fun Route.installDebugEndpoints(pluginConfig: DebugEndpointsConfig) {
         }
     }
 
-    // Register index route LAST - ensures child routes are matched first
+    // Registered last so child routes are matched first.
     get("") {
         if (pluginConfig.accessControl?.invoke(call) == false) {
             call.respond(HttpStatusCode.Forbidden)

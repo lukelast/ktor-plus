@@ -114,7 +114,6 @@ class RbacPluginTest :
             testApplication {
                 application {
                     install(Authentication) {
-                        // Register an auth provider that doesn't set any principal
                         register(
                             object :
                                 AuthenticationProvider(
@@ -123,7 +122,7 @@ class RbacPluginTest :
                                 override suspend fun onAuthenticate(
                                     context: AuthenticationContext
                                 ) {
-                                    // Don't set any principal - simulates unauthenticated user
+                                    // No principal set: simulates an unauthenticated user.
                                 }
                             }
                         )
@@ -378,7 +377,6 @@ class RbacPluginTest :
                     }
                 }
 
-                // Test 403 Forbidden message
                 with(client.get("/admin")) {
                     status shouldBe HttpStatusCode.Forbidden
                     bodyAsText() shouldBe "Insufficient permissions"

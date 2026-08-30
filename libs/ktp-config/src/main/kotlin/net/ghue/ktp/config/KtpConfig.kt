@@ -18,9 +18,7 @@ class KtpConfig(val config: Config, val env: Env) {
         const val KTP_CONFIG_ENV_VAR = "KTP_CONFIG"
 
         init {
-            // https://github.com/lightbend/config#optional-system-or-env-variable-overrides
-            // Tell the config library to allow environment variables to override config values.
-            // Is this needed if we add the overrides explicitly below?
+            // Env-var overrides; maybe redundant with buildConfig's systemEnvironmentOverrides().
             System.setProperty("config.override_with_env_vars", "true")
         }
 
@@ -35,13 +33,7 @@ class KtpConfig(val config: Config, val env: Env) {
 
     @PublishedApi internal val cache = ConcurrentHashMap<KClass<*>, Any>()
 
-    /**
-     * Deserialize part of the configuration into a data class. The name of the data class must
-     * match the name of the configuration. For example, if your class name is `Blah` it will read
-     * the configuration object under "blah".
-     *
-     * Results are cached to avoid expensive reflection and parsing operations.
-     */
+    /** Extracts the config object keyed by [T]'s lower-camel name (`Blah` reads "blah"); cached. */
     inline fun <reified T> extractChild(): T {
         @Suppress("UNCHECKED_CAST")
         return cache.getOrPut(T::class) {
@@ -49,9 +41,7 @@ class KtpConfig(val config: Config, val env: Env) {
             try {
                 config.extract<T>(configPathRoot)
             } catch (ex: Exception) {
-                // The Config4K library just throws an NPE when a data class field has no default
-                // value and no value in the config.
-                // Here we attempt to detect which field is missing to give a better error message.
+                // Config4K throws a bare NPE on a missing field with no default; name it instead.
                 val missingField = findMissingConfigField(config, T::class, configPathRoot)
                 if (missingField != null) {
                     throw IllegalStateException(
@@ -65,10 +55,7 @@ class KtpConfig(val config: Config, val env: Env) {
         } as T
     }
 
-    /**
-     * Get an instance of a sub configuration. A sub configuration class must have a single public
-     * constructor which has one parameter of type [KtpConfig].
-     */
+    /** Returns the cached [T] instance; its primary constructor must take only a [KtpConfig]. */
     inline fun <reified T : Any> get(): T = createInstance(T::class)
 
     fun <T : Any> createInstance(klass: KClass<T>): T {
@@ -76,7 +63,6 @@ class KtpConfig(val config: Config, val env: Env) {
             @Suppress("UNCHECKED_CAST")
             return cache.getOrPut(klass) { klass.primaryConstructor!!.call(this) } as T
         } catch (ex: InvocationTargetException) {
-            // Unwrap exceptions thrown in the constructor.
             throw ex.targetException
         } catch (ex: Exception) {
             throw IllegalStateException(
@@ -94,7 +80,7 @@ class KtpConfig(val config: Config, val env: Env) {
         Logger.getLogger(this::class.java.name).info("All config values: $txt")
     }
 
-    /** Create a config file containing all possible values. */
+    /** Render the text of a config file listing every known value, for use as a template. */
     fun renderTemplate(): String {
         val options =
             ConfigRenderOptions.defaults()
@@ -104,7 +90,7 @@ class KtpConfig(val config: Config, val env: Env) {
                 .setOriginComments(true)
         val filteredConfig =
             filterConfig(config.root()) { path, _ -> path != ENV_CONFIG_PATH } ?: error("No config")
-        // These comment lines don't seem useful.
+        // Drop the noisy "hardcoded value" origin comments.
         val extraComments = Regex("^.*# hardcoded value.*\\R?", RegexOption.MULTILINE)
         val renderedConfig = filteredConfig.render(options).replace(extraComments, "")
         return renderedConfig
@@ -118,7 +104,7 @@ internal fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> 
         val propertyName = if (prefix.isNotEmpty()) "$prefix.${property.name}" else property.name
         val propertyType = property.returnType.jvmErasure
         if (propertyType.qualifiedName?.startsWith("kotlin") == true) {
-            // This is a kotlin library type so must be a primitive leaf node.
+            // Kotlin stdlib types are treated as primitive leaves.
             add(propertyName)
         } else {
             addAll(getLeafPaths(propertyType, propertyName))
@@ -126,14 +112,7 @@ internal fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> 
     }
 }
 
-/**
- * Finds the first missing configuration field for a given data class.
- *
- * @param config The configuration to check against
- * @param kClass The class to check for missing fields
- * @param pathPrefix The configuration path prefix for the class
- * @return The full path to the first missing field, or null if all fields are present
- */
+/** Returns the path of the first [kClass] leaf field missing from [config], or null if none. */
 @PublishedApi
 internal fun findMissingConfigField(
     config: Config,
@@ -144,14 +123,7 @@ internal fun findMissingConfigField(
     return allPaths.firstOrNull { fieldPath -> !config.hasPath(fieldPath) }
 }
 
-/**
- * Recursively filters a ConfigValue, providing the full path to the predicate.
- *
- * @param value The ConfigValue to process.
- * @param path The path to the current value.
- * @param predicate The filter condition, which accepts both path and value.
- * @return A new, filtered ConfigValue, or null if the branch is pruned.
- */
+/** Keeps leaves whose full dotted path passes [predicate]; returns null if none survive. */
 private fun filterConfig(
     value: ConfigValue,
     path: String = "",
@@ -163,7 +135,6 @@ private fun filterConfig(
             val filteredMap = mutableMapOf<String, ConfigValue>()
 
             for ((key, childValue) in originalObject) {
-                // Construct the path for the child element
                 val childPath = if (path.isEmpty()) key else "$path.$key"
                 val filteredChild = filterConfig(childValue, childPath, predicate)
                 if (filteredChild != null) {
@@ -176,7 +147,6 @@ private fun filterConfig(
         ConfigValueType.LIST -> {
             val originalList = value as ConfigList
             val filteredList = originalList.mapIndexedNotNull { index, item ->
-                // Construct the path for the list item
                 val itemPath = "$path[$index]"
                 filterConfig(item, itemPath, predicate)
             }
@@ -184,7 +154,6 @@ private fun filterConfig(
             if (filteredList.isNotEmpty()) ConfigValueFactory.fromIterable(filteredList) else null
         }
         else -> {
-            // Base case: Apply the path-aware predicate to the primitive value
             if (predicate(path, value)) value else null
         }
     }

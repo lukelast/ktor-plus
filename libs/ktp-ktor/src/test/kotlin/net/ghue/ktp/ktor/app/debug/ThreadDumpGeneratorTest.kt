@@ -29,13 +29,13 @@ class ThreadDumpGeneratorTest :
 
         "thread dump includes current thread" {
             val dump = generateThreadDump()
-            // The test runner thread should be in the dump
+            // "Test worker" is the name Gradle gives its test executor thread.
             dump shouldContain "Test worker"
         }
 
         "thread dump includes stack traces" {
             val dump = generateThreadDump()
-            // Stack frames are module-qualified in the plain text format
+            // Stack frames are module-qualified in the plain text format.
             dump shouldContain "java.base/"
         }
 
@@ -55,7 +55,7 @@ class ThreadDumpGeneratorTest :
                 started.await()
                 val dump = generateThreadDump()
 
-                // ThreadMXBean-based dumps cannot see this thread; the new API must.
+                // ThreadMXBean-based dumps cannot see this thread; HotSpotDiagnosticMXBean must.
                 dump shouldContain "test-virtual-thread"
             } finally {
                 virtualThread.interrupt()
@@ -87,7 +87,7 @@ class ThreadDumpGeneratorTest :
 
         "thread dump shows coroutine debug status" {
             val dump = generateThreadDump()
-            // Should contain some coroutine info section (even if just noting it's unavailable)
+            // Present even when it only notes that coroutine info is unavailable.
             dump shouldContain "Coroutine"
         }
     })

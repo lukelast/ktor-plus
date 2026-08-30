@@ -6,7 +6,7 @@ import java.nio.file.Paths
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readText
 
-/** This requires GC logging to be enabled. */
+/** Requires the JVM to log GC to exactly `/tmp/gc.log`, e.g. `-Xlog:gc*:file=/tmp/gc.log`. */
 suspend fun RoutingCall.respondGcLog() {
     val gcLogFile = Paths.get("/tmp", "gc.log")
     if (gcLogFile.isRegularFile()) {

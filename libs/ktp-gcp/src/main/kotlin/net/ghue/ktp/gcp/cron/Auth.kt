@@ -27,6 +27,7 @@ private val GcpCronPlugin =
                 return@onCall
             }
 
+            // Scheduler's default audience is the full URL; the job must set it to the bare origin.
             val token = authHeader.substringAfter("Bearer ")
             val verifier =
                 TokenVerifier.newBuilder()
@@ -50,6 +51,7 @@ private val GcpCronPlugin =
         }
     }
 
+// Child route scopes the plugin to the block's routes, not siblings; mirrors Ktor's authenticate.
 internal fun Route.authenticateGcpCron(build: Route.() -> Unit): Route {
     val route =
         createChild(

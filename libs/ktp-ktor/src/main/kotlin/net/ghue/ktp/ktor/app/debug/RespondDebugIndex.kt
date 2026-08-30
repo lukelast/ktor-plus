@@ -4,12 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-/**
- * Responds with an HTML index page listing all debug endpoints with their status.
- *
- * The index page displays a table showing each endpoint's path, description, and enabled/disabled
- * status. Only enabled endpoints are clickable links.
- */
+/** Responds with an HTML table of all debug endpoints; only enabled ones are rendered as links. */
 suspend fun RoutingCall.respondDebugIndex(config: DebugEndpointsConfig) {
     val endpoints = buildEndpointList(config)
     val html = INDEX_TEMPLATE.trimIndent().replace("{{ENDPOINT_ROWS}}", endpoints.toHtmlRows())
@@ -17,7 +12,6 @@ suspend fun RoutingCall.respondDebugIndex(config: DebugEndpointsConfig) {
     respondText(html, ContentType.Text.Html.withCharset(Charsets.UTF_8))
 }
 
-/** Information about a debug endpoint. */
 internal data class DebugEndpointRow(
     val path: String,
     val description: String,

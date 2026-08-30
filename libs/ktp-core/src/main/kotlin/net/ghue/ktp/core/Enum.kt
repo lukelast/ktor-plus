@@ -1,6 +1,6 @@
 package net.ghue.ktp.core
 
-/** Convert an enum constant name to camel case. */
+/** Converts a SCREAMING_SNAKE_CASE enum constant name to lowerCamelCase. */
 fun Enum<*>.toCamelCase() =
     this.name
         .split("_")

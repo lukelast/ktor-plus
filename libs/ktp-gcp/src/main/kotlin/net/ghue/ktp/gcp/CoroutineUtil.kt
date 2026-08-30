@@ -10,13 +10,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 /** Awaits the completion of the ApiFuture without blocking the current thread. */
 suspend fun <T> ApiFuture<T>.await(): T = suspendCancellableCoroutine { cont ->
-    // Add a callback to the Future to resume the coroutine upon completion
     ApiFutures.addCallback(
         this,
         object : ApiFutureCallback<T> {
             override fun onSuccess(result: T?) {
-                // Firestore results can sometimes be null, but the type system
-                // generally handles it. If T is non-nullable, result won't be null.
+                // APIs that can complete with null must be awaited as ApiFuture<T?>.
                 cont.resume(result as T)
             }
 
@@ -27,6 +25,5 @@ suspend fun <T> ApiFuture<T>.await(): T = suspendCancellableCoroutine { cont ->
         MoreExecutors.directExecutor(),
     )
 
-    // If the coroutine is cancelled, cancel the future
     cont.invokeOnCancellation { this.cancel(true) }
 }

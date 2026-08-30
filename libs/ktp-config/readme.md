@@ -36,10 +36,8 @@ Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://gi
 
 1. Override map (`overrideValue()`)
 2. `CONFIG_FORCE_` environment variables
-3. System environment (`sysenv` path)
-4. System properties
-5. `KTP_CONFIG` environment variable
-6. Config files (by priority, env, config name, alphabetically)
+3. `KTP_CONFIG` environment variable
+4. Config files (by priority, env, config name, alphabetically)
 
 Override keys are paths relative to the config root (e.g. `app.secret`) and must match a path that
 already exists in the merged config. `create()` fails fast on unknown keys because an override that
@@ -48,7 +46,8 @@ instead.
 
 ## Environment Detection
 
-Checks in order: `KTP_ENV` → `ENV` → `KUBERNETES_NAMESPACE` → `localDevEnv` in `0.conf` → default: `dev`
+Checks in order: `KTP_ENV` → `ENV` → `KUBERNETES_NAMESPACE` (each as an environment variable, then as a
+system property) → `localDevEnv` in `0.conf` → default: `localdev`
 
 **Custom dev environment:** Create `0.conf` with `localDevEnv = "your-username"`
 
@@ -96,11 +95,6 @@ class MyServiceConfig(config: KtpConfig) {
     val db = config.extractChild<DatabaseConfig>()
 }
 val serviceConfig = config.get<MyServiceConfig>()
-
-// Examples:
-// extractChild<Auth>() reads from "auth"
-// extractChild<Stripe>() reads from "stripe"
-// extractChild<DatabaseConfig>() reads from "databaseConfig"
 
 // Debugging
 val allConfig = config.getAllConfig()  // Secrets masked
@@ -167,5 +161,5 @@ database.url = ${?DATABASE_URL}
 Values with `secret`, `password`, or `applicationKey` in the path are automatically masked in logs:
 
 ```hocon
-myapp.secretToken = "1234"  # Logged as "12 chars"
+myapp.secretToken = "1234"  # Logged as "4 chars"
 ```

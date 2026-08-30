@@ -9,22 +9,17 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.readText
 
 /**
- * Generates a thread dump of all threads, including virtual threads.
- *
- * [java.lang.management.ThreadMXBean] only reports platform threads, which would hide every request
- * handler now that KTP runs each request on its own virtual thread.
- * [HotSpotDiagnosticMXBean.dumpThreads] (JDK 21+) enumerates all threads, at the cost of the
- * per-thread lock and CPU detail the old ThreadMXBean-based dump provided.
+ * Dumps all threads via [HotSpotDiagnosticMXBean.dumpThreads] (JDK 21+) because
+ * [java.lang.management.ThreadMXBean] omits the virtual threads that run every KTP request, at the
+ * cost of the per-thread lock and CPU detail ThreadMXBean provides.
  */
 fun generateThreadDump(): String {
     val timestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(Date())
     val sb = StringBuilder()
 
-    // Header
     sb.appendLine("Full thread dump - $timestamp")
     sb.appendLine()
 
-    // Runtime info
     val runtime = Runtime.getRuntime()
     sb.appendLine(
         "JVM: ${System.getProperty("java.vm.name")} (${System.getProperty("java.vm.version")})"
@@ -36,13 +31,11 @@ fun generateThreadDump(): String {
     val allThreads = dumpAllThreads()
     sb.append(allThreads)
 
-    // Summary statistics
     sb.appendLine()
     sb.appendLine("Thread Summary:")
     sb.appendLine("  Total threads (including virtual): ${countThreadEntries(allThreads)}")
     sb.appendLine("  Platform threads: ${ManagementFactory.getThreadMXBean().threadCount}")
 
-    // Coroutine info (experimental)
     collectCoroutineInfo()?.let {
         sb.appendLine()
         sb.appendLine("Coroutine Debug Info:")
@@ -52,18 +45,12 @@ fun generateThreadDump(): String {
     return sb.toString()
 }
 
-/**
- * Each thread entry in the [HotSpotDiagnosticMXBean.ThreadDumpFormat.TEXT_PLAIN] format starts a
- * line with `#<tid>`.
- */
+/** Thread entries in the TEXT_PLAIN dump format each start a line with `#<tid>`. */
 private val threadEntryRegex = Regex("""(?m)^#\d+ """)
 
 private fun countThreadEntries(dump: String): Int = threadEntryRegex.findAll(dump).count()
 
-/**
- * [HotSpotDiagnosticMXBean.dumpThreads] refuses to overwrite an existing file, so dump into a fresh
- * temp directory and clean it up after reading.
- */
+/** [HotSpotDiagnosticMXBean.dumpThreads] refuses to overwrite files, hence the fresh temp dir. */
 private fun dumpAllThreads(): String {
     val diagnostic = ManagementFactory.getPlatformMXBean(HotSpotDiagnosticMXBean::class.java)
     val dir = Files.createTempDirectory("ktp-thread-dump")
@@ -80,16 +67,9 @@ private fun dumpAllThreads(): String {
     }
 }
 
-/**
- * Attempts to collect Kotlin coroutine debug information. This is experimental and depends on
- * kotlinx-coroutines-debug being available and coroutine debugging being enabled via system
- * property.
- *
- * Returns null if coroutine debug info is not available.
- */
+/** Unavailability yields an explanatory string, not null, so the dump says why it's missing. */
 private fun collectCoroutineInfo(): String? {
     return try {
-        // Check if coroutine debugging is enabled
         val debugEnabled =
             System.getProperty("kotlinx.coroutines.debug")?.equals("on", ignoreCase = true) ?: false
 
@@ -97,8 +77,7 @@ private fun collectCoroutineInfo(): String? {
             return "Coroutine debugging not enabled. Enable with -Dkotlinx.coroutines.debug=on"
         }
 
-        // Attempt to access coroutine debug info via reflection
-        // This avoids hard dependency on kotlinx-coroutines-debug
+        // Reflection avoids a hard dependency on kotlinx-coroutines-debug.
         val debugClass = Class.forName("kotlinx.coroutines.debug.DebugProbes")
         val dumpCoroutinesMethod = debugClass.getMethod("dumpCoroutines")
         val coroutineInfo = dumpCoroutinesMethod.invoke(null)

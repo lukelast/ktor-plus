@@ -22,13 +22,7 @@ class FindMissingConfigFieldTest :
         }
 
         "returns missing field path for simple config" {
-            val config =
-                ConfigFactory.parseMap(
-                    mapOf(
-                        "simple.name" to "test"
-                        // missing "simple.value"
-                    )
-                )
+            val config = ConfigFactory.parseMap(mapOf("simple.name" to "test"))
 
             val result = findMissingConfigField(config, SimpleConfig::class, "simple")
 
@@ -36,16 +30,11 @@ class FindMissingConfigFieldTest :
         }
 
         "returns first missing field when multiple are missing" {
-            val config =
-                ConfigFactory.parseMap(
-                    mapOf(
-                        // missing both "simple.name" and "simple.value"
-                    )
-                )
+            val config = ConfigFactory.parseMap(mapOf())
 
             val result = findMissingConfigField(config, SimpleConfig::class, "simple")
 
-            // Should return the first missing field (order depends on reflection)
+            // Which field comes first depends on reflection order.
             result shouldBe "simple.name"
         }
 
@@ -64,13 +53,7 @@ class FindMissingConfigFieldTest :
         }
 
         "returns missing nested field path" {
-            val config =
-                ConfigFactory.parseMap(
-                    mapOf(
-                        "nested.outer" to "outer-value"
-                        // missing "nested.nested.innerValue"
-                    )
-                )
+            val config = ConfigFactory.parseMap(mapOf("nested.outer" to "outer-value"))
 
             val result = findMissingConfigField(config, NestedConfig::class, "nested")
 

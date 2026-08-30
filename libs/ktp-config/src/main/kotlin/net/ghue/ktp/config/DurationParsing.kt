@@ -6,19 +6,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Parses a duration string into a Duration.
- *
- * Supported formats:
- * - "7d" - days
- * - "168h" - hours
- * - "10080m" - minutes
- * - "604800s" - seconds
- *
- * @param durationString The duration string to parse
- * @return The parsed Duration
- * @throws IllegalArgumentException if the format is invalid
- */
+/** Parses `7d`, `24h`, `60m`, or `30s` into a [Duration]; throws on malformed input. */
 fun parseDuration(durationString: String): Duration {
     val trimmed = durationString.trim()
     if (trimmed.isEmpty()) {

@@ -80,6 +80,7 @@ private fun extractExtendedFields(ex: KtpRspEx): JsonObject = buildJsonObject {
         ) {
             return@forEach
         }
+        // Needed even for public getters: reflection fails when the subclass is private/internal.
         property.getter.isAccessible = true
         put(propertyName, property.getter.call(ex).toJsonElement())
     }

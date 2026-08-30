@@ -74,6 +74,7 @@ object FirestoreSerializer {
 /** Serializes any object to a Firestore-compatible Map. */
 fun <T> T.serialize(): Map<String, Any> {
     val result = FirestoreSerializer.serialize(this)
+    // Values may be null despite the type; nulls are stored on purpose so [whereNull] matches.
     @Suppress("UNCHECKED_CAST")
     val map =
         (result as? Map<String, Any>)

@@ -3,8 +3,8 @@ package net.ghue.ktp.gcp.firestore
 import java.time.Instant
 
 /**
- * Firestore's document metadata times, filled on read, stripped on write, and never queryable;
- * declare both as nullable constructor params defaulting to null.
+ * Firestore document metadata times: filled on read, stripped on write, never queryable. Implement
+ * as nullable constructor params defaulting to null.
  */
 interface DocTimes {
     /** Creation time from the document metadata. */
