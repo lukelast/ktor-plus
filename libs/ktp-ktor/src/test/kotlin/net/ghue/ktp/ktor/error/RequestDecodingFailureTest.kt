@@ -84,7 +84,7 @@ class RequestDecodingFailureTest :
             }
         }
 
-        "a RuntimeException from a route still answers 500 via the catch-all" {
+        "an unexpected route exception still answers 500 via the catch-all" {
             testApplication {
                 installTestApp()
                 val response = client.get("/boom")
@@ -119,7 +119,7 @@ private fun ApplicationTestBuilder.installTestApp() {
                 call.receive<DecodeTestDto>()
                 call.respondText("ok")
             }
-            get("/boom") { @Suppress("TooGenericExceptionThrown") throw RuntimeException("kaboom") }
+            get("/boom") { throw IllegalStateException("kaboom") }
             get("/conflict") {
                 throw KtpRspEx(
                     status = HttpStatusCode.Conflict,

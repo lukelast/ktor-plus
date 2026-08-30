@@ -26,11 +26,7 @@ class DefaultPluginsTest :
                 application {
                     installDefaultPlugins(KtpConfig.create { setUnitTestEnv() })
 
-                    routing {
-                        get("/boom") {
-                            @Suppress("TooGenericExceptionThrown") throw RuntimeException("leak me")
-                        }
-                    }
+                    routing { get("/boom") { throw IllegalStateException("leak me") } }
                 }
 
                 val response = client.get("/boom")
@@ -40,7 +36,7 @@ class DefaultPluginsTest :
 
                 val bodyText = response.bodyAsText()
                 bodyText.contains("leak me") shouldBe false
-                bodyText.contains("RuntimeException") shouldBe false
+                bodyText.contains("IllegalStateException") shouldBe false
 
                 val body = Json.parseToJsonElement(bodyText).jsonObject
                 body["status"]?.jsonPrimitive?.int shouldBe HttpStatusCode.InternalServerError.value

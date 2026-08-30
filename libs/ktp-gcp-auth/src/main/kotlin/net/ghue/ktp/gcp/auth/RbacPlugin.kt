@@ -1,3 +1,6 @@
+// This file's public API is the plugin and route DSL; RbacConfig supports that API.
+@file:Suppress("MatchingDeclarationName")
+
 package net.ghue.ktp.gcp.auth
 
 import io.ktor.http.*

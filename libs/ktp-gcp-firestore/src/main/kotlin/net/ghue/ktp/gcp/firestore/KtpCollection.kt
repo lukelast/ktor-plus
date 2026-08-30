@@ -12,7 +12,6 @@ import net.ghue.ktp.ktor.error.KtpRspExNotFound
  * Collection handle bound to its document type so reads cannot use the wrong one; [ref] is the
  * escape hatch for transactions, batches, and raw queries. Create via [typedCollection].
  */
-@Suppress("TooManyFunctions")
 class KtpCollection<T : Any>(val ref: CollectionReference, private val kClass: KClass<T>) {
 
     /** Gets a document by ID, returning null if not found. */

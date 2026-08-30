@@ -1,6 +1,3 @@
-// A typed query DSL is naturally many small delegating functions.
-@file:Suppress("TooManyFunctions")
-
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.Query

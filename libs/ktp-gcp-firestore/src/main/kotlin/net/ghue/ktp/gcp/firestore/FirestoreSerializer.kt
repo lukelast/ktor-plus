@@ -27,18 +27,13 @@ object FirestoreSerializer {
         registerSerializer(T::class.java, serializer)
     }
 
-    @Suppress("ReturnCount")
     fun serialize(value: Any?): Any? {
         if (value == null) return null
 
-        customSerializers[value::class.java]?.let {
-            return it(value)
-        }
-        customSerializers.entries
-            .find { it.key.isInstance(value) }
-            ?.let {
-                return it.value(value)
-            }
+        val serializer =
+            customSerializers[value::class.java]
+                ?: customSerializers.entries.find { it.key.isInstance(value) }?.value
+        if (serializer != null) return serializer(value)
 
         return when (value) {
             is String,
@@ -56,9 +51,10 @@ object FirestoreSerializer {
             else -> {
                 if (value::class.isValue) {
                     val prop = value::class.memberProperties.first()
-                    return serialize(prop.call(value))
+                    serialize(prop.call(value))
+                } else {
+                    serializeObject(value)
                 }
-                serializeObject(value)
             }
         }
     }

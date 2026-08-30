@@ -18,7 +18,7 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-class KtorErrorResponseHandlerTest :
+class KtpRspExHandlerTest :
     StringSpec({
         "processKtpRspEx returns RFC 9457 problem details and includes extraFields" {
             testApplication {

@@ -86,7 +86,6 @@ private fun extractExtendedFields(ex: KtpRspEx): JsonObject = buildJsonObject {
     }
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun Any?.toJsonElement(): JsonElement =
     when (this) {
         null -> JsonNull

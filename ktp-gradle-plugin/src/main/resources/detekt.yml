@@ -3,9 +3,11 @@ style:
     # Intellij is dead set on wildcard imports by default.
     active: false
   ThrowsCount:
+    # Default: 2
     max: 4
   ReturnCount:
-    max: 3
+    # Default: 2
+    max: 4
 
 exceptions:
   TooGenericExceptionCaught:
@@ -13,10 +15,26 @@ exceptions:
 
 naming:
   MatchingDeclarationName:
-    active: false
+    active: true
 
 complexity:
   ComplexCondition:
-    allowedConditions: 4
+    # Default: 3
+    allowedConditions: 6
+  CyclomaticComplexMethod:
+    # Default: 14
+    allowedComplexity: 25
   LongMethod:
-    allowedLines: 80
+    # Default: 60
+    allowedLines: 100
+  TooManyFunctions:
+    # Default: 11
+    allowedFunctionsPerFile: 20
+    # Default: 11
+    allowedFunctionsPerClass: 20
+    # Default: 11
+    allowedFunctionsPerInterface: 20
+    # Default: 11
+    allowedFunctionsPerObject: 20
+    # Default: 11
+    allowedFunctionsPerEnum: 20

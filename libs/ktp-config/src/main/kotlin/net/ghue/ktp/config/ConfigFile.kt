@@ -26,6 +26,8 @@ data class ConfigFile(
         )
 
     companion object {
+        private const val MAX_PRIORITY = 9
+
         fun create(resourceUri: String, text: String): ConfigFile {
             val fileName = resourceUri.substringAfterLast("/")
             val nameTokens = fileName.split(".").filter { it != KtpConfig.CONFIG_FILE_EXT }
@@ -37,9 +39,11 @@ data class ConfigFile(
                     ?: error(
                         "Invalid config file name: $resourceUri. Must start with a priority number."
                     )
-            @Suppress("MagicNumber")
-            if (priority !in 0..9) {
-                error("Invalid config file priority: $resourceUri. Must be between 0 and 9")
+            if (priority !in 0..MAX_PRIORITY) {
+                error(
+                    "Invalid config file priority: $resourceUri. " +
+                        "Must be between 0 and $MAX_PRIORITY"
+                )
             }
             val configName = nameTokens.getOrElse(1) { "" }
             return ConfigFile(
@@ -54,7 +58,6 @@ data class ConfigFile(
     }
 
     /** Does this [ConfigFile] belong in the given [env]? */
-    @Suppress("ReturnCount")
     fun appliesTo(env: Env): Boolean {
         // Keep test envs (unit and integration) from picking up local dev override configs.
         if (env.isTest && envName.isEmpty() && (configName == "local" || configName.isEmpty())) {
