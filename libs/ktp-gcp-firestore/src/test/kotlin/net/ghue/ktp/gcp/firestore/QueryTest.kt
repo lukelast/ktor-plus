@@ -9,7 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
 
-class FirestoreQueryTest :
+class QueryTest :
     StringSpec({
         "whereEq unwraps value class operands" {
             val query = mockk<Query>()
@@ -65,6 +65,19 @@ class FirestoreQueryTest :
             query.whereGte(Event::at, at) shouldBe next
             query.whereLt(Event::at, at) shouldBe next
             query.whereLte(Event::at, at) shouldBe next
+        }
+
+        "range filters reject operands that serialize to null" {
+            data class Event(val id: String, val value: NullQueryOperand)
+
+            FirestoreSerializer.registerSerializer<NullQueryOperand> { null }
+            val query = mockk<Query>()
+
+            val error =
+                shouldThrow<IllegalArgumentException> {
+                    query.whereGt(Event::value, NullQueryOperand("value"))
+                }
+            error.message shouldContain "must not be null"
         }
 
         "whereNull and whereNotNull filter on null" {
@@ -125,3 +138,5 @@ class FirestoreQueryTest :
 private enum class QueryTestStatus {
     ACTIVE
 }
+
+private data class NullQueryOperand(val value: String)

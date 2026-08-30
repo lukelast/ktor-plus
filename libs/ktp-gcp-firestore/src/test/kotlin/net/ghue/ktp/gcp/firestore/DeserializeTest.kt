@@ -2,25 +2,48 @@ package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.Timestamp
 import com.google.cloud.firestore.DocumentSnapshot
+import com.google.cloud.firestore.GeoPoint
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import kotlin.reflect.full.createType
+import kotlin.reflect.typeOf
 import net.ghue.ktp.ktor.error.KtpRspEx
 
-class FirestoreDeserializeTest :
+class DeserializeTest :
     StringSpec({
         "primitives deserialization" {
-            val type = Int::class.createType()
-            FirestoreDeserializer.deserialize(123L, type) shouldBe 123
+            FirestoreDeserializer.deserialize(123L, Int::class.createType()) shouldBe 123
             FirestoreDeserializer.deserialize("hello", String::class.createType()) shouldBe "hello"
             FirestoreDeserializer.deserialize(true, Boolean::class.createType()) shouldBe true
+        }
+
+        "all numeric target types are converted" {
+            FirestoreDeserializer.deserialize(42L, Long::class.createType()) shouldBe 42L
+            FirestoreDeserializer.deserialize(42L, Double::class.createType()) shouldBe 42.0
+            FirestoreDeserializer.deserialize(42L, Float::class.createType()) shouldBe 42.0f
+            FirestoreDeserializer.deserialize(42L, Short::class.createType()) shouldBe 42.toShort()
+            FirestoreDeserializer.deserialize(42L, Byte::class.createType()) shouldBe 42.toByte()
+        }
+
+        "null is allowed only for nullable target types" {
+            FirestoreDeserializer.deserialize(
+                null,
+                String::class.createType(nullable = true),
+            ) shouldBe null
+
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(null, String::class.createType())
+                }
+            error.detail shouldContain "non-nullable type"
         }
 
         "timestamp to instant" {
@@ -47,6 +70,47 @@ class FirestoreDeserializeTest :
 
             val email = FirestoreDeserializer.deserialize("test@a.com", DEmail::class.createType())
             email shouldBe DEmail("test@a.com")
+        }
+
+        "lists iterables sets and maps deserialize their elements" {
+            val numbers = listOf(1L, 2L, 2L)
+
+            FirestoreDeserializer.deserialize(numbers, typeOf<List<Int>>()) shouldBe listOf(1, 2, 2)
+            FirestoreDeserializer.deserialize(numbers, typeOf<ArrayList<Int>>()) shouldBe
+                arrayListOf(1, 2, 2)
+            FirestoreDeserializer.deserialize(numbers, typeOf<Iterable<Int>>()) shouldBe
+                listOf(1, 2, 2)
+            FirestoreDeserializer.deserialize(numbers, typeOf<Set<Int>>()) shouldBe setOf(1, 2)
+            FirestoreDeserializer.deserialize(listOf(1L), typeOf<List<*>>()) shouldBe listOf(1L)
+
+            val values = mapOf<Any, Any>(1 to 2L, "three" to 3L)
+            FirestoreDeserializer.deserialize(values, typeOf<Map<String, Int>>()) shouldBe
+                mapOf("1" to 2, "three" to 3)
+            FirestoreDeserializer.deserialize(values, typeOf<HashMap<String, Int>>()) shouldBe
+                hashMapOf("1" to 2, "three" to 3)
+        }
+
+        "Firestore native values and unknown types pass through unchanged" {
+            val geoPoint = GeoPoint(1.0, 2.0)
+            val marker = Any()
+
+            FirestoreDeserializer.deserialize(
+                geoPoint,
+                GeoPoint::class.createType(),
+            ) shouldBeSameInstanceAs geoPoint
+            FirestoreDeserializer.deserialize(
+                marker,
+                Any::class.createType(),
+            ) shouldBeSameInstanceAs marker
+        }
+
+        "custom deserializer registered by class converts values" {
+            FirestoreDeserializer.registerDeserializer(DCustom::class.java) {
+                DCustom(it.toString())
+            }
+
+            FirestoreDeserializer.deserialize("value", DCustom::class.createType()) shouldBe
+                DCustom("value")
         }
 
         "data class deserialization" {
@@ -106,6 +170,49 @@ class FirestoreDeserializeTest :
             result shouldBe DataWithDefault("default")
         }
 
+        "missing nullable parameter becomes null" {
+            FirestoreDeserializer.deserialize(
+                emptyMap<String, Any>(),
+                DNullable::class.createType(),
+            ) shouldBe DNullable(null)
+        }
+
+        "missing required parameter fails with its name" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(
+                        emptyMap<String, Any>(),
+                        DRequired::class.createType(),
+                    )
+                }
+
+            error.detail shouldContain "Missing required parameter value"
+        }
+
+        "class without a primary constructor fails descriptively" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(
+                        mapOf("value" to "x"),
+                        DSecondary::class.createType(),
+                    )
+                }
+
+            error.detail shouldContain "No primary constructor"
+        }
+
+        "raw values with the wrong constructor type fail descriptively" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(
+                        mapOf("value" to "raw"),
+                        DUnknownHolder::class.createType(),
+                    )
+                }
+
+            error.detail shouldContain "Constructing DUnknownHolder failed"
+        }
+
         "instant round-trip truncates to Firestore's microsecond precision" {
             val precise = Instant.ofEpochSecond(1234567890L, 123456789)
             val stored = FirestoreSerializer.serialize(precise)
@@ -144,6 +251,11 @@ class FirestoreDeserializeTest :
         "custom deserializer returning null for a non-nullable target fails" {
             FirestoreDeserializer.registerDeserializer<DNullCustom> { null }
 
+            FirestoreDeserializer.deserialize(
+                "x",
+                DNullCustom::class.createType(nullable = true),
+            ) shouldBe null
+
             val error =
                 shouldThrow<KtpRspEx> {
                     FirestoreDeserializer.deserialize("x", DNullCustom::class.createType())
@@ -154,7 +266,7 @@ class FirestoreDeserializeTest :
 
 data class DataWithDefault(val value: String = "default")
 
-// D-prefixed to avoid clashing with FirestoreSerializeTest's top-level fixtures in this package.
+// D-prefixed to avoid clashing with SerializeTest's top-level fixtures in this package.
 
 @JvmInline value class DCount(val value: Int)
 
@@ -194,3 +306,21 @@ data class DValidated(val name: String) {
 }
 
 class DNullCustom
+
+data class DCustom(val value: String)
+
+data class DNullable(val value: String?)
+
+data class DRequired(val value: String)
+
+class DSecondary {
+    val value: String
+
+    constructor(value: String) {
+        this.value = value
+    }
+}
+
+class DUnknown
+
+data class DUnknownHolder(val value: DUnknown)

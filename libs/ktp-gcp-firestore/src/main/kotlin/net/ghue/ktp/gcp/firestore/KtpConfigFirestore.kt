@@ -2,6 +2,7 @@ package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.FirestoreOptions
 import net.ghue.ktp.config.KtpConfig
+import org.koin.dsl.module
 
 val KtpConfig.firestore: Google
     get() = extractChild()
@@ -14,3 +15,5 @@ data class Google(val firestore: Firestore) {
                 ?: error("error creating firestore")
     }
 }
+
+fun firestoreModule() = module { single { get<KtpConfig>().firestore.firestore.firestore() } }

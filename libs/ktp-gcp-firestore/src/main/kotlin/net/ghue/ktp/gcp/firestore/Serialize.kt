@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.Timestamp

@@ -104,6 +104,41 @@ class KtpCollectionTest :
             verify(exactly = 1) { docRef.set(mapOf("name" to "Ada"), any<SetOptions>()) }
         }
 
+        "write and id helpers delegate to the bound collection" {
+            data class User(val id: String, val name: String)
+
+            val ref = mockk<CollectionReference>()
+            val docRef = mockk<DocumentReference>()
+            val autoRef = mockk<DocumentReference>()
+            val listedRef = mockk<DocumentReference>()
+            val users = KtpCollection(ref, User::class)
+            val user = User(id = "user-1", name = "Ada")
+
+            every { ref.document("user-1") } returns docRef
+            every { docRef.set(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
+            every { docRef.create(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
+            every { docRef.delete() } returns colFuture(mockk<WriteResult>())
+            every { ref.document() } returns autoRef
+            every { autoRef.id } returns "new-id"
+            every { autoRef.set(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
+            every { listedRef.id } returns "listed-id"
+            every { ref.listDocuments() } returns listOf(listedRef)
+
+            users.replace(user)
+            users.createOrNull(user) shouldBe user
+            users.newDoc { id -> User(id = id, name = "New") } shouldBe
+                User(id = "new-id", name = "New")
+            users.newId() shouldBe "new-id"
+            users.listIds() shouldContainExactly listOf("listed-id")
+            users.deleteById("user-1")
+            users.delete(user)
+
+            verify(exactly = 1) { docRef.set(mapOf("name" to "Ada")) }
+            verify(exactly = 1) { docRef.create(mapOf("name" to "Ada")) }
+            verify(exactly = 1) { autoRef.set(mapOf("name" to "New")) }
+            verify(exactly = 2) { docRef.delete() }
+        }
+
         "sub creates a typed handle for a subcollection" {
             data class User(val id: String, val name: String)
             data class Item(val id: String, val label: String)

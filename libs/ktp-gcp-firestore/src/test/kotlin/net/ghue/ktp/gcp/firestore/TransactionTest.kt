@@ -20,7 +20,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
-class FirestoreTransactionTest :
+class TransactionTest :
     StringSpec({
         // Runs the callback inline and surfaces its exception via the future, as the SDK does.
         fun mockRunTransaction(firestore: Firestore, txn: Transaction) {
@@ -69,12 +69,13 @@ class FirestoreTransactionTest :
 
             every { collection.document("user-1") } returns docRef
             every { txn.get(docRef) } returnsMany
-                listOf(transactionFuture(doc), transactionFuture(emptyDoc))
+                listOf(transactionFuture(doc), transactionFuture(doc), transactionFuture(emptyDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
             every { emptyDoc.data } returns null
 
             txn.getOrNull<User>(collection, "user-1") shouldBe User(id = "user-1", name = "Ada")
+            txn.getOrThrow<User>(collection, "user-1") shouldBe User(id = "user-1", name = "Ada")
 
             val error = shouldThrow<KtpRspExNotFound> { txn.getOrThrow<User>(collection, "user-1") }
             error.id shouldBe "user-1"
@@ -114,7 +115,7 @@ class FirestoreTransactionTest :
             txn.upsert(collection, User(id = "user-1", name = "Ada"))
             txn.replace(collection, User(id = "user-1", name = "Bob"))
 
-            verify(exactly = 1) { txn.set(docRef, mapOf("name" to "Ada"), any<SetOptions>()) }
+            verify(exactly = 1) { txn.set(docRef, mapOf("name" to "Ada"), SetOptions.merge()) }
             verify(exactly = 1) { txn.set(docRef, mapOf("name" to "Bob")) }
         }
     })
