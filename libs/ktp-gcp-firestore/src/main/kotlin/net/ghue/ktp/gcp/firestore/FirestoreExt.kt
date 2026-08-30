@@ -19,10 +19,7 @@ import net.ghue.ktp.ktor.error.ktpRspError
 const val FIRESTORE_BATCH_SIZE = 500
 
 /** Inserts or updates a document using its 'id' property as the document ID. */
-inline fun <reified T : Any> CollectionReference.upsert(
-    document: T,
-    setOptions: SetOptions = SetOptions.merge(),
-) {
+fun <T : Any> CollectionReference.upsert(document: T, setOptions: SetOptions = SetOptions.merge()) {
     document(idFieldValue(document)).set(document.serialize(), setOptions).join()
 }
 
@@ -30,7 +27,7 @@ inline fun <reified T : Any> CollectionReference.upsert(
  * Sets the document to exactly [document], deleting fields not present in it. Unlike [upsert],
  * whose merge write never removes existing fields or map keys.
  */
-inline fun <reified T : Any> CollectionReference.replace(document: T) {
+fun <T : Any> CollectionReference.replace(document: T) {
     document(idFieldValue(document)).set(document.serialize()).join()
 }
 

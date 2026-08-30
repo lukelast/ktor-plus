@@ -172,20 +172,26 @@ object FirestoreDeserializer {
 }
 
 /**
- * Deserializes the snapshot into [T], or null when the document does not exist. If the type [T] has
- * an `id` property, then its value will be set with the document id. A document that exists but
- * cannot deserialize into [T] is an error, never null.
+ * Deserializes the snapshot into a [kClass] instance, or null when the document does not exist. If
+ * the type has an `id` property, then its value will be set with the document id. A document that
+ * exists but cannot deserialize into the type is an error, never null.
  */
-inline fun <reified T : Any> DocumentSnapshot.deserialize(): T? {
+fun <T : Any> DocumentSnapshot.deserialize(kClass: KClass<T>): T? {
     val rawData = data ?: return null
     // We inject the ID into the map so the deserializer picks it up.
     val dataWithId = rawData + mapOf("id" to id)
-    val result = FirestoreDeserializer.deserialize(dataWithId, T::class.createType())
-    return result as? T
-        ?: ktpRspError {
+    val result = FirestoreDeserializer.deserialize(dataWithId, kClass.createType())
+    if (!kClass.isInstance(result)) {
+        ktpRspError {
             title = "Deserialization Error"
             detail =
                 "Document '$id' deserialized to ${result?.javaClass?.simpleName} " +
-                    "instead of ${T::class.simpleName}"
+                    "instead of ${kClass.simpleName}"
         }
+    }
+    @Suppress("UNCHECKED_CAST")
+    return result as T
 }
+
+/** Reified convenience for [deserialize]. */
+inline fun <reified T : Any> DocumentSnapshot.deserialize(): T? = deserialize(T::class)
