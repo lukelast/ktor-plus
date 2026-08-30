@@ -10,26 +10,26 @@ import com.google.cloud.firestore.Query
 import com.google.cloud.firestore.SetOptions
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
-import net.ghue.ktp.gcp.await
+import net.ghue.ktp.gcp.join
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 import net.ghue.ktp.ktor.error.ktpRspError
 
 const val FIRESTORE_BATCH_SIZE = 500
 
 /** Inserts or updates a document using its 'id' property as the document ID. */
-suspend inline fun <reified T : Any> CollectionReference.upsert(
+inline fun <reified T : Any> CollectionReference.upsert(
     document: T,
     setOptions: SetOptions = SetOptions.merge(),
 ) {
-    document(idFieldValue(document)).set(document.serialize(), setOptions).await()
+    document(idFieldValue(document)).set(document.serialize(), setOptions).join()
 }
 
 /**
  * Sets the document to exactly [document], deleting fields not present in it. Unlike [upsert],
  * whose merge write never removes existing fields or map keys.
  */
-suspend inline fun <reified T : Any> CollectionReference.replace(document: T) {
-    document(idFieldValue(document)).set(document.serialize()).await()
+inline fun <reified T : Any> CollectionReference.replace(document: T) {
+    document(idFieldValue(document)).set(document.serialize()).join()
 }
 
 /**
@@ -37,46 +37,46 @@ suspend inline fun <reified T : Any> CollectionReference.replace(document: T) {
  * server-side sentinels like [com.google.cloud.firestore.FieldValue.increment], which [upsert]
  * would mangle. Creates the document when missing.
  */
-suspend fun DocumentReference.setMerge(fields: Map<String, Any>) {
-    set(fields, SetOptions.merge()).await()
+fun DocumentReference.setMerge(fields: Map<String, Any>) {
+    set(fields, SetOptions.merge()).join()
 }
 
 /** Creates a new document with an auto-generated ID, passing the ID to the builder function. */
-suspend fun <T : Any> CollectionReference.newDoc(documentBuilder: (String) -> T): T {
+fun <T : Any> CollectionReference.newDoc(documentBuilder: (String) -> T): T {
     val newDocRef = this.document()
     val doc = documentBuilder(newDocRef.id)
-    newDocRef.set(doc.serialize()).await()
+    newDocRef.set(doc.serialize()).join()
     return doc
 }
 
 /** Executes the query and returns all matching documents as a list. */
-suspend inline fun <reified T : Any> Query.getList(): List<T> =
-    get().await().documents.mapNotNull { it.deserialize<T>() }
+inline fun <reified T : Any> Query.getList(): List<T> =
+    get().join().documents.mapNotNull { it.deserialize<T>() }
 
 /** Executes the query and returns the first matching document, or null if none found. */
-suspend inline fun <reified T : Any> Query.firstOrNull(): T? =
-    get().await().documents.firstOrNull()?.deserialize()
+inline fun <reified T : Any> Query.firstOrNull(): T? =
+    get().join().documents.firstOrNull()?.deserialize()
 
 /** Gets a document by ID, throwing [KtpRspExNotFound] if not found. */
-suspend inline fun <reified T : Any> CollectionReference.getOrThrow(documentId: String): T {
+inline fun <reified T : Any> CollectionReference.getOrThrow(documentId: String): T {
     return getOrNull(documentId)
         ?: throw KtpRspExNotFound(T::class.simpleName ?: "Document", documentId)
 }
 
 /** Gets a document by ID, returning null if not found. */
-suspend inline fun <reified T : Any> CollectionReference.getOrNull(documentId: String): T? {
-    val doc = this.document(documentId).get().await()
+inline fun <reified T : Any> CollectionReference.getOrNull(documentId: String): T? {
+    val doc = this.document(documentId).get().join()
     return doc.deserialize<T>()
 }
 
 /** Gets a document from this reference, throwing [KtpRspExNotFound] if not found. */
-suspend inline fun <reified T : Any> DocumentReference.getOrThrow(): T {
+inline fun <reified T : Any> DocumentReference.getOrThrow(): T {
     return getOrNull<T>() ?: throw KtpRspExNotFound(T::class.simpleName ?: "Document", id)
 }
 
 /** Gets a document from this reference, returning null if not found. */
-suspend inline fun <reified T : Any> DocumentReference.getOrNull(): T? {
-    val doc = get().await()
+inline fun <reified T : Any> DocumentReference.getOrNull(): T? {
+    val doc = get().join()
     return doc.deserialize<T>()
 }
 
@@ -126,26 +126,26 @@ fun idFieldValue(item: Any): String {
 }
 
 /** Writes multiple documents in batches, respecting Firestore's 500 document limit per batch. */
-suspend fun Firestore.batchWrite(collection: CollectionReference, items: List<Any>) {
+fun Firestore.batchWrite(collection: CollectionReference, items: List<Any>) {
     items.chunked(FIRESTORE_BATCH_SIZE).forEach { chunk ->
         val batch = batch()
         chunk.forEach { item ->
             batch.set(collection.document(idFieldValue(item)), item.serialize(), SetOptions.merge())
         }
-        batch.commit().await()
+        batch.commit().join()
     }
 }
 
 /** Deletes all documents in a collection using batched operations. */
-suspend fun Firestore.deleteCollection(collection: CollectionReference) {
+fun Firestore.deleteCollection(collection: CollectionReference) {
     while (true) {
         val snapshot =
-            collection.limit(FIRESTORE_BATCH_SIZE).select(FieldPath.documentId()).get().await()
+            collection.limit(FIRESTORE_BATCH_SIZE).select(FieldPath.documentId()).get().join()
         if (snapshot.documents.isEmpty()) break
 
         val batch = batch()
         snapshot.documents.forEach { batch.delete(it.reference) }
-        batch.commit().await()
+        batch.commit().join()
     }
 }
 
@@ -153,7 +153,7 @@ suspend fun Firestore.deleteCollection(collection: CollectionReference) {
  * Deletes documents from the specified collection where the given property matches the provided
  * value.
  */
-suspend fun <T> Firestore.deleteByField(
+fun <T> Firestore.deleteByField(
     collection: CollectionReference,
     property: KProperty1<*, T>,
     value: T,
@@ -165,12 +165,12 @@ suspend fun <T> Firestore.deleteByField(
                 .limit(FIRESTORE_BATCH_SIZE)
                 .select(FieldPath.documentId())
                 .get()
-                .await()
+                .join()
 
         if (snapshot.documents.isEmpty()) break
 
         val batch = batch()
         snapshot.documents.forEach { batch.delete(it.reference) }
-        batch.commit().await()
+        batch.commit().join()
     }
 }
