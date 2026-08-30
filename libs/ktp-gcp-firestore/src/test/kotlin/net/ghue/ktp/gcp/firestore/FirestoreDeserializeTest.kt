@@ -1,11 +1,15 @@
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.Timestamp
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import kotlin.reflect.full.createType
+import net.ghue.ktp.ktor.error.KtpRspEx
 
 class FirestoreDeserializeTest :
     StringSpec({
@@ -76,6 +80,51 @@ class FirestoreDeserializeTest :
                 FirestoreDeserializer.deserialize(data, DataWithDefault::class.createType())
             result shouldBe DataWithDefault("default")
         }
+
+        "instant round-trip truncates to Firestore's microsecond precision" {
+            val precise = Instant.ofEpochSecond(1234567890L, 123456789)
+            val stored = FirestoreSerializer.serialize(precise)
+
+            FirestoreDeserializer.deserialize(stored, Instant::class.createType()) shouldBe
+                precise.truncatedTo(ChronoUnit.MICROS)
+        }
+
+        "unknown enum value fails with a descriptive error" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize("C", DEnum::class.createType())
+                }
+            error.detail shouldBe "Unknown DEnum enum value 'C'"
+        }
+
+        "failing value class validation surfaces a descriptive error" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(-1L, DPositive::class.createType())
+                }
+            error.detail shouldBe "Constructing DPositive failed: must be positive"
+        }
+
+        "failing data class validation surfaces a descriptive error" {
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize(
+                        mapOf("name" to ""),
+                        DValidated::class.createType(),
+                    )
+                }
+            error.detail shouldBe "Constructing DValidated failed: name must not be empty"
+        }
+
+        "custom deserializer returning null for a non-nullable target fails" {
+            FirestoreDeserializer.registerDeserializer<DNullCustom> { null }
+
+            val error =
+                shouldThrow<KtpRspEx> {
+                    FirestoreDeserializer.deserialize("x", DNullCustom::class.createType())
+                }
+            error.detail shouldContain "DNullCustom"
+        }
     })
 
 data class DataWithDefault(val value: String = "default")
@@ -113,3 +162,18 @@ data class DData(val name: String, val count: Int, val type: DEnum)
 data class DNested(val data: DData)
 
 data class DWithId(val id: String, val value: String)
+
+@JvmInline
+value class DPositive(val value: Int) {
+    init {
+        require(value > 0) { "must be positive" }
+    }
+}
+
+data class DValidated(val name: String) {
+    init {
+        require(name.isNotEmpty()) { "name must not be empty" }
+    }
+}
+
+class DNullCustom

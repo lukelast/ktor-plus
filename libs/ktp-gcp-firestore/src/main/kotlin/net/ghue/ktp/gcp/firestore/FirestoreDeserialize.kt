@@ -1,6 +1,7 @@
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.DocumentSnapshot
+import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
@@ -37,7 +38,16 @@ object FirestoreDeserializer {
 
         // Check custom deserializers
         customDeserializers[kClass.java]?.let {
-            return it(value)
+            val converted = it(value)
+            if (converted == null && !targetType.isMarkedNullable) {
+                ktpRspError {
+                    title = "Deserialization Error"
+                    detail =
+                        "Custom deserializer for ${kClass.simpleName} returned null " +
+                            "for non-nullable target"
+                }
+            }
+            return converted
         }
 
         // Primitives
@@ -58,7 +68,11 @@ object FirestoreDeserializer {
         // Enums
         if (kClass.java.isEnum) {
             @Suppress("UNCHECKED_CAST") val constants = kClass.java.enumConstants as Array<Enum<*>>
-            return constants.first { it.name == value.toString() }
+            return constants.firstOrNull { it.name == value.toString() }
+                ?: ktpRspError {
+                    title = "Deserialization Error"
+                    detail = "Unknown ${kClass.simpleName} enum value '$value'"
+                }
         }
 
         // Value Classes (Unwrap strategy: The constructor takes the single primitive/value)
@@ -66,7 +80,7 @@ object FirestoreDeserializer {
             val constructor = kClass.primaryConstructor!!
             val param = constructor.parameters.first()
             val paramVal = deserialize(value, param.type)
-            return constructor.call(paramVal)
+            return construct(kClass) { constructor.call(paramVal) }
         }
 
         // Collections
@@ -137,14 +151,41 @@ object FirestoreDeserializer {
                 }
                 .toMap()
 
-        return constructor.callBy(callArgs)
+        return construct(kClass) { constructor.callBy(callArgs) }
+    }
+
+    /** Invokes a constructor, surfacing validation failures as descriptive errors. */
+    private fun <R> construct(kClass: KClass<*>, invoke: () -> R): R =
+        try {
+            invoke()
+        } catch (e: InvocationTargetException) {
+            constructionError(kClass, e.cause ?: e)
+        } catch (e: IllegalArgumentException) {
+            constructionError(kClass, e)
+        }
+
+    private fun constructionError(kClass: KClass<*>, error: Throwable): Nothing = ktpRspError {
+        title = "Deserialization Error"
+        detail = "Constructing ${kClass.simpleName} failed: ${error.message}"
+        cause = error
     }
 }
 
-/** If the type [T] has an `id` property, then its value will be set with the document id. */
+/**
+ * Deserializes the snapshot into [T], or null when the document does not exist. If the type [T] has
+ * an `id` property, then its value will be set with the document id. A document that exists but
+ * cannot deserialize into [T] is an error, never null.
+ */
 inline fun <reified T : Any> DocumentSnapshot.deserialize(): T? {
     val rawData = data ?: return null
     // We inject the ID into the map so the deserializer picks it up.
     val dataWithId = rawData + mapOf("id" to id)
-    return FirestoreDeserializer.deserialize(dataWithId, T::class.createType()) as? T
+    val result = FirestoreDeserializer.deserialize(dataWithId, T::class.createType())
+    return result as? T
+        ?: ktpRspError {
+            title = "Deserialization Error"
+            detail =
+                "Document '$id' deserialized to ${result?.javaClass?.simpleName} " +
+                    "instead of ${T::class.simpleName}"
+        }
 }
