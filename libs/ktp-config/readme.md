@@ -44,6 +44,11 @@ already exists in the merged config. `create()` fails fast on unknown keys becau
 nothing reads would be a silent no-op. The `env` path cannot be overridden; set `env` on the builder
 instead.
 
+String values are trimmed of leading/trailing ASCII whitespace (the `java.lang.String.trim` set)
+when the config is built, so padded values injected by secret managers or CI just work; trimmed
+paths are logged. Padding can still survive inside a `${}` concatenation when the padded value
+comes from a config file, `KTP_CONFIG`, or a plain `${?ENV_VAR}` substitution.
+
 ## Environment Detection
 
 Checks in order: `KTP_ENV` → `ENV` → `KUBERNETES_NAMESPACE` (each as an environment variable, then as a
@@ -52,6 +57,9 @@ system property) → `localDevEnv` in `0.conf` → default: `localdev`
 **Custom dev environment:** Create `0.conf` with `localDevEnv = "your-username"`
 
 **Valid names:** lowercase letters, numbers, dashes only (`[a-z0-9-]+`)
+
+A `localDevEnv` key that is present but invalid fails fast rather than silently falling back to
+`localdev`; only a missing `0.conf` or missing key falls back.
 
 ## Creating Configuration
 

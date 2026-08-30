@@ -78,6 +78,7 @@ Configuration management built on Typesafe Config with layered, environment-spec
 - **Environment Detection**: Automatic detection via `KTP_ENV`, `ENV`, or Kubernetes namespace
 - **Secret Masking**: Automatic sanitization of sensitive values in logs
 - **Environment Variables**: Override any config value with `CONFIG_FORCE_` prefix
+- **Whitespace Trimming**: Leading/trailing ASCII whitespace is stripped from every string config value
 - **HOCON Injection**: Inject configuration via `KTP_CONFIG` environment variable
 - **Testing Support**: Built-in helpers for unit and integration testing
 

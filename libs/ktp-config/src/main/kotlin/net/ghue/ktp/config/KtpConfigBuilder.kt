@@ -45,16 +45,22 @@ private fun buildConfigForEnv(env: Env, overrideMap: Map<String, Any> = emptyMap
     return buildConfig(env, usedConfigFiles, overrideMap)
 }
 
+/** Merges all config sources, resolves substitutions, and trims string values. */
 fun buildConfig(
     env: Env,
     configFiles: List<ConfigFile>,
     /** Highest precedence. */
     overrideMap: Map<String, Any> = emptyMap(),
+    /** `CONFIG_FORCE_` env-var overrides; injectable so their trimming is testable. */
+    envOverrides: Config = ConfigFactory.systemEnvironmentOverrides(),
 ): Config {
     val envConfig =
         ConfigFactory.parseMap(mapOf(ENV_CONFIG_PATH to env.name), "current environment")
     val baseConfigs = buildList {
-        add(ConfigFactory.systemEnvironmentOverrides())
+        // Env-var override values arrive verbatim; trim before the merge so padding cannot be
+        // baked into ${} concatenations during resolve. Parsed files and KTP_CONFIG may hold
+        // unresolved substitutions, so their values can only be trimmed post-resolve.
+        add(envOverrides.withTrimmedStrings())
         buildConfigFromEnvVar()?.let { add(it) }
         configFiles.sorted().forEach { file ->
             add(
@@ -66,12 +72,15 @@ fun buildConfig(
         }
     }
     val base = mergeConfigs(listOf(envConfig) + baseConfigs)
-    if (overrideMap.isEmpty()) {
-        return base
-    }
-    validateOverrideKeys(overrideMap.keys, base)
-    val overrides = ConfigFactory.parseMap(overrideMap, "overrides")
-    return mergeConfigs(listOf(envConfig, overrides) + baseConfigs)
+    val merged =
+        if (overrideMap.isEmpty()) {
+            base
+        } else {
+            validateOverrideKeys(overrideMap.keys, base)
+            val overrides = ConfigFactory.parseMap(overrideMap, "overrides").withTrimmedStrings()
+            mergeConfigs(listOf(envConfig, overrides) + baseConfigs)
+        }
+    return merged.withTrimmedStrings()
 }
 
 private fun mergeConfigs(configs: List<Config>): Config =

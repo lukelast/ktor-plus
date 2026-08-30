@@ -1,7 +1,11 @@
 package net.ghue.ktp.config
 
+import com.typesafe.config.ConfigFactory
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class EnvTest :
     StringSpec({
@@ -16,6 +20,45 @@ class EnvTest :
             } finally {
                 System.clearProperty(envVar)
             }
+        }
+
+        "findEnvironment trims whitespace from env var value" {
+            val envVar = "KTP_ENV"
+            System.setProperty(envVar, " prod\n")
+
+            try {
+                val env = findEnvironment()
+                env.name shouldBe "prod"
+            } finally {
+                System.clearProperty(envVar)
+            }
+        }
+
+        "localDevEnvOrNull trims whitespace from the value" {
+            val config = ConfigFactory.parseString("""localDevEnv = " staging\n"""")
+            localDevEnvOrNull(config, "0.conf")?.name shouldBe "staging"
+        }
+
+        "invalid localDevEnv fails fast with the source in the message" {
+            val config = ConfigFactory.parseString("""localDevEnv = "Not Valid"""")
+            val ex = shouldThrow<IllegalArgumentException> { localDevEnvOrNull(config, "0.conf") }
+            ex.message shouldContain "localDevEnv"
+            ex.message shouldContain "Not Valid"
+            ex.message shouldContain "0.conf"
+        }
+
+        "blank localDevEnv fails fast instead of silently using the default" {
+            val config = ConfigFactory.parseString("""localDevEnv = """"")
+            shouldThrow<IllegalArgumentException> { localDevEnvOrNull(config, "0.conf") }
+        }
+
+        "absent localDevEnv returns null so findEnvironment uses the default" {
+            localDevEnvOrNull(ConfigFactory.parseString(""), "0.conf").shouldBeNull()
+        }
+
+        "null localDevEnv is treated as absent" {
+            localDevEnvOrNull(ConfigFactory.parseString("localDevEnv = null"), "0.conf")
+                .shouldBeNull()
         }
 
         "localDev flag comes from config file override" {

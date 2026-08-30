@@ -1,5 +1,7 @@
 package net.ghue.ktp.config
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 
 private val envVarNames = listOf("KTP_ENV", "ENV", "KUBERNETES_NAMESPACE")
@@ -35,18 +37,33 @@ fun findEnvironment(): Env {
         .flatMap { listOf(System.getenv(it), System.getProperty(it)) }
         .firstOrNull { !it.isNullOrBlank() }
         ?.let {
-            return Env(it)
+            // Runs before config is built, so TrimConfigStrings can't cover these values.
+            return Env(it.trim())
+        }
+    // Read 0.conf directly; KtpConfig can't load until the env that selects its files is known.
+    val configFileName = "${KtpConfig.CONFIG_FILE_DIR}/0.${KtpConfig.CONFIG_FILE_EXT}"
+    return localDevEnvOrNull(ConfigFactory.parseResources(configFileName), configFileName)
+        ?: Env(LOCAL_DEV_ENV_NAME)
+}
+
+/**
+ * Returns the [Env] named by [LOCAL_DEV_PATH] in [config], or `null` when the key (or the whole
+ * file) is absent so the caller falls back to the default. A key that is present but holds an
+ * invalid env name fails fast instead of being silently ignored.
+ */
+internal fun localDevEnvOrNull(config: Config, source: String): Env? {
+    val localDevEnv =
+        try {
+            config.getString(LOCAL_DEV_PATH)
+        } catch (_: ConfigException.Missing) {
+            return null
         }
     try {
-        // Read 0.conf directly; KtpConfig can't load until the env that selects its files is known.
-        val configFileName = "${KtpConfig.CONFIG_FILE_DIR}/0.${KtpConfig.CONFIG_FILE_EXT}"
-        val localConfigFile = ConfigFactory.parseResources(configFileName)
-        val localDevEnv = localConfigFile.getString(LOCAL_DEV_PATH)
-        if (!localDevEnv.isNullOrBlank()) {
-            return Env(localDevEnv)
-        }
-    } catch (_: Exception) {
-        // No config file, or no localDevEnv key in it; fall through to the default.
+        return Env(localDevEnv.trim())
+    } catch (ex: IllegalArgumentException) {
+        throw IllegalArgumentException(
+            "Invalid $LOCAL_DEV_PATH value '$localDevEnv' in $source: ${ex.message}",
+            ex,
+        )
     }
-    return Env(LOCAL_DEV_ENV_NAME)
 }

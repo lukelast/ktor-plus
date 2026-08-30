@@ -10,7 +10,12 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 
-class KtpConfig(val config: Config, val env: Env) {
+/**
+ * [rawConfig] must be fully resolved (no `${}` substitutions), or construction throws
+ * [com.typesafe.config.ConfigException.NotResolved]. String values are trimmed on construction, so
+ * [config] holds a trimmed copy rather than the instance passed in.
+ */
+class KtpConfig(rawConfig: Config, val env: Env) {
     companion object {
         const val CONFIG_FILE_EXT = "conf"
         const val CONFIG_FILE_DIR = "ktp"
@@ -28,6 +33,9 @@ class KtpConfig(val config: Config, val env: Env) {
             return builder.build()
         }
     }
+
+    /** The fully resolved config with string values trimmed. */
+    val config: Config = rawConfig.withTrimmedStrings()
 
     val data: KtpConfigData = config.extract()
 

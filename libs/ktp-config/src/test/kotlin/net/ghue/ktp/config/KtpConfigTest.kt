@@ -76,13 +76,20 @@ class KtpConfigTest :
             val config = KtpConfig.create { setUnitTestEnv() }
             config.env shouldBe Env.TEST_UNIT
         }
+
+        "constructor trims string config values" {
+            val config = newKtpConfig(appName = "  test app\r\n")
+
+            config.data.app.name shouldBe "test app"
+            config.config.getString("app.name") shouldBe "test app"
+        }
     })
 
-private fun newKtpConfig(): KtpConfig =
+private fun newKtpConfig(appName: String = ""): KtpConfig =
     KtpConfig(
         ConfigFactory.parseMap(
             mapOf(
-                "app.name" to "",
+                "app.name" to appName,
                 "app.nameShort" to "",
                 "app.secret" to "",
                 "app.version" to "",
