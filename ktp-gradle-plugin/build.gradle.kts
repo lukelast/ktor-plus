@@ -90,6 +90,34 @@ val versionGenTask =
 
         doLast {
             outputFile.get().asFile.parentFile.mkdirs()
+            val libAccessors =
+                libraryNames.joinToString("\n\n") { name ->
+                    val alias =
+                        name.removePrefix("ktp-")
+                            .split('-')
+                            .mapIndexed { i, part ->
+                                if (i == 0) part else part.replaceFirstChar { it.uppercaseChar() }
+                            }
+                            .joinToString("")
+                    "    /** `$projectGroup:$name` */\n" +
+                        "    const val $alias = \"$projectGroup:$name:$projectVersion\""
+                }
+            val ktpLibsObject =
+                buildString {
+                    appendLine()
+                    appendLine("/**")
+                    appendLine(" * Dependency coordinates for every KTP library, pinned to this")
+                    appendLine(" * plugin's own release so they can never drift from it.")
+                    appendLine(" * Usable from any build script of a build that applies a KTP plugin:")
+                    appendLine(" * `implementation(KtpLibs.stripe)`.")
+                    appendLine(" */")
+                    appendLine("object KtpLibs {")
+                    appendLine("    /** koin BOM, same version the plugin injects into consumer builds. */")
+                    appendLine("    const val koinBom = \"io.insert-koin:koin-bom:$koinVersion\"")
+                    appendLine()
+                    appendLine(libAccessors)
+                    append("}")
+                }
             outputFile
                 .get()
                 .asFile
@@ -121,7 +149,7 @@ val versionGenTask =
                 val libs = listOf(${libraryNames.joinToString { "\"$it\"" }})
             }
         """
-                        .trimIndent()
+                        .trimIndent() + "\n" + ktpLibsObject
                 )
         }
     }
