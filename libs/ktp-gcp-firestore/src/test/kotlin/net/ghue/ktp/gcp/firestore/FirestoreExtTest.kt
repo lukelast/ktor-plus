@@ -7,12 +7,14 @@ import com.google.cloud.firestore.DocumentReference
 import com.google.cloud.firestore.DocumentSnapshot
 import com.google.cloud.firestore.FieldPath
 import com.google.cloud.firestore.Firestore
+import com.google.cloud.firestore.FirestoreException
 import com.google.cloud.firestore.Query
 import com.google.cloud.firestore.QueryDocumentSnapshot
 import com.google.cloud.firestore.QuerySnapshot
 import com.google.cloud.firestore.SetOptions
 import com.google.cloud.firestore.WriteBatch
 import com.google.cloud.firestore.WriteResult
+import io.grpc.Status
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -269,6 +271,100 @@ class FirestoreExtTest :
             verify(exactly = 1) { batch.commit() }
             verify(exactly = 2) { collection.whereEqualTo("age", 42) }
         }
+
+        "deleteByField serializes value class operands" {
+            val firestore = mockk<Firestore>()
+            val collection = mockk<CollectionReference>()
+            val query = mockk<Query>()
+            val emptySnapshot = mockk<QuerySnapshot>()
+
+            every { collection.whereEqualTo("id", "value-1") } returns query
+            every { query.limit(FIRESTORE_BATCH_SIZE) } returns query
+            every { query.select(any<FieldPath>()) } returns query
+            every { query.get() } returns completedFuture(emptySnapshot)
+            every { emptySnapshot.documents } returns mutableListOf()
+
+            firestore.deleteByField(collection, ValueUser::id, UserId("value-1"))
+
+            verify(exactly = 1) { collection.whereEqualTo("id", "value-1") }
+        }
+
+        "createOrNull stores serialized data without id and returns the document" {
+            data class User(val id: String, val name: String)
+
+            val collection = mockk<CollectionReference>()
+            val docRef = mockk<DocumentReference>()
+
+            every { collection.document("user-1") } returns docRef
+            every { docRef.create(any<Map<String, Any>>()) } returns
+                completedFuture(mockk<WriteResult>())
+
+            val user = User(id = "user-1", name = "Ada")
+            collection.createOrNull(user) shouldBe user
+
+            verify(exactly = 1) { docRef.create(mapOf("name" to "Ada")) }
+        }
+
+        "createOrNull returns null when the document already exists" {
+            data class User(val id: String, val name: String)
+
+            val collection = mockk<CollectionReference>()
+            val docRef = mockk<DocumentReference>()
+
+            every { collection.document("user-1") } returns docRef
+            every { docRef.create(any<Map<String, Any>>()) } returns
+                failedFuture(FirestoreException.forServerRejection(Status.ALREADY_EXISTS, "exists"))
+
+            collection.createOrNull(User(id = "user-1", name = "Ada")) shouldBe null
+        }
+
+        "createOrNull rethrows other Firestore errors" {
+            data class User(val id: String, val name: String)
+
+            val collection = mockk<CollectionReference>()
+            val docRef = mockk<DocumentReference>()
+
+            every { collection.document("user-1") } returns docRef
+            every { docRef.create(any<Map<String, Any>>()) } returns
+                failedFuture(FirestoreException.forServerRejection(Status.PERMISSION_DENIED, "no"))
+
+            shouldThrow<FirestoreException> {
+                collection.createOrNull(User(id = "user-1", name = "Ada"))
+            }
+        }
+
+        "newId mints an id without writing" {
+            val collection = mockk<CollectionReference>()
+
+            every { collection.document() } returns mockk { every { id } returns "new-id" }
+
+            collection.newId() shouldBe "new-id"
+        }
+
+        "listIds returns the ids of all documents" {
+            val collection = mockk<CollectionReference>()
+            val ref1 = mockk<DocumentReference> { every { id } returns "a" }
+            val ref2 = mockk<DocumentReference> { every { id } returns "b" }
+
+            every { collection.listDocuments() } returns listOf(ref1, ref2)
+
+            collection.listIds() shouldContainExactly listOf("a", "b")
+        }
+
+        "deleteById and delete remove the document by id" {
+            data class User(val id: String, val name: String)
+
+            val collection = mockk<CollectionReference>()
+            val docRef = mockk<DocumentReference>()
+
+            every { collection.document("user-1") } returns docRef
+            every { docRef.delete() } returns completedFuture(mockk<WriteResult>())
+
+            collection.deleteById("user-1")
+            collection.delete(User(id = "user-1", name = "Ada"))
+
+            verify(exactly = 2) { docRef.delete() }
+        }
     })
 
 @JvmInline value class UserId(val value: String)
@@ -281,3 +377,6 @@ data class NullableValueUser(val id: NullableUserId, val name: String)
 
 private fun <T> completedFuture(value: T): ApiFuture<T> =
     SettableApiFuture.create<T>().apply { set(value) }
+
+private fun <T> failedFuture(error: Throwable): ApiFuture<T> =
+    SettableApiFuture.create<T>().apply { setException(error) }

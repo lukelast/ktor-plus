@@ -6,8 +6,10 @@ import com.google.cloud.firestore.CollectionReference
 import com.google.cloud.firestore.DocumentReference
 import com.google.cloud.firestore.FieldPath
 import com.google.cloud.firestore.Firestore
+import com.google.cloud.firestore.FirestoreException
 import com.google.cloud.firestore.Query
 import com.google.cloud.firestore.SetOptions
+import io.grpc.Status
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import net.ghue.ktp.gcp.join
@@ -33,6 +35,19 @@ inline fun <reified T : Any> CollectionReference.replace(document: T) {
 }
 
 /**
+ * Create-only write using the document's 'id' property as the document ID. Returns [document] on
+ * success, or null when a document with that ID already exists — e.g. losing a concurrent
+ * first-write race. Any other failure propagates.
+ */
+fun <T : Any> CollectionReference.createOrNull(document: T): T? =
+    try {
+        document(idFieldValue(document)).create(document.serialize()).join()
+        document
+    } catch (e: FirestoreException) {
+        if (e.status?.code == Status.Code.ALREADY_EXISTS) null else throw e
+    }
+
+/**
  * Partial merge write of raw field values, bypassing the reflection serializer. Use for Firestore
  * server-side sentinels like [com.google.cloud.firestore.FieldValue.increment], which [upsert]
  * would mangle. Creates the document when missing.
@@ -48,6 +63,9 @@ fun <T : Any> CollectionReference.newDoc(documentBuilder: (String) -> T): T {
     newDocRef.set(doc.serialize()).join()
     return doc
 }
+
+/** Mints a new random document ID without writing anything. */
+fun CollectionReference.newId(): String = document().id
 
 /** Executes the query and returns all matching documents as a list. */
 inline fun <reified T : Any> Query.getList(): List<T> =
@@ -78,6 +96,22 @@ inline fun <reified T : Any> DocumentReference.getOrThrow(): T {
 inline fun <reified T : Any> DocumentReference.getOrNull(): T? {
     val doc = get().join()
     return doc.deserialize<T>()
+}
+
+/**
+ * IDs of all documents in the collection, including "virtual" parent documents that exist only as
+ * subcollection path segments.
+ */
+fun CollectionReference.listIds(): List<String> = listDocuments().map { it.id }
+
+/** Deletes the document with the given ID. Deleting a missing document is a no-op. */
+fun CollectionReference.deleteById(documentId: String) {
+    document(documentId).delete().join()
+}
+
+/** Deletes the document whose ID comes from [document]'s 'id' property. */
+fun CollectionReference.delete(document: Any) {
+    deleteById(idFieldValue(document))
 }
 
 /** Extracts the value of the 'id' property from the given data object. */
@@ -151,17 +185,17 @@ fun Firestore.deleteCollection(collection: CollectionReference) {
 
 /**
  * Deletes documents from the specified collection where the given property matches the provided
- * value.
+ * value. The value is serialized as in [whereEq].
  */
-fun <T> Firestore.deleteByField(
+fun <T, V> Firestore.deleteByField(
     collection: CollectionReference,
-    property: KProperty1<*, T>,
-    value: T,
+    property: KProperty1<T, V>,
+    value: V,
 ) {
     while (true) {
         val snapshot =
             collection
-                .whereEqualTo(property.name, value)
+                .whereEq(property, value)
                 .limit(FIRESTORE_BATCH_SIZE)
                 .select(FieldPath.documentId())
                 .get()
