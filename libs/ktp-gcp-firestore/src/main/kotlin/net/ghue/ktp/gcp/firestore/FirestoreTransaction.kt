@@ -9,9 +9,9 @@ import net.ghue.ktp.gcp.join
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 /**
- * Runs [block] in a Firestore transaction on an SDK executor thread. Read and write only via the
- * [Transaction] receiver (plain collection extensions run outside it), read before any write, and
- * keep [block] side-effect free: it may rerun on contention. Its exception is rethrown unwrapped.
+ * Runs [block] on an SDK thread, rethrowing its exception unwrapped. It may rerun on contention, so
+ * keep it side-effect free, read before writing, and use only the [Transaction] receiver; plain
+ * collection extensions bypass the transaction.
  */
 fun <T> Firestore.transaction(block: Transaction.() -> T): T = runTransaction { it.block() }.join()
 

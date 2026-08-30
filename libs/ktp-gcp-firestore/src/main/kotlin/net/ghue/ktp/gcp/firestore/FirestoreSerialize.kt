@@ -11,6 +11,7 @@ import net.ghue.ktp.ktor.error.ktpRspError
 object FirestoreSerializer {
     private val customSerializers = mutableMapOf<Class<*>, (Any) -> Any?>()
 
+    // Also run by FirestoreDeserializer so either may init first; re-registration is idempotent.
     init {
         FirestoreTypes.registerDefaults()
     }

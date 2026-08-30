@@ -3,15 +3,14 @@ package net.ghue.ktp.gcp.firestore
 import java.time.Instant
 
 /**
- * Opt-in mirror of Firestore's document metadata times: filled from the snapshot on reads, stripped
- * on writes. Declare both as nullable constructor params defaulting to null. Not queryable, and
- * [updateTime] advances on every write, including no-op merges and writes from other tools.
+ * Firestore's document metadata times, filled on read, stripped on write, and never queryable;
+ * declare both as nullable constructor params defaulting to null.
  */
 interface DocTimes {
     /** Creation time from the document metadata. */
     val createTime: Instant?
 
-    /** Last write time from the document metadata. */
+    /** Last write time; advances on every write, even no-op merges and writes from other tools. */
     val updateTime: Instant?
 
     companion object {

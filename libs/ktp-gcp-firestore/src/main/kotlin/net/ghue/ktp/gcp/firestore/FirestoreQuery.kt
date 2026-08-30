@@ -29,10 +29,7 @@ fun <T, V> Query.whereLt(property: KProperty1<T, V>, value: V & Any): Query =
 fun <T, V> Query.whereLte(property: KProperty1<T, V>, value: V & Any): Query =
     whereLessThanOrEqualTo(fieldName(property), serializeOperand(property, value))
 
-/**
- * Filters where [property] is an explicit null; a missing field matches neither this nor
- * [whereNotNull]. Library writes always store nulls, so only legacy or external docs differ.
- */
+/** Matches explicit nulls only, not missing fields; library writes always store nulls. */
 fun <T> Query.whereNull(property: KProperty1<T, *>): Query = whereEqualTo(fieldName(property), null)
 
 /** Filters where [property] is non-null. Skips documents missing the field, as in [whereNull]. */

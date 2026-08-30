@@ -9,11 +9,9 @@ import net.ghue.ktp.gcp.join
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 /**
- * Collection handle bound to its document type, so reads need no type witnesses and cannot use the
- * wrong type; [ref] is the escape hatch for transactions, batches, and raw queries. Create via
- * [typedCollection].
+ * Collection handle bound to its document type so reads cannot use the wrong one; [ref] is the
+ * escape hatch for transactions, batches, and raw queries. Create via [typedCollection].
  */
-// Small delegating CRUD functions are this handle's natural shape.
 @Suppress("TooManyFunctions")
 class KtpCollection<T : Any>(val ref: CollectionReference, private val kClass: KClass<T>) {
 

@@ -169,9 +169,8 @@ object FirestoreDeserializer {
 }
 
 /**
- * Deserializes into a [kClass] instance, or null when the document does not exist; an existing
- * document that cannot deserialize is an error. Sets an `id` property from the document id, and for
- * [DocTimes] types fills `createTime`/`updateTime` from snapshot metadata over any stored fields.
+ * Null only when the document does not exist; otherwise a [kClass] built with `id` from the document
+ * id and, for [DocTimes] types, `createTime`/`updateTime` from snapshot metadata over stored fields.
  */
 fun <T : Any> DocumentSnapshot.deserialize(kClass: KClass<T>): T? {
     val rawData = data ?: return null

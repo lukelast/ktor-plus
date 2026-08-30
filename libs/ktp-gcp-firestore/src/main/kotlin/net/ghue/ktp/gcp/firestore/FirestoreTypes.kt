@@ -6,9 +6,9 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 /**
- * Firestore [Timestamp] truncated to microseconds (Firestore's precision) so in-memory round-trips
- * match real ones; also for raw writes like [setMerge] that bypass the serializer, e.g. TTL fields,
- * which Firestore only honors as native timestamps.
+ * [Timestamp] truncated to Firestore's microsecond precision so in-memory round-trips match real
+ * ones; use for serializer-bypassing raw writes like [setMerge], e.g. TTL fields, which Firestore
+ * only honors as native timestamps.
  */
 fun Instant.toTimestamp(): Timestamp {
     val truncated = truncatedTo(ChronoUnit.MICROS)

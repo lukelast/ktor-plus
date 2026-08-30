@@ -142,7 +142,7 @@ fun idFieldValue(item: Any): String {
     return stringValue
 }
 
-/** Writes multiple documents in batches, respecting Firestore's 500 document limit per batch. */
+/** Upserts [items] with [upsert]'s merge semantics, in batches of Firestore's 500-write limit. */
 fun Firestore.batchWrite(collection: CollectionReference, items: List<Any>) {
     items.chunked(FIRESTORE_BATCH_SIZE).forEach { chunk ->
         val batch = batch()
