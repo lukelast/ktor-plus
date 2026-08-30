@@ -40,7 +40,7 @@ class KtpRspExBuilder {
     /** Occurrence-specific explanation; omitted from the response when blank. */
     var detail: String = ""
 
-    /** Logged server-side but never sent to the client; becomes [RuntimeException.message]. */
+    /** Logged server-side but never sent to the client. */
     var internalMessage: String = ""
 
     /** Never sent to the client; its stack trace is logged only for 5xx (4xx are client faults). */

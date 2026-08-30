@@ -35,7 +35,7 @@ private val GcpCronPlugin =
                     .build()
             try {
                 val jws = verifier.verify(token)
-                val email = jws.payload.get("email") as String
+                val email = jws.payload["email"] as String
                 val gcpProjectId = ServiceOptions.getDefaultProjectId()
                 val expectedEmail = "scheduler@$gcpProjectId.iam.gserviceaccount.com"
                 if (email != expectedEmail) {

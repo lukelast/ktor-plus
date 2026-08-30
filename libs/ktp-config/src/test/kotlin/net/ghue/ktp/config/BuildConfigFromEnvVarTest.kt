@@ -48,9 +48,9 @@ class BuildConfigFromEnvVarTest :
 
         "buildConfigFromEnvVar parses HOCON with substitution when resolved" {
             val configText =
-                """
+                $$"""
                 baseUrl = "https://example.com"
-                apiUrl = ${'$'}{baseUrl}"/api"
+                apiUrl = ${baseUrl}"/api"
                 """
                     .trimIndent()
 

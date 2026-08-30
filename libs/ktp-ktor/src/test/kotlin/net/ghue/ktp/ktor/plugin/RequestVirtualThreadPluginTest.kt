@@ -9,6 +9,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -26,7 +27,7 @@ class RequestVirtualThreadPluginTest :
                     routing {
                         get("/thread") {
                             val before = Thread.currentThread()
-                            delay(10)
+                            delay(10.milliseconds)
                             val after = Thread.currentThread()
                             call.respondText(
                                 listOf(
@@ -50,7 +51,7 @@ class RequestVirtualThreadPluginTest :
                     routing {
                         get("/mdc") {
                             MDC.put("key", "value")
-                            delay(10)
+                            delay(10.milliseconds)
                             call.respondText(MDC.get("key") ?: "missing")
                         }
                     }

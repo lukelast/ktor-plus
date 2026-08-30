@@ -4,7 +4,6 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.post
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.*
@@ -74,8 +73,6 @@ class ApiCronTest :
                 val client = createClient { install(io.ktor.client.plugins.resources.Resources) }
 
                 client.post(Api.Cron.Hourly()).apply {
-                    println("Status: $status")
-                    println("Body: ${bodyAsText()}")
                     status shouldBe HttpStatusCode.TooManyRequests
                 }
                 coVerify(exactly = 1) { cronHandler.hourly(any()) }

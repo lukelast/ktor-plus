@@ -1,11 +1,20 @@
 package net.ghue.ktp.gcp.auth
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
+import io.ktor.server.application.pluginOrNull
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.session
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.clear
+import io.ktor.server.sessions.cookie
+import io.ktor.server.sessions.maxAge
+import io.ktor.server.sessions.sameSite
+import io.ktor.server.sessions.sessions
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import org.koin.ktor.ext.inject
@@ -17,11 +26,7 @@ object AuthProviderName {
 
 class FirebaseAuthPluginConfig {
     var secureCookies: (ktpConfig: KtpConfig, env: Env) -> Boolean = { ktpConfig, env ->
-        if (env.isLocalDev) {
-            false
-        } else {
-            ktpConfig.auth.secureCookies
-        }
+        !env.isLocalDev && ktpConfig.auth.secureCookies
     }
 }
 

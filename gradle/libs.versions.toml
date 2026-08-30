@@ -35,7 +35,6 @@ gradleFoojay = { module = "org.gradle.toolchains:foojay-resolver", version = "1.
 
 # Testing
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-byteBuddyAgent = { module = "net.bytebuddy:byte-buddy-agent", version.ref = "byteBuddy" }
 kotest-bom = { module = "io.kotest:kotest-bom", version.ref = "kotest" }
 kotest-engine = { module = "io.kotest:kotest-framework-engine"}
 kotest-koin = { module = "io.kotest:kotest-extensions-koin" }

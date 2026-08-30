@@ -1,20 +1,24 @@
 package net.ghue.ktp.test
 
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.core.start
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.server.application.Application
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.start.ktpAppCreate
-import org.koin.core.component.inject
 import org.koin.ktor.ext.inject
 
 class KtpTestStartTest :
