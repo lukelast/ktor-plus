@@ -1,8 +1,10 @@
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.firestore.Query
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
@@ -76,6 +78,34 @@ class FirestoreQueryTest :
 
             query.whereNull(Entry::settledAt) shouldBe isNull
             query.whereNotNull(Entry::settledAt) shouldBe notNull
+        }
+
+        "DocTimes metadata properties are rejected in filters and ordering" {
+            data class Timed(
+                val id: String,
+                override val createTime: Instant? = null,
+                override val updateTime: Instant? = null,
+            ) : DocTimes
+
+            val query = mockk<Query>()
+            val at = Instant.parse("2024-01-01T00:00:00Z")
+
+            val error =
+                shouldThrow<IllegalArgumentException> { query.whereEq(Timed::updateTime, at) }
+            error.message shouldContain "server metadata"
+            shouldThrow<IllegalArgumentException> { query.whereGt(Timed::updateTime, at) }
+            shouldThrow<IllegalArgumentException> { query.whereNull(Timed::createTime) }
+            shouldThrow<IllegalArgumentException> { query.orderByDesc(Timed::createTime) }
+        }
+
+        "createTime on a non-DocTimes class queries the stored field" {
+            data class Legacy(val id: String, val createTime: Instant)
+
+            val query = mockk<Query>()
+            val next = mockk<Query>()
+            every { query.orderBy("createTime") } returns next
+
+            query.orderByAsc(Legacy::createTime) shouldBe next
         }
 
         "orderByAsc and orderByDesc order by the property" {

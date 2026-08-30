@@ -80,6 +80,26 @@ class FirestoreSerializeTest :
 
             result shouldBe mapOf("child" to mapOf("id" to "inner-id", "value" to "inner-val"))
         }
+        "DocTimes createTime and updateTime are excluded from writes" {
+            val doc =
+                TimedData(
+                    id = "doc-1",
+                    value = "v",
+                    createTime = Instant.parse("2024-01-01T00:00:00Z"),
+                    updateTime = Instant.parse("2024-01-02T00:00:00Z"),
+                )
+
+            doc.serialize() shouldBe mapOf("value" to "v")
+        }
+
+        "createTime and updateTime on a non-DocTimes class are stored" {
+            val at = Instant.parse("2024-01-01T00:00:00Z")
+            val doc = PlainTimedData(id = "doc-1", createTime = at, updateTime = at)
+
+            doc.serialize() shouldBe
+                mapOf("createTime" to at.toTimestamp(), "updateTime" to at.toTimestamp())
+        }
+
         "value class serialization" {
             val email = Email("test@example.com")
             val count = Count(42)
@@ -108,3 +128,12 @@ data class NestedData(val data: TestData)
 data class DataWithId(val id: String, val value: String)
 
 data class NestedWithId(val child: DataWithId)
+
+data class TimedData(
+    val id: String,
+    val value: String,
+    override val createTime: Instant? = null,
+    override val updateTime: Instant? = null,
+) : DocTimes
+
+data class PlainTimedData(val id: String, val createTime: Instant, val updateTime: Instant)

@@ -82,6 +82,7 @@ fun <T> T.serialize(): Map<String, Any> {
                 title = "Serialization Error"
                 detail = "Serialized result is not a Map. It was: ${result?.javaClass?.simpleName}"
             }
-    // `id` field is a special copy of the document ID so we don't want to store it.
-    return map - "id"
+    // `id` field is a special copy of the document ID so we don't want to store it. DocTimes
+    // properties mirror server-maintained metadata, so they are never stored either.
+    return if (this is DocTimes) map - "id" - DocTimes.FIELDS else map - "id"
 }

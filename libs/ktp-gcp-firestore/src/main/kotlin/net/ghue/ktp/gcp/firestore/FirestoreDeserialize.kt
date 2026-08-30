@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure
 import net.ghue.ktp.ktor.error.ktpRspError
@@ -173,13 +174,26 @@ object FirestoreDeserializer {
 
 /**
  * Deserializes the snapshot into a [kClass] instance, or null when the document does not exist. If
- * the type has an `id` property, then its value will be set with the document id. A document that
- * exists but cannot deserialize into the type is an error, never null.
+ * the type has an `id` property, then its value will be set with the document id. A [DocTimes] type
+ * additionally gets `createTime` and `updateTime` from the snapshot's metadata, overriding any
+ * stored fields with those names. A document that exists but cannot deserialize into the type is an
+ * error, never null.
  */
 fun <T : Any> DocumentSnapshot.deserialize(kClass: KClass<T>): T? {
     val rawData = data ?: return null
-    // We inject the ID into the map so the deserializer picks it up.
-    val dataWithId = rawData + mapOf("id" to id)
+    // We inject the ID (and for DocTimes types the metadata timestamps) into the map so the
+    // deserializer picks them up.
+    val dataWithId =
+        if (kClass.isSubclassOf(DocTimes::class)) {
+            rawData +
+                mapOf(
+                    "id" to id,
+                    DocTimes.CREATE_TIME to createTime,
+                    DocTimes.UPDATE_TIME to updateTime,
+                )
+        } else {
+            rawData + mapOf("id" to id)
+        }
     val result = FirestoreDeserializer.deserialize(dataWithId, kClass.createType())
     if (!kClass.isInstance(result)) {
         ktpRspError {

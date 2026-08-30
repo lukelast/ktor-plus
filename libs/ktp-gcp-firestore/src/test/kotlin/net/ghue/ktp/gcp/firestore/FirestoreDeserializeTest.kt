@@ -1,10 +1,13 @@
 package net.ghue.ktp.gcp.firestore
 
 import com.google.cloud.Timestamp
+import com.google.cloud.firestore.DocumentSnapshot
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
@@ -71,6 +74,32 @@ class FirestoreDeserializeTest :
             val data = mapOf("id" to "doc-123", "value" to "content")
             val result = FirestoreDeserializer.deserialize(data, DWithId::class.createType())
             result shouldBe DWithId("doc-123", "content")
+        }
+
+        "DocTimes types get createTime and updateTime from snapshot metadata" {
+            val created = Instant.parse("2024-01-01T00:00:00Z")
+            val updated = Instant.parse("2024-01-02T00:00:00Z")
+            val stale = Instant.parse("2020-01-01T00:00:00Z")
+            val doc = mockk<DocumentSnapshot>()
+            every { doc.data } returns
+                // A stored "updateTime" field must lose to the snapshot metadata.
+                mapOf("value" to "content", "updateTime" to stale.toTimestamp())
+            every { doc.id } returns "doc-1"
+            every { doc.createTime } returns created.toTimestamp()
+            every { doc.updateTime } returns updated.toTimestamp()
+
+            doc.deserialize<DTimed>() shouldBe
+                DTimed(id = "doc-1", value = "content", createTime = created, updateTime = updated)
+        }
+
+        "non-DocTimes types read stored createTime as a normal field" {
+            val at = Instant.parse("2024-01-01T00:00:00Z")
+            val doc = mockk<DocumentSnapshot>()
+            every { doc.data } returns mapOf("createTime" to at.toTimestamp())
+            every { doc.id } returns "doc-1"
+            // No metadata stubs: a non-DocTimes type must not touch the snapshot's times.
+
+            doc.deserialize<DStoredTime>() shouldBe DStoredTime(id = "doc-1", createTime = at)
         }
 
         "missing optional parameter uses default" {
@@ -162,6 +191,15 @@ data class DData(val name: String, val count: Int, val type: DEnum)
 data class DNested(val data: DData)
 
 data class DWithId(val id: String, val value: String)
+
+data class DTimed(
+    val id: String,
+    val value: String,
+    override val createTime: Instant? = null,
+    override val updateTime: Instant? = null,
+) : DocTimes
+
+data class DStoredTime(val id: String, val createTime: Instant)
 
 @JvmInline
 value class DPositive(val value: Int) {
