@@ -9,12 +9,9 @@ import net.ghue.ktp.gcp.join
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 /**
- * Runs [block] in a Firestore transaction and returns its result. Reads and writes must go through
- * the [Transaction] receiver ([getOrNull], [getList], [upsert], ...); the plain collection
- * extensions would execute outside the transaction. Firestore requires all reads before the first
- * write, and may run [block] more than once on contention, so keep side effects out of it. The
- * block runs on an SDK executor thread, not the calling thread. An exception thrown by the block
- * aborts the transaction and is rethrown unwrapped.
+ * Runs [block] in a Firestore transaction on an SDK executor thread. Read and write only via the
+ * [Transaction] receiver (plain collection extensions run outside it), read before any write, and
+ * keep [block] side-effect free: it may rerun on contention. Its exception is rethrown unwrapped.
  */
 fun <T> Firestore.transaction(block: Transaction.() -> T): T = runTransaction { it.block() }.join()
 
@@ -32,22 +29,16 @@ inline fun <reified T : Any> Transaction.getOrThrow(
     getOrNull<T>(collection, documentId)
         ?: throw KtpRspExNotFound(T::class.simpleName ?: "Document", documentId)
 
-/** Executes the query within the transaction and returns all matching documents as a list. */
+/** Runs [query] within the transaction and returns all matching documents. */
 inline fun <reified T : Any> Transaction.getList(query: Query): List<T> =
     get(query).join().documents.mapNotNull { it.deserialize<T>() }
 
-/**
- * Transactional [CollectionReference.upsert]: merge-writes [document] using its 'id' property as
- * the document ID.
- */
+/** Transactional [CollectionReference.upsert]: merge-writes [document] keyed by its `id`. */
 fun Transaction.upsert(collection: CollectionReference, document: Any) {
     set(collection.document(idFieldValue(document)), document.serialize(), SetOptions.merge())
 }
 
-/**
- * Transactional [CollectionReference.replace]: sets the document to exactly [document], deleting
- * fields not present in it.
- */
+/** Transactional [CollectionReference.replace]: overwrites the document, dropping absent fields. */
 fun Transaction.replace(collection: CollectionReference, document: Any) {
     set(collection.document(idFieldValue(document)), document.serialize())
 }

@@ -9,13 +9,11 @@ import net.ghue.ktp.gcp.join
 import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 /**
- * A collection handle bound to its document type. Declares the name-to-type binding once, so reads
- * need no reified type witnesses and a collection cannot be read as the wrong type. [ref] is the
- * escape hatch for anything the handle does not cover (transactions, batch helpers, raw queries).
- *
- * Create via [typedCollection]: `val users = db.typedCollection<DbUser>("user")`
+ * Collection handle bound to its document type, so reads need no type witnesses and cannot use the
+ * wrong type; [ref] is the escape hatch for transactions, batches, and raw queries. Create via
+ * [typedCollection].
  */
-// A cohesive typed CRUD surface; many small delegating functions is its natural shape.
+// Small delegating CRUD functions are this handle's natural shape.
 @Suppress("TooManyFunctions")
 class KtpCollection<T : Any>(val ref: CollectionReference, private val kClass: KClass<T>) {
 
@@ -30,7 +28,7 @@ class KtpCollection<T : Any>(val ref: CollectionReference, private val kClass: K
     /** All documents in the collection. */
     fun getList(): List<T> = query { this }
 
-    /** Executes the query built against this collection and returns all matching documents. */
+    /** Runs the query built on this collection and returns all matching documents. */
     fun query(build: Query.() -> Query): List<T> =
         ref.build().get().join().documents.mapNotNull { it.deserialize(kClass) }
 

@@ -9,12 +9,7 @@ import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
-/**
- * Filters where [property] equals [value]. The field name comes from the property and the operand
- * runs through [FirestoreSerializer] — the same conversion writes use — so value classes, enums,
- * and types with custom serializers (e.g. `Instant`) match their stored representation instead of
- * silently matching nothing. A null [value] is Firestore's is-null filter.
- */
+/** Filters where [property] equals [value], serialized as on write; null acts as [whereNull]. */
 fun <T, V> Query.whereEq(property: KProperty1<T, V>, value: V): Query =
     whereEqualTo(fieldName(property), FirestoreSerializer.serialize(value))
 
@@ -34,10 +29,13 @@ fun <T, V> Query.whereLt(property: KProperty1<T, V>, value: V & Any): Query =
 fun <T, V> Query.whereLte(property: KProperty1<T, V>, value: V & Any): Query =
     whereLessThanOrEqualTo(fieldName(property), serializeOperand(property, value))
 
-/** Filters where [property] is null. */
+/**
+ * Filters where [property] is an explicit null; a missing field matches neither this nor
+ * [whereNotNull]. Library writes always store nulls, so only legacy or external docs differ.
+ */
 fun <T> Query.whereNull(property: KProperty1<T, *>): Query = whereEqualTo(fieldName(property), null)
 
-/** Filters where [property] is not null. */
+/** Filters where [property] is non-null. Skips documents missing the field, as in [whereNull]. */
 fun <T> Query.whereNotNull(property: KProperty1<T, *>): Query =
     whereNotEqualTo(fieldName(property), null)
 
@@ -48,11 +46,7 @@ fun <T> Query.orderByAsc(property: KProperty1<T, *>): Query = orderBy(fieldName(
 fun <T> Query.orderByDesc(property: KProperty1<T, *>): Query =
     orderBy(fieldName(property), Query.Direction.DESCENDING)
 
-/**
- * Resolves the Firestore field name for [property], rejecting [DocTimes] metadata properties — they
- * mirror server metadata that is never stored in the document, so a filter or ordering on them
- * would silently match nothing.
- */
+/** Rejects [DocTimes] properties: unstored server metadata would silently match nothing. */
 private fun fieldName(property: KProperty1<*, *>): String {
     val name = property.name
     if (name in DocTimes.FIELDS) {

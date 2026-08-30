@@ -37,7 +37,6 @@ object FirestoreDeserializer {
 
         val kClass = targetType.jvmErasure
 
-        // Check custom deserializers
         customDeserializers[kClass.java]?.let {
             val converted = it(value)
             if (converted == null && !targetType.isMarkedNullable) {
@@ -51,7 +50,6 @@ object FirestoreDeserializer {
             return converted
         }
 
-        // Primitives
         if (kClass == String::class) return value.toString()
         if (value is Number) {
             when (kClass) {
@@ -66,7 +64,6 @@ object FirestoreDeserializer {
 
         if (kClass == Boolean::class) return value as Boolean
 
-        // Enums
         if (kClass.java.isEnum) {
             @Suppress("UNCHECKED_CAST") val constants = kClass.java.enumConstants as Array<Enum<*>>
             return constants.firstOrNull { it.name == value.toString() }
@@ -76,7 +73,7 @@ object FirestoreDeserializer {
                 }
         }
 
-        // Value Classes (Unwrap strategy: The constructor takes the single primitive/value)
+        // Value classes are stored unwrapped, so rebuild from the single constructor parameter.
         if (kClass.isValue) {
             val constructor = kClass.primaryConstructor!!
             val param = constructor.parameters.first()
@@ -84,7 +81,6 @@ object FirestoreDeserializer {
             return construct(kClass) { constructor.call(paramVal) }
         }
 
-        // Collections
         if (
             kClass == List::class ||
                 kClass == ArrayList::class ||
@@ -104,22 +100,21 @@ object FirestoreDeserializer {
         if (kClass == Map::class || kClass == HashMap::class) {
             val map = value as Map<*, *>
             val valueType = targetType.arguments[1].type ?: Any::class.createType()
-            // Assume string keys for Firestore
+            // Firestore map keys are always strings, so the declared key type is ignored.
             return map.entries.associate { (k, v) -> k.toString() to deserialize(v, valueType) }
         }
 
-        // Firestore Natives (if no custom deserializer caught them)
+        // Firestore native types (GeoPoint, DocumentReference, ...) are returned as-is.
         if (kClass.java.packageName.startsWith("com.google.cloud.firestore")) {
             return value
         }
 
-        // Data Classes / Objects
         if (value is Map<*, *>) {
             @Suppress("UNCHECKED_CAST")
             return deserializeObject(value as Map<String, Any?>, kClass)
         }
 
-        // Fallback or error
+        // Unknown type: pass the raw value through for the caller or constructor call to reject.
         return value
     }
 
@@ -139,7 +134,7 @@ object FirestoreDeserializer {
                         param to deserialize(map[paramName], param.type)
                     } else {
                         if (param.isOptional) {
-                            null // Skip this parameter, let default logic handle it
+                            null // Omitted from callBy so the declared default applies.
                         } else if (param.type.isMarkedNullable) {
                             param to null
                         } else {
@@ -162,6 +157,7 @@ object FirestoreDeserializer {
         } catch (e: InvocationTargetException) {
             constructionError(kClass, e.cause ?: e)
         } catch (e: IllegalArgumentException) {
+            // Reflection's own type-mismatch error, e.g. raw value from the unknown-type fallback.
             constructionError(kClass, e)
         }
 
@@ -173,16 +169,12 @@ object FirestoreDeserializer {
 }
 
 /**
- * Deserializes the snapshot into a [kClass] instance, or null when the document does not exist. If
- * the type has an `id` property, then its value will be set with the document id. A [DocTimes] type
- * additionally gets `createTime` and `updateTime` from the snapshot's metadata, overriding any
- * stored fields with those names. A document that exists but cannot deserialize into the type is an
- * error, never null.
+ * Deserializes into a [kClass] instance, or null when the document does not exist; an existing
+ * document that cannot deserialize is an error. Sets an `id` property from the document id, and for
+ * [DocTimes] types fills `createTime`/`updateTime` from snapshot metadata over any stored fields.
  */
 fun <T : Any> DocumentSnapshot.deserialize(kClass: KClass<T>): T? {
     val rawData = data ?: return null
-    // We inject the ID (and for DocTimes types the metadata timestamps) into the map so the
-    // deserializer picks them up.
     val dataWithId =
         if (kClass.isSubclassOf(DocTimes::class)) {
             rawData +

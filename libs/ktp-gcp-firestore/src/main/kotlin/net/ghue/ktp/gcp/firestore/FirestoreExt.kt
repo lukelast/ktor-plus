@@ -23,19 +23,12 @@ fun <T : Any> CollectionReference.upsert(document: T, setOptions: SetOptions = S
     document(idFieldValue(document)).set(document.serialize(), setOptions).join()
 }
 
-/**
- * Sets the document to exactly [document], deleting fields not present in it. Unlike [upsert],
- * whose merge write never removes existing fields or map keys.
- */
+/** Full overwrite: fields absent from [document] are deleted, unlike [upsert]'s merge. */
 fun <T : Any> CollectionReference.replace(document: T) {
     document(idFieldValue(document)).set(document.serialize()).join()
 }
 
-/**
- * Create-only write using the document's 'id' property as the document ID. Returns [document] on
- * success, or null when a document with that ID already exists — e.g. losing a concurrent
- * first-write race. Any other failure propagates.
- */
+/** Creates the document keyed by its 'id'; returns it, or null if that ID already exists. */
 fun <T : Any> CollectionReference.createOrNull(document: T): T? =
     try {
         document(idFieldValue(document)).create(document.serialize()).join()
@@ -44,11 +37,7 @@ fun <T : Any> CollectionReference.createOrNull(document: T): T? =
         if (e.status?.code == Status.Code.ALREADY_EXISTS) null else throw e
     }
 
-/**
- * Partial merge write of raw field values, bypassing the reflection serializer. Use for Firestore
- * server-side sentinels like [com.google.cloud.firestore.FieldValue.increment], which [upsert]
- * would mangle. Creates the document when missing.
- */
+/** Merges unserialized fields so `FieldValue` sentinels like increment work; creates if missing. */
 fun DocumentReference.setMerge(fields: Map<String, Any>) {
     set(fields, SetOptions.merge()).join()
 }
@@ -95,10 +84,7 @@ inline fun <reified T : Any> DocumentReference.getOrNull(): T? {
     return doc.deserialize<T>()
 }
 
-/**
- * IDs of all documents in the collection, including "virtual" parent documents that exist only as
- * subcollection path segments.
- */
+/** All document IDs, including "virtual" parents existing only as subcollection path segments. */
 fun CollectionReference.listIds(): List<String> = listDocuments().map { it.id }
 
 /** Deletes the document with the given ID. Deleting a missing document is a no-op. */
@@ -129,7 +115,7 @@ fun idFieldValue(item: Any): String {
 
     val stringValue =
         if (idValue::class.isValue) {
-            // Handle value class by getting the single property from the primary constructor
+            // Value class toString() is "UserId(value=...)"; use the backing property instead.
             val property =
                 idValue::class.memberProperties.firstOrNull()
                     ?: ktpRspError {
@@ -180,10 +166,7 @@ fun Firestore.deleteCollection(collection: CollectionReference) {
     }
 }
 
-/**
- * Deletes documents from the specified collection where the given property matches the provided
- * value. The value is serialized as in [whereEq].
- */
+/** Deletes all documents where [property] equals [value], serialized as in [whereEq]. */
 fun <T, V> Firestore.deleteByField(
     collection: CollectionReference,
     property: KProperty1<T, V>,

@@ -22,8 +22,7 @@ import net.ghue.ktp.ktor.error.KtpRspExNotFound
 
 class FirestoreTransactionTest :
     StringSpec({
-        // Runs the captured transaction callback immediately, completing the future with its
-        // result or its exception, matching how the SDK surfaces callback failures.
+        // Runs the callback inline and surfaces its exception via the future, as the SDK does.
         fun mockRunTransaction(firestore: Firestore, txn: Transaction) {
             every { firestore.runTransaction(any<Transaction.Function<Any?>>()) } answers
                 {

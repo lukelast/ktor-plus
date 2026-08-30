@@ -30,11 +30,9 @@ object FirestoreSerializer {
     fun serialize(value: Any?): Any? {
         if (value == null) return null
 
-        // Check custom serializers first
         customSerializers[value::class.java]?.let {
             return it(value)
         }
-        // Handle subclasses for custom serializers
         customSerializers.entries
             .find { it.key.isInstance(value) }
             ?.let {
@@ -82,7 +80,6 @@ fun <T> T.serialize(): Map<String, Any> {
                 title = "Serialization Error"
                 detail = "Serialized result is not a Map. It was: ${result?.javaClass?.simpleName}"
             }
-    // `id` field is a special copy of the document ID so we don't want to store it. DocTimes
-    // properties mirror server-maintained metadata, so they are never stored either.
+    // `id` and DocTimes fields mirror the document ID and server metadata, so neither is stored.
     return if (this is DocTimes) map - "id" - DocTimes.FIELDS else map - "id"
 }

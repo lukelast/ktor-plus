@@ -105,9 +105,7 @@ class FirestoreSerializeTest :
             val count = Count(42)
 
             FirestoreSerializer.serialize(email) shouldBe "test@example.com"
-            // interpreting "convert to string" as "unwrap", but user said "to string".
-            // If I unwrap Count(42), it is 42. If I "convert to string", it is "42".
-            // I will assume unwrapping is the goal.
+            // Value classes unwrap rather than stringify, so Count stays a number, not "42".
             FirestoreSerializer.serialize(count) shouldBe 42
         }
     })

@@ -4,3 +4,4 @@ build
 .claude
 .gradle-linux/
 .idea/
+.workflow/
