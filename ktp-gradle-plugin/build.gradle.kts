@@ -56,8 +56,6 @@ gradlePlugin {
     }
 }
 
-tasks.named<Copy>("processResources") { from("../gradle/libs.versions.toml") { into("") } }
-
 val sourceGenDir = "generated/version"
 val versionGenTask =
     tasks.register("generateVersionFile") {
