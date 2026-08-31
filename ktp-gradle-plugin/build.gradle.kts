@@ -109,14 +109,8 @@ val versionGenTask =
 
             /** Generated from `gradle/libs.versions.toml`; do not edit by hand. */
             object KtpVersion {
-                /** Maven group all ktor-plus artifacts are published under. */
-                const val GROUP = "$projectGroup"
-
                 /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
-
-                /** koin BOM version this plugin injects into consumer builds. */
-                const val KOIN = "$koinVersion"
 
                 /** kotest BOM version this plugin injects into consumer builds. */
                 const val KOTEST = "$kotestVersion"
@@ -126,9 +120,6 @@ val versionGenTask =
 
                 /** ktfmt engine version used by the formatting tasks. */
                 const val KTFMT = "$ktfmtVersion"
-
-                /** Names of the ktor-plus library modules this plugin publishes. */
-                val libs = listOf(${libraryNames.joinToString { "\"$it\"" }})
             }
 
             /**
