@@ -91,6 +91,9 @@ gcpCore = { module = "com.google.cloud:google-cloud-core" }
 gcpFirestore = { module = "com.google.cloud:google-cloud-firestore" }
 # Firebase Admin SDK - manages its own version but uses GCP BOM for transitive deps
 firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.10.0" }
+# Identity Platform Admin API. Stay on v2: Maven Central's <latest> is a 2018 legacy v3 artifact
+# that the versionCheck task's isNonStable filter does not reject - do not "upgrade" to it.
+identityToolkit = { module = "com.google.apis:google-api-services-identitytoolkit", version = "v2-rev20250130-2.0.0" }
 
 # Logging dependencies
 logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.1" }

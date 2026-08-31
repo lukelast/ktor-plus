@@ -8,8 +8,6 @@ val KtpConfig.auth: Auth
     get() = this.extractChild()
 
 data class Auth(
-    val loginUrl: String,
-    val logoutUrl: String,
     val sessionTimeout: String,
     val secureCookies: Boolean,
 ) {

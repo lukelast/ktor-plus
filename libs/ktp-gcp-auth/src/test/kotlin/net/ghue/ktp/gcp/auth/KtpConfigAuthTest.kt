@@ -28,17 +28,12 @@ class KtpConfigAuthTest :
             config.auth.sessionTimeoutDuration shouldBe 48.hours
         }
 
-        "auth config reads all URL values" {
+        "auth config reads secure cookies" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
-                overrideValue("auth.loginUrl", "/custom/login")
-                overrideValue("auth.logoutUrl", "/custom/logout")
-                overrideValue("auth.sessionTimeout", "14d")
+                overrideValue("auth.secureCookies", "false")
             }
 
-            config.auth.loginUrl shouldBe "/custom/login"
-            config.auth.logoutUrl shouldBe "/custom/logout"
-            config.auth.sessionTimeout shouldBe "14d"
-            config.auth.sessionTimeoutDuration shouldBe 14.days
+            config.auth.secureCookies shouldBe false
         }
     })

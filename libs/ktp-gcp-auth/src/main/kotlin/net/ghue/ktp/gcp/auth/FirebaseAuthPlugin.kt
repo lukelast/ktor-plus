@@ -7,6 +7,7 @@ import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.session
 import io.ktor.server.response.respond
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.Sessions
@@ -17,11 +18,19 @@ import io.ktor.server.sessions.sameSite
 import io.ktor.server.sessions.sessions
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
+import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
 import org.slf4j.MDC
 
 object AuthProviderName {
     const val FIREBASE_SESSION: String = "firebase-session"
+}
+
+/** Fixed same-origin auth routes. Convention, not configuration: clients hardcode these paths. */
+object AuthUrls {
+    const val CLIENT_CONFIG: String = "/auth/config"
+    const val LOGIN: String = "/auth/login"
+    const val LOGOUT: String = "/auth/logout"
 }
 
 class FirebaseAuthPluginConfig {
@@ -39,6 +48,9 @@ val FirebaseAuthPlugin =
 
         val ktpConfig: KtpConfig by application.inject()
         val authService: FirebaseAuthService by application.inject()
+        // Resolved eagerly so a broken deployment (no ADC, no project ID, missing Koin binding)
+        // fails at startup instead of answering 500 on the first request.
+        val authClientConfigService = application.get<FirebaseAuthClientConfigService>()
         val authConfig = ktpConfig.auth
         val useSecureCookies = pluginConfig.secureCookies(ktpConfig, ktpConfig.env)
 
@@ -72,7 +84,8 @@ val FirebaseAuthPlugin =
         }
 
         application.routing {
-            post(authConfig.loginUrl) { with(authService) { handleLogin() } }
-            post(authConfig.logoutUrl) { with(authService) { handleLogout() } }
+            get(AuthUrls.CLIENT_CONFIG) { with(authClientConfigService) { handleClientConfig() } }
+            post(AuthUrls.LOGIN) { with(authService) { handleLogin() } }
+            post(AuthUrls.LOGOUT) { with(authService) { handleLogout() } }
         }
     }

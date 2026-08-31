@@ -1,5 +1,12 @@
 package net.ghue.ktp.gcp.auth
 
+import com.google.api.services.identitytoolkit.v2.IdentityToolkit
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2ClientConfig
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2Config
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2DefaultSupportedIdpConfig
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2Email
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2ListDefaultSupportedIdpConfigsResponse
+import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2SignInConfig
 import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
@@ -19,9 +26,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.authenticate
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -31,6 +40,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.io.IOException
 import java.util.Date
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -79,22 +89,122 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
 
                     pluginOrNull(Sessions) shouldNotBe null
+                }
+            }
+        }
+
+        "serves public auth client configuration" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
+                val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
+                val projectConfig =
+                    GoogleCloudIdentitytoolkitAdminV2Config()
+                        .setClient(
+                            GoogleCloudIdentitytoolkitAdminV2ClientConfig()
+                                .setApiKey("firebase-key")
+                                .setFirebaseSubdomain("auth-example")
+                        )
+                        .setSignIn(
+                            GoogleCloudIdentitytoolkitAdminV2SignInConfig()
+                                .setEmail(
+                                    GoogleCloudIdentitytoolkitAdminV2Email()
+                                        .setEnabled(true)
+                                        .setPasswordRequired(true)
+                                )
+                        )
+                val idpConfigResponse =
+                    GoogleCloudIdentitytoolkitAdminV2ListDefaultSupportedIdpConfigsResponse()
+                        .setDefaultSupportedIdpConfigs(
+                            listOf(
+                                GoogleCloudIdentitytoolkitAdminV2DefaultSupportedIdpConfig()
+                                    .setName(
+                                        "projects/test-project/defaultSupportedIdpConfigs/google.com"
+                                    )
+                                    .setEnabled(true)
+                            )
+                        )
+                val authClientConfigService =
+                    FirebaseAuthClientConfigService(
+                        firebaseApp = mockFirebaseApp(),
+                        identityToolkit =
+                            mockIdentityToolkit(projectConfig, idpConfigResponse).identityToolkit,
+                    )
+
+                application {
+                    install(KoinIsolated) {
+                        modules(
+                            authTestModule(
+                                config,
+                                mockFirebaseAuth,
+                                mockLifecycle,
+                                authClientConfigService,
+                            )
+                        )
+                    }
+
+                    install(ContentNegotiation) { json() }
+                    install(FirebaseAuthPlugin)
+                }
+
+                client.get(AuthUrls.CLIENT_CONFIG).apply {
+                    status shouldBe HttpStatusCode.OK
+                    headers[HttpHeaders.CacheControl] shouldBe "public, max-age=600"
+                    contentType() shouldBe ContentType.Application.Json
+                    Json.parseToJsonElement(bodyAsText()) shouldBe
+                        Json.parseToJsonElement(
+                            """{
+                              "firebase": {
+                                "apiKey": "firebase-key",
+                                "projectId": "test-project",
+                                "authDomain": "auth-example.firebaseapp.com"
+                              },
+                              "enabledProviders": ["google.com", "password"]
+                            }"""
+                        )
+                }
+            }
+        }
+
+        "returns service unavailable when GCP auth configuration cannot be loaded" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
+                val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
+                val failingToolkit = mockk<IdentityToolkit>()
+                every { failingToolkit.projects() } throws IOException("GCP unavailable")
+                val authClientConfigService =
+                    FirebaseAuthClientConfigService(
+                        firebaseApp = mockFirebaseApp(),
+                        identityToolkit = failingToolkit,
+                    )
+
+                application {
+                    install(KoinIsolated) {
+                        modules(
+                            authTestModule(
+                                config,
+                                mockFirebaseAuth,
+                                mockLifecycle,
+                                authClientConfigService,
+                            )
+                        )
+                    }
+
+                    install(FirebaseAuthPlugin)
+                }
+
+                client.get("/auth/config").apply {
+                    status shouldBe HttpStatusCode.ServiceUnavailable
+                    headers[HttpHeaders.CacheControl] shouldBe "no-store"
                 }
             }
         }
@@ -120,17 +230,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -170,17 +270,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -213,17 +303,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -261,17 +341,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -321,17 +391,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -370,17 +430,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -406,17 +456,7 @@ class FirebaseAuthPluginTest :
 
                 application {
                     install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
                     install(FirebaseAuthPlugin)
@@ -430,60 +470,6 @@ class FirebaseAuthPluginTest :
 
                 response.status shouldBe HttpStatusCode.BadRequest
                 response.bodyAsText() shouldBe "{}"
-            }
-        }
-
-        "custom login and logout URLs are used" {
-            testApplication {
-                val config = KtpConfig.create {
-                    setUnitTestEnv()
-                    overrideValue("auth.loginUrl", "/custom/signin")
-                    overrideValue("auth.logoutUrl", "/custom/signout")
-                }
-
-                val mockFirebaseAuth = mockk<FirebaseAuth>()
-                val mockLifecycle = mockk<AuthLifecycleHandler>()
-                val mockToken = createMockFirebaseToken()
-
-                every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
-                coEvery { mockLifecycle.onLogin(any()) } returns
-                    UserInfo(
-                        userId = UserId("test-user-id"),
-                        tenantId = TenantId("test-tenant"),
-                        email = "test@example.com",
-                        name = "Test User",
-                        roles = setOf("user"),
-                        extra = null,
-                    )
-                coEvery { mockLifecycle.onLogout(any()) } returns Unit
-
-                application {
-                    install(KoinIsolated) {
-                        modules(
-                            module {
-                                single { config }
-                                single {
-                                    FirebaseAuthService(
-                                        firebaseAuth = mockFirebaseAuth,
-                                        lifecycle = mockLifecycle,
-                                    )
-                                }
-                            }
-                        )
-                    }
-
-                    install(FirebaseAuthPlugin)
-                }
-
-                val loginResponse =
-                    client.post("/custom/signin") {
-                        contentType(ContentType.Application.Json)
-                        setBody(Json.encodeToString(LoginRequest("valid-token")))
-                    }
-                loginResponse.status shouldBe HttpStatusCode.OK
-
-                val logoutResponse = client.post("/custom/signout")
-                logoutResponse.status shouldBe HttpStatusCode.NoContent
             }
         }
     })
@@ -504,4 +490,21 @@ private fun deleteDefaultFirebaseApp() {
     FirebaseApp.getApps()
         .filter { it.name == FirebaseApp.DEFAULT_APP_NAME }
         .forEach(FirebaseApp::delete)
+}
+
+private fun authTestModule(
+    config: KtpConfig,
+    firebaseAuth: FirebaseAuth,
+    lifecycle: AuthLifecycleHandler,
+    // The plugin resolves this eagerly at install; tests that never hit the config route still
+    // need a resolvable instance, backed by a strict mock that fails loudly if it is called.
+    authClientConfigService: FirebaseAuthClientConfigService =
+        FirebaseAuthClientConfigService(
+            firebaseApp = mockFirebaseApp(),
+            identityToolkit = mockk(),
+        ),
+) = module {
+    single { config }
+    single { FirebaseAuthService(firebaseAuth = firebaseAuth, lifecycle = lifecycle) }
+    single { authClientConfigService }
 }

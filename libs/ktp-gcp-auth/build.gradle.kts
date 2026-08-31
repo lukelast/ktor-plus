@@ -15,6 +15,7 @@ dependencies {
     api(libs.ktor.auth)
 
     api(libs.firebaseAdmin)
+    implementation(libs.identityToolkit)
 
     testImplementation(project(":libs:ktp-test"))
 }

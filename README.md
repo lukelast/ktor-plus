@@ -122,6 +122,16 @@ Firebase and Google Cloud Platform authentication for Ktor applications:
 
 **Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp-auth:VERSION")`
 
+`FirebaseAuthPlugin` registers fixed auth routes — `GET /auth/config`, `POST /auth/login`, and
+`POST /auth/logout` (see `AuthUrls`); they are convention, not configuration. The config endpoint
+serves the browser API key, auth domain, and enabled sign-in methods, loaded through Google's
+Identity Toolkit v2 SDK using Application Default Credentials — no Firebase browser values or
+provider list need to be duplicated in KTP configuration. The runtime service account needs the
+`roles/firebaseauth.viewer` role (listing IdP configs requires more than the
+`firebaseauth.configs.get` permission alone). Results are cached for 10 minutes on the server and
+in the browser (errors are never browser-cached), and the last known good value is served if a
+refresh fails; `503 Service Unavailable` is returned only until the first successful load.
+
 ### ktp-gcp-firestore
 
 Google Cloud Firestore integration utilities:
