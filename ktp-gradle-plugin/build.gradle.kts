@@ -100,22 +100,6 @@ val versionGenTask =
                     "    /** `$projectGroup:$name` */\n" +
                         "    const val $alias = \"$projectGroup:$name:$projectVersion\""
                 }
-            val ktpLibsObject =
-                buildString {
-                    appendLine()
-                    appendLine("/**")
-                    appendLine(" * Dependency coordinates for every KTP library, pinned to this")
-                    appendLine(" * plugin's own release so they can never drift from it.")
-                    appendLine(" * Usable from any build script of a build that applies a KTP plugin:")
-                    appendLine(" * `implementation(KtpLibs.stripe)`.")
-                    appendLine(" */")
-                    appendLine("object KtpLibs {")
-                    appendLine("    /** koin BOM, same version the plugin injects into consumer builds. */")
-                    appendLine("    const val koinBom = \"io.insert-koin:koin-bom:$koinVersion\"")
-                    appendLine()
-                    appendLine(libAccessors)
-                    append("}")
-                }
             outputFile
                 .get()
                 .asFile
@@ -146,8 +130,24 @@ val versionGenTask =
                 /** Names of the ktor-plus library modules this plugin publishes. */
                 val libs = listOf(${libraryNames.joinToString { "\"$it\"" }})
             }
+
+            /**
+             * Dependency coordinates for every KTP library, pinned to this
+             * plugin's own release so they can never drift from it.
+             * Usable from any build script of a build that applies a KTP plugin:
+             * `implementation(KtpLibs.stripe)`.
+             */
+            object KtpLibs {
+                /** koin BOM, same version the plugin injects into consumer builds. */
+                const val koinBom = "io.insert-koin:koin-bom:$koinVersion"
+
+            %LIBS%
+            }
         """
-                        .trimIndent() + "\n" + ktpLibsObject
+                        // %LIBS% is spliced after trimIndent because the accessor block's
+                        // 4-space lines would otherwise corrupt the common-indent computation.
+                        .trimIndent()
+                        .replace("%LIBS%", libAccessors)
                 )
         }
     }
