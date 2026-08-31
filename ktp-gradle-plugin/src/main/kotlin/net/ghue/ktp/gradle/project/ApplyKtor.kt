@@ -2,7 +2,7 @@ package net.ghue.ktp.gradle.project
 
 import io.ktor.plugin.*
 import net.ghue.ktp.gradle.project.mods.*
-import net.ghue.ktp.lib.KtpVersion
+import net.ghue.ktp.lib.KtpLibs
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.tasks.JavaExec
@@ -55,7 +55,7 @@ fun Project.applyKtor() {
     // coordinates: the ktor-plus repo itself rewires these to its local subprojects with a
     // dependency substitution in its root build script.
     dependencies {
-        add("implementation", "${KtpVersion.GROUP}:ktp-ktor:${KtpVersion.VERSION}")
-        add("testImplementation", "${KtpVersion.GROUP}:ktp-test:${KtpVersion.VERSION}")
+        add("implementation", KtpLibs.ktor)
+        add("testImplementation", KtpLibs.test)
     }
 }
