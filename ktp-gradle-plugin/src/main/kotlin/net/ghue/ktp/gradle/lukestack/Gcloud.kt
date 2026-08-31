@@ -22,17 +22,23 @@ internal fun Project.configureGcpEnvironment() {
  * - `gcp.projectId`: GCP project id. Default: the root project name.
  * - `gcp.appName`: app name for the Infra Manager deployment. Default: the root project name.
  * - `gcp.region`: deployment region. Default: `us-central1`.
- * - `gcp.githubOwner`: passed to terraform when set, omitted otherwise.
  * - `gcp.githubRepo`: passed to terraform. Default: the root project name.
  *
- * Terraform sources are expected at the `deploy/tf` convention location.
+ * The GitHub owner is site identity, not build config: set `github_owner` in
+ * `deploy/tf/site.auto.tfvars`. Terraform sources are expected at the `deploy/tf` convention
+ * location.
  */
 internal fun Project.registerGcloudTasks() {
-    // Renamed from snake_case; fail fast so stale gradle.properties keys aren't silently ignored.
-    for ((old, new) in listOf("gcp.github_owner" to "gcp.githubOwner", "gcp.github_repo" to "gcp.githubRepo")) {
-        check(findProperty(old) == null) {
-            "File 'gradle.properties', field '$old', is no longer supported. Use '$new' instead."
+    // Fail fast on dead keys: gcloud --input-values would silently outrank site.auto.tfvars.
+    for (dead in listOf("gcp.github_owner", "gcp.githubOwner")) {
+        check(findProperty(dead) == null) {
+            "File 'gradle.properties', field '$dead', is no longer supported. " +
+                "Set 'github_owner' in 'deploy/tf/site.auto.tfvars' instead."
         }
+    }
+    check(findProperty("gcp.github_repo") == null) {
+        "File 'gradle.properties', field 'gcp.github_repo', is no longer supported. " +
+            "Use 'gcp.githubRepo' instead."
     }
     val gcloudCommand =
         if (System.getProperty("os.name").startsWith("Windows")) "gcloud.cmd" else "gcloud"
@@ -86,7 +92,6 @@ internal fun Project.registerGcloudTasks() {
                     "project_id=$gcpProjectId",
                     "app_name=$appName",
                     "region=$region",
-                    findProperty("gcp.githubOwner")?.let { "github_owner=$it" },
                     "github_repo=${findProperty("gcp.githubRepo") ?: rootProject.name}",
                 )
                 .joinToString(",")
