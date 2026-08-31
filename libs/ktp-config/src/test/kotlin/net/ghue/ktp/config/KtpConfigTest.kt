@@ -78,16 +78,6 @@ class KtpConfigTest :
             config.extractChild<App>() shouldBe App(name = "test-app", version = "1.0.0")
         }
 
-        "extractChild uses an explicit path when given" {
-            data class RenamedApp(val name: String)
-            val config = KtpConfig.create {
-                setUnitTestEnv()
-                overrideValue("app.name", "test-app")
-            }
-
-            config.extractChild<RenamedApp>("app").name shouldBe "test-app"
-        }
-
         "config property exposes underlying Typesafe Config" {
             val config = newKtpConfig()
             config.config.hasPath("app.name") shouldBe true

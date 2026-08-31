@@ -2,8 +2,8 @@ package net.ghue.ktp.stripe
 
 import net.ghue.ktp.config.KtpConfig
 
-val KtpConfig.stripe: StripeConfig
-    get() = this.extractChild("stripe")
+val KtpConfig.stripe: Stripe
+    get() = this.extractChild()
 
-/** Maps the `stripe` config block; the path is explicit because the class name carries a suffix. */
-data class StripeConfig(val secretKey: String, val webhookSecret: String)
+// `Stripe` must match the `stripe` config block; [KtpConfig.extractChild] keys on the type name.
+data class Stripe(val secretKey: String, val webhookSecret: String)

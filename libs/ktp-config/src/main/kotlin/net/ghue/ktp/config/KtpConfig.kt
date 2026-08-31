@@ -41,14 +41,11 @@ class KtpConfig(rawConfig: Config, val env: Env) {
 
     @PublishedApi internal val cache = ConcurrentHashMap<KClass<*>, Any>()
 
-    /**
-     * Extracts the config object keyed by [T]'s lower-camel name (`Blah` reads "blah"), or by
-     * [path] when given; cached.
-     */
-    inline fun <reified T> extractChild(path: String? = null): T {
+    /** Extracts the config object keyed by [T]'s lower-camel name (`Blah` reads "blah"); cached. */
+    inline fun <reified T> extractChild(): T {
         @Suppress("UNCHECKED_CAST")
         return cache.getOrPut(T::class) {
-            val configPathRoot = path ?: T::class.simpleName!!.replaceFirstChar { it.lowercase() }
+            val configPathRoot = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
             try {
                 config.extract<T>(configPathRoot)
             } catch (ex: Exception) {
