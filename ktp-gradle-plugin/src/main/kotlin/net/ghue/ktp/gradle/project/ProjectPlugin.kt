@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 
 class ProjectPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val mode = project.findProjectMode()
+        val mode = project.resolveProjectMode()
         project.logger.lifecycle(
             "Applying KTP gradle project plugin to ${project.name}, " +
                 "mode: $mode, " +

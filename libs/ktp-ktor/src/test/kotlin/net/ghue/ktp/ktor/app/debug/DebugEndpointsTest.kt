@@ -1,4 +1,4 @@
-package net.ghue.ktp.ktor.app
+package net.ghue.ktp.ktor.app.debug
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -9,8 +9,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.app.debug.DebugEndpoints
-import net.ghue.ktp.ktor.app.debug.DebugEndpointsPlugin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 

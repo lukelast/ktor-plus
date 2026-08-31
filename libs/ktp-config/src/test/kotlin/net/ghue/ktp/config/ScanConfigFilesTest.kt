@@ -3,7 +3,7 @@ package net.ghue.ktp.config
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainExactly
 
-class ConfigFileScannerTest :
+class ScanConfigFilesTest :
     StringSpec({
         val configFiles =
             listOf(

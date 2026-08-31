@@ -55,7 +55,7 @@ class KtpCollection<T : Any>(val ref: CollectionReference, private val kClass: K
     fun delete(document: T) = ref.delete(document)
 
     /** A typed handle for a subcollection under one of this collection's documents. */
-    inline fun <reified C : Any> sub(parentId: String, name: String): KtpCollection<C> =
+    inline fun <reified C : Any> subCollection(parentId: String, name: String): KtpCollection<C> =
         KtpCollection(ref.document(parentId).collection(name), C::class)
 }
 

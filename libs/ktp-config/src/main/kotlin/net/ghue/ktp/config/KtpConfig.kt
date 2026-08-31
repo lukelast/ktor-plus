@@ -41,11 +41,14 @@ class KtpConfig(rawConfig: Config, val env: Env) {
 
     @PublishedApi internal val cache = ConcurrentHashMap<KClass<*>, Any>()
 
-    /** Extracts the config object keyed by [T]'s lower-camel name (`Blah` reads "blah"); cached. */
-    inline fun <reified T> extractChild(): T {
+    /**
+     * Extracts the config object keyed by [T]'s lower-camel name (`Blah` reads "blah"), or by
+     * [path] when given; cached.
+     */
+    inline fun <reified T> extractChild(path: String? = null): T {
         @Suppress("UNCHECKED_CAST")
         return cache.getOrPut(T::class) {
-            val configPathRoot = T::class.simpleName!!.replaceFirstChar { it.lowercase() }
+            val configPathRoot = path ?: T::class.simpleName!!.replaceFirstChar { it.lowercase() }
             try {
                 config.extract<T>(configPathRoot)
             } catch (ex: Exception) {
@@ -64,9 +67,9 @@ class KtpConfig(rawConfig: Config, val env: Env) {
     }
 
     /** Returns the cached [T] instance; its primary constructor must take only a [KtpConfig]. */
-    inline fun <reified T : Any> get(): T = createInstance(T::class)
+    inline fun <reified T : Any> get(): T = getInstance(T::class)
 
-    fun <T : Any> createInstance(klass: KClass<T>): T {
+    fun <T : Any> getInstance(klass: KClass<T>): T {
         try {
             @Suppress("UNCHECKED_CAST")
             return cache.getOrPut(klass) { klass.primaryConstructor!!.call(this) } as T
@@ -81,10 +84,11 @@ class KtpConfig(rawConfig: Config, val env: Env) {
         }
     }
 
-    fun getAllConfig(): Map<String, String> = config.toRecords().associate { it.path to it.value }
+    fun getAllConfigMasked(): Map<String, String> =
+        config.toMaskedRecords().associate { it.path to it.value }
 
     fun logAllConfig() {
-        val txt = getAllConfig().entries.joinToString(", ") { "${it.key} = ${it.value}" }
+        val txt = getAllConfigMasked().entries.joinToString(", ") { "${it.key} = ${it.value}" }
         Logger.getLogger(this::class.java.name).info("All config values: $txt")
     }
 

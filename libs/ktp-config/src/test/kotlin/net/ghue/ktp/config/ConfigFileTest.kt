@@ -11,9 +11,9 @@ class ConfigFileTest :
         "config files sort by priority first" {
             val files =
                 listOf(
-                        fakeConfig(9, configName = "z", text = """v=9"""),
-                        fakeConfig(5, configName = "a", text = """v=5"""),
-                        fakeConfig(1, configName = "m", text = """v=1"""),
+                        fakeConfigFile(9, configName = "z", text = """v=9"""),
+                        fakeConfigFile(5, configName = "a", text = """v=5"""),
+                        fakeConfigFile(1, configName = "m", text = """v=1"""),
                     )
                     .shuffled()
 
@@ -24,8 +24,8 @@ class ConfigFileTest :
         "config files prefer environment-specific variants for equal priority" {
             val files =
                 listOf(
-                        fakeConfig(5, configName = "config", env = "", text = """v=no_env"""),
-                        fakeConfig(5, configName = "config", env = "prod", text = """v=prod"""),
+                        fakeConfigFile(5, configName = "config", env = "", text = """v=no_env"""),
+                        fakeConfigFile(5, configName = "config", env = "prod", text = """v=prod"""),
                     )
                     .shuffled()
 
@@ -37,8 +37,13 @@ class ConfigFileTest :
         "config files prefer named variants over unnamed ones" {
             val files =
                 listOf(
-                        fakeConfig(5, configName = "", env = "", text = """v=no_name"""),
-                        fakeConfig(5, configName = "config", env = "", text = """v=with_name"""),
+                        fakeConfigFile(5, configName = "", env = "", text = """v=no_name"""),
+                        fakeConfigFile(
+                            5,
+                            configName = "config",
+                            env = "",
+                            text = """v=with_name""",
+                        ),
                     )
                     .shuffled()
 
@@ -50,9 +55,9 @@ class ConfigFileTest :
         "config files sort names alphabetically when all else matches" {
             val files =
                 listOf(
-                        fakeConfig(5, configName = "zebra", env = "", text = """v=zebra"""),
-                        fakeConfig(5, configName = "apple", env = "", text = """v=apple"""),
-                        fakeConfig(5, configName = "banana", env = "", text = """v=banana"""),
+                        fakeConfigFile(5, configName = "zebra", env = "", text = """v=zebra"""),
+                        fakeConfigFile(5, configName = "apple", env = "", text = """v=apple"""),
+                        fakeConfigFile(5, configName = "banana", env = "", text = """v=banana"""),
                     )
                     .shuffled()
 
@@ -63,21 +68,31 @@ class ConfigFileTest :
         "config files sort by priority, env, and name in sequence" {
             val files =
                 listOf(
-                        fakeConfig(
+                        fakeConfigFile(
                             8,
                             configName = "config",
                             env = "dev",
                             text = """v=8_config_dev""",
                         ),
-                        fakeConfig(8, configName = "config", env = "", text = """v=8_config_all"""),
-                        fakeConfig(
+                        fakeConfigFile(
+                            8,
+                            configName = "config",
+                            env = "",
+                            text = """v=8_config_all""",
+                        ),
+                        fakeConfigFile(
                             3,
                             configName = "config",
                             env = "dev",
                             text = """v=3_config_dev""",
                         ),
-                        fakeConfig(3, configName = "config", env = "", text = """v=3_config_all"""),
-                        fakeConfig(3, configName = "", env = "", text = """v=3_no_name"""),
+                        fakeConfigFile(
+                            3,
+                            configName = "config",
+                            env = "",
+                            text = """v=3_config_all""",
+                        ),
+                        fakeConfigFile(3, configName = "", env = "", text = """v=3_no_name"""),
                     )
                     .shuffled()
 
@@ -99,9 +114,24 @@ class ConfigFileTest :
         "config files sort environment names alphabetically" {
             val files =
                 listOf(
-                        fakeConfig(5, configName = "config", env = "zebra", text = """v=zebra"""),
-                        fakeConfig(5, configName = "config", env = "apple", text = """v=apple"""),
-                        fakeConfig(5, configName = "config", env = "banana", text = """v=banana"""),
+                        fakeConfigFile(
+                            5,
+                            configName = "config",
+                            env = "zebra",
+                            text = """v=zebra""",
+                        ),
+                        fakeConfigFile(
+                            5,
+                            configName = "config",
+                            env = "apple",
+                            text = """v=apple""",
+                        ),
+                        fakeConfigFile(
+                            5,
+                            configName = "config",
+                            env = "banana",
+                            text = """v=banana""",
+                        ),
                     )
                     .shuffled()
 
@@ -112,12 +142,17 @@ class ConfigFileTest :
         "config files respect the overall sorting contract" {
             val files =
                 listOf(
-                        fakeConfig(9, configName = "z", env = "prod", text = """v=9_z_prod"""),
-                        fakeConfig(2, configName = "a", env = "dev", text = """v=2_a_dev"""),
-                        fakeConfig(2, configName = "a", env = "", text = """v=2_a_all"""),
-                        fakeConfig(2, configName = "", env = "test", text = """v=2_no_name_test"""),
-                        fakeConfig(2, configName = "", env = "", text = """v=2_no_name_all"""),
-                        fakeConfig(
+                        fakeConfigFile(9, configName = "z", env = "prod", text = """v=9_z_prod"""),
+                        fakeConfigFile(2, configName = "a", env = "dev", text = """v=2_a_dev"""),
+                        fakeConfigFile(2, configName = "a", env = "", text = """v=2_a_all"""),
+                        fakeConfigFile(
+                            2,
+                            configName = "",
+                            env = "test",
+                            text = """v=2_no_name_test""",
+                        ),
+                        fakeConfigFile(2, configName = "", env = "", text = """v=2_no_name_all"""),
+                        fakeConfigFile(
                             6,
                             configName = "b",
                             env = "staging",
@@ -243,33 +278,33 @@ class ConfigFileTest :
         }
 
         "appliesTo returns true for files without environment" {
-            val file = fakeConfig(5, configName = "app", env = "")
+            val file = fakeConfigFile(5, configName = "app", env = "")
             file.appliesTo(Env("prod")) shouldBe true
             file.appliesTo(Env.TEST_UNIT) shouldBe true
         }
 
         "appliesTo returns true when environment matches" {
-            val file = fakeConfig(5, configName = "app", env = "prod")
+            val file = fakeConfigFile(5, configName = "app", env = "prod")
             file.appliesTo(Env("prod")) shouldBe true
         }
 
         "appliesTo returns false when environment does not match" {
-            val file = fakeConfig(5, configName = "app", env = "prod")
+            val file = fakeConfigFile(5, configName = "app", env = "prod")
             file.appliesTo(Env("dev")) shouldBe false
         }
 
-        "appliesTo filters out unnamed local files in CI test environments" {
-            val file = fakeConfig(5, configName = "", env = "")
+        "appliesTo filters out unnamed local files in test environments" {
+            val file = fakeConfigFile(5, configName = "", env = "")
             file.appliesTo(Env.TEST_UNIT) shouldBe false
         }
 
-        "appliesTo filters out local named files in CI test environments" {
-            val file = fakeConfig(5, configName = "local", env = "")
+        "appliesTo filters out local named files in test environments" {
+            val file = fakeConfigFile(5, configName = "local", env = "")
             file.appliesTo(Env.TEST_UNIT) shouldBe false
         }
 
-        "appliesTo allows named non-local files in CI test environments" {
-            val file = fakeConfig(5, configName = "app", env = "")
+        "appliesTo allows named non-local files in test environments" {
+            val file = fakeConfigFile(5, configName = "app", env = "")
             file.appliesTo(Env.TEST_UNIT) shouldBe true
         }
     })

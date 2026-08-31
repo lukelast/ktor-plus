@@ -20,9 +20,9 @@ import org.koin.ktor.plugin.KoinIsolated
 
 class ApiCronTest :
     StringSpec({
-        "authorized request runs cron handler" {
+        "localdev request bypasses auth and runs cron handler" {
             val cronHandler = mockk<CronHandler>()
-            coEvery { cronHandler.hourly(any()) } returns Result(runAgain = false)
+            coEvery { cronHandler.hourly(any()) } returns CronResult(runAgain = false)
 
             testApplication {
                 application {
@@ -53,7 +53,7 @@ class ApiCronTest :
 
         "run again returns 429" {
             val cronHandler = mockk<CronHandler>()
-            coEvery { cronHandler.hourly(any()) } returns Result(runAgain = true)
+            coEvery { cronHandler.hourly(any()) } returns CronResult(runAgain = true)
 
             testApplication {
                 application {

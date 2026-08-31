@@ -1,4 +1,4 @@
-package net.ghue.ktp.gradle.project.mods
+package net.ghue.ktp.gradle.project.features
 
 import com.ncorti.ktfmt.gradle.KtfmtExtension
 import com.ncorti.ktfmt.gradle.KtfmtPlugin

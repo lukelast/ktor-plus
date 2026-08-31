@@ -24,13 +24,13 @@ dependencies {
     api(libs.ktor.client.java)
 
     // Koin
-    api(platform(libs.koinBom))
-    api(libs.koinAnnotations)
-    api(libs.koinCore)
-    api(libs.koinKtor)
-    implementation(libs.koinLoggerSlf4j)
+    api(platform(libs.koin.bom))
+    api(libs.koin.annotations)
+    api(libs.koin.core)
+    api(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
 
     // Testing
     testImplementation(libs.ktor.test)
-    testImplementation(libs.koinTest)
+    testImplementation(libs.koin.test)
 }

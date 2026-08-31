@@ -128,7 +128,7 @@ class TrimConfigStringsTest :
         "override padding cannot leak into substitution concatenations" {
             val files =
                 listOf(
-                    fakeConfig(
+                    fakeConfigFile(
                         0,
                         text =
                             $$"""
@@ -148,7 +148,7 @@ class TrimConfigStringsTest :
         "trims CONFIG_FORCE_ env-var overrides before substitutions resolve" {
             val files =
                 listOf(
-                    fakeConfig(
+                    fakeConfigFile(
                         0,
                         text =
                             $$"""
@@ -167,7 +167,7 @@ class TrimConfigStringsTest :
         }
 
         "buildConfig trims file values" {
-            val files = listOf(fakeConfig(0, text = """v = "  padded  """"))
+            val files = listOf(fakeConfigFile(0, text = """v = "  padded  """"))
 
             buildConfig(Env.TEST_UNIT, files).getString("v") shouldBe "padded"
         }

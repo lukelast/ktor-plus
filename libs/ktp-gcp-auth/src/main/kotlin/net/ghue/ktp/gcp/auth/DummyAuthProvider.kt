@@ -8,7 +8,7 @@ fun AuthenticationConfig.dummy(
     principal: UserSession =
         UserSession(
             userId = UserId(""),
-            tenId = TenantId(""),
+            tenantId = TenantId(""),
             email = "",
             name = "",
             roles = emptySet(),

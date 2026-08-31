@@ -19,7 +19,7 @@ import io.mockk.verify
 
 class BatchTest :
     StringSpec({
-        "batchWrite chunks items and commits each batch" {
+        "batchUpsert chunks items and commits each batch" {
             data class Item(val id: String, val name: String)
 
             val firestore = mockk<Firestore>()
@@ -33,7 +33,7 @@ class BatchTest :
             every { batch.commit() } returns completedFuture(listOf(mockk<WriteResult>()))
             every { collection.document(any<String>()) } returns mockk<DocumentReference>()
 
-            firestore.batchWrite(collection, items)
+            firestore.batchUpsert(collection, items)
 
             verify(exactly = 2) { firestore.batch() }
             verify(exactly = items.size) {
@@ -42,11 +42,11 @@ class BatchTest :
             verify(exactly = 2) { batch.commit() }
         }
 
-        "batchWrite does nothing for an empty list" {
+        "batchUpsert does nothing for an empty list" {
             val firestore = mockk<Firestore>()
             val collection = mockk<CollectionReference>()
 
-            firestore.batchWrite(collection, emptyList())
+            firestore.batchUpsert(collection, emptyList())
 
             verify(exactly = 0) { firestore.batch() }
         }

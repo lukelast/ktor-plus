@@ -56,7 +56,7 @@ class FirebaseAuthService(
             val userSession =
                 UserSession(
                     userId = firebaseToken.userId,
-                    tenId = userInfo.tenantId,
+                    tenantId = userInfo.tenantId,
                     email = userInfo.email,
                     name = userInfo.name,
                     roles = userInfo.roles,

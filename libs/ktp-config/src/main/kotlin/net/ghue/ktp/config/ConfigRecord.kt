@@ -9,7 +9,7 @@ private val secretPathWords = listOf("secret", "applicationKey", "password")
 private const val MAX_VALUE_SIZE = 200
 
 /** Lists every config value for display, with secrets masked. */
-fun Config.toRecords(): List<ConfigRecord> =
+fun Config.toMaskedRecords(): List<ConfigRecord> =
     entrySet()
         .map {
             ConfigRecord(

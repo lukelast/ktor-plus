@@ -6,14 +6,14 @@ import io.ktor.server.routing.*
 import net.ghue.ktp.config.ConfigRecord
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.maskConfigDisplayValue
-import net.ghue.ktp.config.toRecords
+import net.ghue.ktp.config.toMaskedRecords
 import org.koin.ktor.ext.inject
 
 /** HTML page of config, JVM runtime, env, and system property records with secrets masked. */
 suspend fun RoutingCall.respondConfigHtml() {
     val ktpConfig: KtpConfig by inject()
 
-    val configRecords = ktpConfig.config.toRecords()
+    val configRecords = ktpConfig.config.toMaskedRecords()
     val runtimeRecords =
         listOf(
             collectGcInfo(),

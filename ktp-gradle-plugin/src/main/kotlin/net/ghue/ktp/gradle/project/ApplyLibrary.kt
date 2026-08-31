@@ -1,6 +1,6 @@
 package net.ghue.ktp.gradle.project
 
-import net.ghue.ktp.gradle.project.mods.*
+import net.ghue.ktp.gradle.project.features.*
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
@@ -43,13 +43,13 @@ fun Project.applyLibrary() {
         }
     }
 
-    configPublishJava()
+    configureJavaPublishing()
 
     installKotest()
     registerVerifyTask()
 }
 
-fun Project.configPublishJava() {
+fun Project.configureJavaPublishing() {
     extensions.configure<PublishingExtension> {
         publications {
             publications.create<MavenPublication>("mavenJava") {

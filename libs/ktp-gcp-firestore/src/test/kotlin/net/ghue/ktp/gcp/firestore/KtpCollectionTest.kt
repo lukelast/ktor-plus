@@ -41,7 +41,8 @@ class KtpCollectionTest :
             val emptyDoc = mockk<DocumentSnapshot>()
 
             every { ref.document("user-1") } returns docRef
-            every { docRef.get() } returnsMany listOf(colFuture(doc), colFuture(emptyDoc))
+            every { docRef.get() } returnsMany
+                listOf(completedFuture(doc), completedFuture(emptyDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
             every { emptyDoc.data } returns null
@@ -63,7 +64,7 @@ class KtpCollectionTest :
             val doc = mockk<QueryDocumentSnapshot>()
 
             every { ref.whereEqualTo("name", "Ada") } returns filtered
-            every { filtered.get() } returns colFuture(snapshot)
+            every { filtered.get() } returns completedFuture(snapshot)
             every { snapshot.documents } returns mutableListOf(doc)
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
@@ -80,7 +81,7 @@ class KtpCollectionTest :
             val snapshot = mockk<QuerySnapshot>()
             val doc = mockk<QueryDocumentSnapshot>()
 
-            every { ref.get() } returns colFuture(snapshot)
+            every { ref.get() } returns completedFuture(snapshot)
             every { snapshot.documents } returns mutableListOf(doc)
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
@@ -97,7 +98,7 @@ class KtpCollectionTest :
 
             every { ref.document("user-1") } returns docRef
             every { docRef.set(any<Map<String, Any>>(), any<SetOptions>()) } returns
-                colFuture(mockk<WriteResult>())
+                completedFuture(mockk<WriteResult>())
 
             KtpCollection(ref, User::class).upsert(User(id = "user-1", name = "Ada"))
 
@@ -115,12 +116,15 @@ class KtpCollectionTest :
             val user = User(id = "user-1", name = "Ada")
 
             every { ref.document("user-1") } returns docRef
-            every { docRef.set(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
-            every { docRef.create(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
-            every { docRef.delete() } returns colFuture(mockk<WriteResult>())
+            every { docRef.set(any<Map<String, Any>>()) } returns
+                completedFuture(mockk<WriteResult>())
+            every { docRef.create(any<Map<String, Any>>()) } returns
+                completedFuture(mockk<WriteResult>())
+            every { docRef.delete() } returns completedFuture(mockk<WriteResult>())
             every { ref.document() } returns autoRef
             every { autoRef.id } returns "new-id"
-            every { autoRef.set(any<Map<String, Any>>()) } returns colFuture(mockk<WriteResult>())
+            every { autoRef.set(any<Map<String, Any>>()) } returns
+                completedFuture(mockk<WriteResult>())
             every { listedRef.id } returns "listed-id"
             every { ref.listDocuments() } returns listOf(listedRef)
 
@@ -150,11 +154,11 @@ class KtpCollectionTest :
             every { ref.document("user-1") } returns parentDoc
             every { parentDoc.collection("item") } returns subRef
 
-            val items = KtpCollection(ref, User::class).sub<Item>("user-1", "item")
+            val items = KtpCollection(ref, User::class).subCollection<Item>("user-1", "item")
 
             items.ref shouldBe subRef
         }
     })
 
-private fun <T> colFuture(value: T): ApiFuture<T> =
+private fun <T> completedFuture(value: T): ApiFuture<T> =
     SettableApiFuture.create<T>().apply { set(value) }

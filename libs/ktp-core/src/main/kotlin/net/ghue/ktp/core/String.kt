@@ -1,4 +1,4 @@
-package net.ghue.ktp.core.string
+package net.ghue.ktp.core
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream

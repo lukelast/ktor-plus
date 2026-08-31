@@ -3,7 +3,7 @@ package net.ghue.ktp.core
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
-class EnumKtTest :
+class EnumTest :
     StringSpec({
         "toCamelCase converts enum constants" {
             TestEnum.TEST_ENUM_01.toCamelCase() shouldBe "testEnum01"

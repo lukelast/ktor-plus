@@ -9,12 +9,18 @@ import net.ghue.ktp.gcp.join
 
 const val FIRESTORE_BATCH_SIZE = 500
 
-/** Upserts [items] with [upsert]'s merge semantics, in batches of Firestore's 500-write limit. */
-fun Firestore.batchWrite(collection: CollectionReference, items: List<Any>) {
-    items.chunked(FIRESTORE_BATCH_SIZE).forEach { chunk ->
+/**
+ * Upserts [documents] with [upsert]'s merge semantics, in batches of Firestore's 500-write limit.
+ */
+fun Firestore.batchUpsert(collection: CollectionReference, documents: List<Any>) {
+    documents.chunked(FIRESTORE_BATCH_SIZE).forEach { chunk ->
         val batch = batch()
-        chunk.forEach { item ->
-            batch.set(collection.document(idFieldValue(item)), item.serialize(), SetOptions.merge())
+        chunk.forEach { document ->
+            batch.set(
+                collection.document(idFieldValue(document)),
+                document.serialize(),
+                SetOptions.merge(),
+            )
         }
         batch.commit().join()
     }

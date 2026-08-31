@@ -28,7 +28,7 @@ class TransactionTest :
                 {
                     val callback = firstArg<Transaction.Function<Any?>>()
                     try {
-                        transactionFuture(callback.updateCallback(txn))
+                        completedFuture(callback.updateCallback(txn))
                     } catch (e: Exception) {
                         SettableApiFuture.create<Any?>().apply { setException(e) }
                     }
@@ -69,7 +69,7 @@ class TransactionTest :
 
             every { collection.document("user-1") } returns docRef
             every { txn.get(docRef) } returnsMany
-                listOf(transactionFuture(doc), transactionFuture(doc), transactionFuture(emptyDoc))
+                listOf(completedFuture(doc), completedFuture(doc), completedFuture(emptyDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
             every { emptyDoc.data } returns null
@@ -90,7 +90,7 @@ class TransactionTest :
             val doc1 = mockk<QueryDocumentSnapshot>()
             val doc2 = mockk<QueryDocumentSnapshot>()
 
-            every { txn.get(query) } returns transactionFuture(snapshot)
+            every { txn.get(query) } returns completedFuture(snapshot)
             every { snapshot.documents } returns mutableListOf(doc1, doc2)
             every { doc1.data } returns mapOf("name" to "Ada")
             every { doc1.id } returns "user-1"
@@ -120,5 +120,5 @@ class TransactionTest :
         }
     })
 
-private fun <T> transactionFuture(value: T): ApiFuture<T> =
+private fun <T> completedFuture(value: T): ApiFuture<T> =
     SettableApiFuture.create<T>().apply { set(value) }

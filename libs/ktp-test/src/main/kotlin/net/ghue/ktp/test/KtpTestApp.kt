@@ -8,25 +8,25 @@ import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.start.KtpAppBuilderFactory
 import net.ghue.ktp.ktor.start.ktpAppCreate
 
-fun testKtpStart(
-    ktp: KtpAppBuilderFactory = ktpAppCreate {},
+fun ktpTestApp(
+    appFactory: KtpAppBuilderFactory = ktpAppCreate {},
     /** Set false to do more configuration before the application is started. */
     start: Boolean = true,
-    overrideMap: Map<String, Any> = emptyMap(),
+    configOverrides: Map<String, Any> = emptyMap(),
     test: suspend ApplicationTestBuilder.() -> Unit,
 ) {
     testApplication {
-        val ktpApp = ktp()
-        ktpApp.createKtpConfig = {
+        val appBuilder = appFactory()
+        appBuilder.createKtpConfig = {
             KtpConfig.create {
                 setUnitTestEnv()
-                overrideMap.forEach { (key, value) -> overrideValue(key, value) }
+                configOverrides.forEach { (key, value) -> overrideValue(key, value) }
             }
         }
-        val ktpInstance = ktpApp.build()
+        val app = appBuilder.build()
         application {
-            ktpInstance.installKoin(this)
-            ktpInstance.runAppInits(this)
+            app.installKoin(this)
+            app.runAppInits(this)
         }
         client = createClient {
             install(Resources)

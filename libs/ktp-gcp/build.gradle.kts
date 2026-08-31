@@ -1,15 +1,15 @@
 plugins { id("com.github.lukelast.ktor-plus.project") }
 
 dependencies {
-    api(platform(libs.gcpBom))
+    api(platform(libs.gcp.bom))
     api(platform(libs.ktor.bom))
-    api(platform(libs.koinBom))
+    api(platform(libs.koin.bom))
 
-    api(libs.gcpCore)
+    api(libs.gcp.core)
 
     api(project(":libs:ktp-ktor"))
 
-    // Provides TokenVerifier; version comes from gcpBom.
+    // Provides TokenVerifier; version comes from gcp-bom.
     api("com.google.auth:google-auth-library-oauth2-http")
 
     testImplementation(project(":libs:ktp-test"))

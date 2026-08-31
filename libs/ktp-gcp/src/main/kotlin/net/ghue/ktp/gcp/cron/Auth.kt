@@ -11,8 +11,8 @@ import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
-private val GcpCronPlugin =
-    createRouteScopedPlugin(name = "GcpCronPlugin") {
+private val GcpCronAuthPlugin =
+    createRouteScopedPlugin(name = "GcpCronAuthPlugin") {
         onCall { call ->
             val config by call.inject<KtpConfig>()
 
@@ -64,7 +64,7 @@ internal fun Route.authenticateGcpCron(build: Route.() -> Unit): Route {
                 }
             }
         )
-    route.install(GcpCronPlugin)
+    route.install(GcpCronAuthPlugin)
     route.build()
     return route
 }

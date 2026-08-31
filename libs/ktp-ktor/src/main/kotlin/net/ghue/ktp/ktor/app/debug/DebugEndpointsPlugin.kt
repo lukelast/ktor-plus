@@ -41,7 +41,10 @@ class DebugEndpointsConfig {
  * so set [DebugEndpointsConfig.accessControl] in production.
  */
 val DebugEndpointsPlugin =
-    createApplicationPlugin(name = "DebugEndpoints", createConfiguration = ::DebugEndpointsConfig) {
+    createApplicationPlugin(
+        name = "DebugEndpointsPlugin",
+        createConfiguration = ::DebugEndpointsConfig,
+    ) {
         if (pluginConfig.accessControl == null) {
             log {}
                 .warn {

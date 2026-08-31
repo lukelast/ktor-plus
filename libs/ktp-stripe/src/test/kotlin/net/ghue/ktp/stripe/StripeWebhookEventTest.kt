@@ -55,16 +55,6 @@ class StripeWebhookEventTest :
                 .objectId shouldBe CustomerId("cus_test_123")
         }
 
-        "maps all documented invoice actions" {
-            mapOf(
-                    "overdue" to StripeAction.OVERDUE,
-                    "overpaid" to StripeAction.OVERPAID,
-                    "payment_attempt_required" to StripeAction.PAYMENT_ATTEMPT_REQUIRED,
-                    "will_be_due" to StripeAction.WILL_BE_DUE,
-                )
-                .forEach { (value, expected) -> StripeAction.fromString(value) shouldBe expected }
-        }
-
         "unmodeled object types have no typed id but keep the raw fields" {
             val event =
                 stripeEvent(

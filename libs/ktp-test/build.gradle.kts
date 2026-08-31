@@ -4,11 +4,11 @@ dependencies {
     api(project(":libs:ktp-ktor"))
 
     api(platform(libs.ktor.bom))
-    api(platform(libs.koinBom))
+    api(platform(libs.koin.bom))
     api(platform(libs.kotest.bom))
     api(libs.mockk)
     api(libs.ktor.test)
-    api(libs.koinTest)
+    api(libs.koin.test)
     api(libs.kotest.koin)
     api(libs.ktor.client.resources)
     api(libs.ktor.client.contentNegotiation)

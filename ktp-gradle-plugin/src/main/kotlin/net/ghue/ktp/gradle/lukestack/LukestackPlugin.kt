@@ -2,7 +2,7 @@ package net.ghue.ktp.gradle.lukestack
 
 import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.ProjectPlugin
-import net.ghue.ktp.gradle.project.findProjectMode
+import net.ghue.ktp.gradle.project.resolveProjectMode
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -15,7 +15,7 @@ import org.gradle.api.Project
 class LukestackPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply(ProjectPlugin::class.java)
-        when (project.findProjectMode()) {
+        when (project.resolveProjectMode()) {
             ProjectMode.ROOT -> {
                 project.registerDockerTasks()
                 project.registerGcloudTasks()

@@ -9,7 +9,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.log.installLocalDevConsoleLogger
+import net.ghue.ktp.log.configureLocalDevConsoleLogFormat
 import net.ghue.ktp.log.installSlf4jBridge
 import net.ghue.ktp.log.log
 import org.koin.core.module.Module
@@ -113,7 +113,7 @@ fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBu
 fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
     val ktpApp = ktpAppBuilder().build()
     if (ktpApp.config.env.isLocalDev) {
-        installLocalDevConsoleLogger()
+        configureLocalDevConsoleLogFormat()
     }
 
     val ktorEnv = applicationEnvironment { this.log = LoggerFactory.getLogger("ktor") }

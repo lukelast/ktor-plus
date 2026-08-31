@@ -20,8 +20,8 @@ import org.koin.dsl.module
 
 class KtpConfigFirestoreTest :
     StringSpec({
-        "firestore config extracts the database id" {
-            testConfig().firestore shouldBe Google(Google.Firestore(dbId = "test-db"))
+        "google config extracts the firestore database id" {
+            testConfig().google shouldBe Google(Google.Firestore(dbId = "test-db"))
         }
 
         "firestoreModule creates the configured Firestore service" {
@@ -51,7 +51,7 @@ class KtpConfigFirestoreTest :
             }
         }
 
-        "firestore config fails when the SDK does not create a service" {
+        "createClient fails when the SDK does not create a service" {
             mockkStatic(FirestoreOptions::class)
             try {
                 val builder = mockk<FirestoreOptions.Builder>()
@@ -62,7 +62,9 @@ class KtpConfigFirestoreTest :
                 every { options.service } returns null
 
                 val error =
-                    shouldThrow<IllegalStateException> { Google.Firestore("test-db").firestore() }
+                    shouldThrow<IllegalStateException> {
+                        Google.Firestore("test-db").createClient()
+                    }
 
                 error.message shouldContain "error creating firestore"
             } finally {

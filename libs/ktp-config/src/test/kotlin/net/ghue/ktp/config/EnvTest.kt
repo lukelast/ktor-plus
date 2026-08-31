@@ -61,7 +61,7 @@ class EnvTest :
                 .shouldBeNull()
         }
 
-        "localDev flag comes from config file override" {
+        "findEnvironment reads env name from localDevEnv config key" {
             // Expects the localDevEnv value from src/test/resources/ktp/0.conf.
             val env = findEnvironment()
             env.name shouldBe "123"
@@ -77,7 +77,7 @@ class EnvTest :
             env.isLocalDev shouldBe true
         }
 
-        "TEST_UNIT is recognised as CI environment" {
+        "TEST_UNIT is recognised as test environment" {
             val env = Env.TEST_UNIT
             env.isTest shouldBe true
             env.isLocalDev shouldBe false

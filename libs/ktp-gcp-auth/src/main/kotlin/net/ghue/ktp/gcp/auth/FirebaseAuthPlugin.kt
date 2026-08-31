@@ -1,8 +1,10 @@
 package net.ghue.ktp.gcp.auth
 
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.session
@@ -18,7 +20,6 @@ import io.ktor.server.sessions.sameSite
 import io.ktor.server.sessions.sessions
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
-import org.koin.ktor.ext.get
 import org.koin.ktor.ext.inject
 import org.slf4j.MDC
 
@@ -34,7 +35,7 @@ object AuthUrls {
 }
 
 class FirebaseAuthPluginConfig {
-    var secureCookies: (ktpConfig: KtpConfig, env: Env) -> Boolean = { ktpConfig, env ->
+    var secureCookiesProvider: (ktpConfig: KtpConfig, env: Env) -> Boolean = { ktpConfig, env ->
         !env.isLocalDev && ktpConfig.auth.secureCookies
     }
 }
@@ -48,11 +49,8 @@ val FirebaseAuthPlugin =
 
         val ktpConfig: KtpConfig by application.inject()
         val authService: FirebaseAuthService by application.inject()
-        // Resolved eagerly so a broken deployment (no ADC, no project ID, missing Koin binding)
-        // fails at startup instead of answering 500 on the first request.
-        val authClientConfigService = application.get<FirebaseAuthClientConfigService>()
-        val authConfig = ktpConfig.auth
-        val useSecureCookies = pluginConfig.secureCookies(ktpConfig, ktpConfig.env)
+        val authClientConfigService: FirebaseAuthClientConfigService by application.inject()
+        val useSecureCookies = pluginConfig.secureCookiesProvider(ktpConfig, ktpConfig.env)
 
         // An app that installs Sessions itself must register cookie<UserSession>, or login throws.
         if (application.pluginOrNull(Sessions) == null) {
@@ -62,7 +60,7 @@ val FirebaseAuthPlugin =
                     cookie.sameSite = "lax"
                     cookie.httpOnly = true
                     cookie.secure = useSecureCookies
-                    cookie.maxAge = authConfig.sessionTimeoutDuration
+                    cookie.maxAge = ktpConfig.auth.sessionTimeoutDuration
                     transform(ktpConfig.createSessionTransportTransformer())
                 }
             }
@@ -84,7 +82,21 @@ val FirebaseAuthPlugin =
         }
 
         application.routing {
-            get(AuthUrls.CLIENT_CONFIG) { with(authClientConfigService) { handleClientConfig() } }
+            get(AuthUrls.CLIENT_CONFIG) {
+                val service =
+                    try {
+                        authClientConfigService
+                    } catch (ex: Exception) {
+                        call.application.log.error(
+                            "Unable to initialize Firebase client configuration",
+                            ex,
+                        )
+                        call.response.headers.append(HttpHeaders.CacheControl, "no-store")
+                        call.respond(HttpStatusCode.ServiceUnavailable)
+                        return@get
+                    }
+                with(service) { handleClientConfig() }
+            }
             post(AuthUrls.LOGIN) { with(authService) { handleLogin() } }
             post(AuthUrls.LOGOUT) { with(authService) { handleLogout() } }
         }

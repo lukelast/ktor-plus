@@ -1,9 +1,9 @@
-package net.ghue.ktp.core.string
+package net.ghue.ktp.core
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
-class StringKtTest :
+class StringTest :
     StringSpec({
         "decodeUrlEncoded replaces plus with spaces" { "a+b+c".decodeUrlEncoded() shouldBe "a b c" }
 

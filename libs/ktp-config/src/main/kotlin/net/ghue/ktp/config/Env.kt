@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 
 private val envVarNames = listOf("KTP_ENV", "ENV", "KUBERNETES_NAMESPACE")
-private const val LOCAL_DEV_PATH = "localDevEnv"
+private const val LOCAL_DEV_ENV_CONFIG_PATH = "localDevEnv"
 const val LOCAL_DEV_ENV_NAME = "localdev"
 
 /** Represents a runtime environment. */
@@ -47,14 +47,14 @@ fun findEnvironment(): Env {
 }
 
 /**
- * Returns the [Env] named by [LOCAL_DEV_PATH] in [config], or `null` when the key (or the whole
- * file) is absent so the caller falls back to the default. A key that is present but holds an
- * invalid env name fails fast instead of being silently ignored.
+ * Returns the [Env] named by [LOCAL_DEV_ENV_CONFIG_PATH] in [config], or `null` when the key (or
+ * the whole file) is absent so the caller falls back to the default. A key that is present but
+ * holds an invalid env name fails fast instead of being silently ignored.
  */
 internal fun localDevEnvOrNull(config: Config, source: String): Env? {
     val localDevEnv =
         try {
-            config.getString(LOCAL_DEV_PATH)
+            config.getString(LOCAL_DEV_ENV_CONFIG_PATH)
         } catch (_: ConfigException.Missing) {
             return null
         }
@@ -62,7 +62,7 @@ internal fun localDevEnvOrNull(config: Config, source: String): Env? {
         return Env(localDevEnv.trim())
     } catch (ex: IllegalArgumentException) {
         throw IllegalArgumentException(
-            "Invalid $LOCAL_DEV_PATH value '$localDevEnv' in $source: ${ex.message}",
+            "Invalid $LOCAL_DEV_ENV_CONFIG_PATH value '$localDevEnv' in $source: ${ex.message}",
             ex,
         )
     }

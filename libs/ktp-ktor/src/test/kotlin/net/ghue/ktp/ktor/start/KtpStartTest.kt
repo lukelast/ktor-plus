@@ -10,24 +10,24 @@ import org.koin.dsl.module
 class KtpStartTest :
     StringSpec({
         "update creates a new builder with additional modules and inits" {
-            val originalBuilder = ktpAppCreate {
+            val originalFactory = ktpAppCreate {
                 addModule(module {})
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }
 
-            val updatedBuilder = originalBuilder.update {
+            val updatedFactory = originalFactory.update {
                 addModule(module {})
                 addAppInit { _ -> }
             }
 
-            val originalApp = originalBuilder()
-            val updatedApp = updatedBuilder()
+            val originalBuilder = originalFactory()
+            val updatedBuilder = updatedFactory()
 
-            originalApp.modules.size shouldBe 1
-            originalApp.appInits.size shouldBe 0
-            updatedApp.modules.size shouldBe 2
-            updatedApp.appInits.size shouldBe 1
-            updatedBuilder shouldNotBeSameInstanceAs originalBuilder
+            originalBuilder.modules.size shouldBe 1
+            originalBuilder.appInits.size shouldBe 0
+            updatedBuilder.modules.size shouldBe 2
+            updatedBuilder.appInits.size shouldBe 1
+            updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
         "update preserves custom configuration manager" {
@@ -37,66 +37,66 @@ class KtpStartTest :
                 KtpConfig.create { setUnitTestEnv() }
             }
 
-            val originalBuilder = ktpAppCreate {
+            val originalFactory = ktpAppCreate {
                 createKtpConfig = customConfigManager
                 addModule(module {})
             }
 
-            val updatedBuilder = originalBuilder.update { addModule(module {}) }
+            val updatedFactory = originalFactory.update { addModule(module {}) }
 
-            val updatedApp = updatedBuilder()
-            updatedApp.createKtpConfig()
+            val updatedBuilder = updatedFactory()
+            updatedBuilder.createKtpConfig()
 
             customConfigCalled.shouldBeTrue()
-            updatedApp.modules.size shouldBe 2
+            updatedBuilder.modules.size shouldBe 2
         }
 
         "update supports chaining additional changes" {
-            val originalBuilder = ktpAppCreate {
+            val originalFactory = ktpAppCreate {
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }
 
-            val firstUpdate = originalBuilder.update { addModule(module {}) }
+            val firstUpdateFactory = originalFactory.update { addModule(module {}) }
 
-            val secondUpdate = firstUpdate.update {
+            val secondUpdateFactory = firstUpdateFactory.update {
                 addModule(module {})
                 addAppInit { _ -> }
             }
 
-            val finalApp = secondUpdate()
+            val finalBuilder = secondUpdateFactory()
 
-            finalApp.modules.size shouldBe 2
-            finalApp.appInits.size shouldBe 1
+            finalBuilder.modules.size shouldBe 2
+            finalBuilder.appInits.size shouldBe 1
         }
 
         "update with empty block still produces new builder" {
-            val originalBuilder = ktpAppCreate {
+            val originalFactory = ktpAppCreate {
                 addModule(module {})
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }
 
-            val originalModulesCount = originalBuilder().modules.size
+            val originalModulesCount = originalFactory().modules.size
 
-            val updatedBuilder = originalBuilder.update {}
+            val updatedFactory = originalFactory.update {}
 
-            val updatedApp = updatedBuilder()
+            val updatedBuilder = updatedFactory()
 
-            updatedApp.modules.size shouldBe originalModulesCount
-            updatedBuilder shouldNotBeSameInstanceAs originalBuilder
+            updatedBuilder.modules.size shouldBe originalModulesCount
+            updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
         "update returns idempotent builder with preserved changes" {
-            val originalBuilder = ktpAppCreate {
+            val originalFactory = ktpAppCreate {
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }
 
-            val updatedBuilder = originalBuilder.update {
+            val updatedFactory = originalFactory.update {
                 addModule(module {})
                 addAppInit { _ -> }
             }
 
-            val firstCall = updatedBuilder()
-            val secondCall = updatedBuilder()
+            val firstCall = updatedFactory()
+            val secondCall = updatedFactory()
 
             firstCall.modules.size shouldBe secondCall.modules.size
             firstCall.appInits.size shouldBe secondCall.appInits.size
@@ -105,14 +105,14 @@ class KtpStartTest :
         }
 
         "build does not accumulate config modules across repeated invocations" {
-            val updatedBuilder = ktpAppCreate {
+            val updatedFactory = ktpAppCreate {
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
                 addModule(module {})
             }
                 .update { addModule(module {}) }
 
-            val firstBuild = updatedBuilder().build()
-            val secondBuild = updatedBuilder().build()
+            val firstBuild = updatedFactory().build()
+            val secondBuild = updatedFactory().build()
 
             firstBuild.modules.size shouldBe 3
             secondBuild.modules.size shouldBe 3

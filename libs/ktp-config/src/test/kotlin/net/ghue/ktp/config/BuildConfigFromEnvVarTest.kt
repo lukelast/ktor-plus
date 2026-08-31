@@ -112,7 +112,7 @@ class BuildConfigFromEnvVarTest :
             result.shouldBeNull()
         }
 
-        "buildConfigFromEnvVar returns null for duplicate key at same level" {
+        "buildConfigFromEnvVar parses duplicate keys with last value winning" {
             // Typesafe Config accepts duplicate keys at the same level; the last value wins.
             val configText = "key = \"value1\"\nkey = \"value2\""
             val result = buildConfigFromEnvVar(configText)

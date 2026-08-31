@@ -7,9 +7,9 @@ dependencies {
     api(project(":libs:ktp-ktor"))
 
     // Not inherited from ktp-gcp because JitPack builds could not resolve them transitively.
-    api(platform(libs.gcpBom))
+    api(platform(libs.gcp.bom))
     api(platform(libs.ktor.bom))
-    api(platform(libs.koinBom))
+    api(platform(libs.koin.bom))
 
     api(libs.ktor.sessions)
     api(libs.ktor.auth)

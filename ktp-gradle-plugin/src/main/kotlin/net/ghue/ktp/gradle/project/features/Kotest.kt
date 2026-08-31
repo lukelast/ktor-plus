@@ -1,4 +1,4 @@
-package net.ghue.ktp.gradle.project.mods
+package net.ghue.ktp.gradle.project.features
 
 import net.ghue.ktp.lib.KtpVersion
 import org.gradle.api.Project

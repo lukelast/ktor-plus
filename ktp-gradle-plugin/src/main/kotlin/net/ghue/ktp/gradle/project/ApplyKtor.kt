@@ -1,7 +1,7 @@
 package net.ghue.ktp.gradle.project
 
 import io.ktor.plugin.*
-import net.ghue.ktp.gradle.project.mods.*
+import net.ghue.ktp.gradle.project.features.*
 import net.ghue.ktp.lib.KtpLibs
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project

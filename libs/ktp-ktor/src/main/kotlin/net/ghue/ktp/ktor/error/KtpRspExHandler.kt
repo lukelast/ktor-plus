@@ -24,7 +24,7 @@ private val ignoredFieldNames =
 
 suspend fun processKtpRspEx(call: ApplicationCall, ex: KtpRspEx) {
     val requestPath = call.request.path()
-    val reflectedFields = extractExtendedFields(ex)
+    val reflectedFields = extractReflectedFields(ex)
     val problemJson = buildJsonObject {
         put("type", ex.type.ifBlank { "about:blank" })
         put("title", ex.title.ifBlank { ex.status.description })
@@ -64,7 +64,7 @@ suspend fun processKtpRspEx(call: ApplicationCall, ex: KtpRspEx) {
     )
 }
 
-private fun extractExtendedFields(ex: KtpRspEx): JsonObject = buildJsonObject {
+private fun extractReflectedFields(ex: KtpRspEx): JsonObject = buildJsonObject {
     if (ex::class == KtpRspEx::class) {
         return@buildJsonObject
     }

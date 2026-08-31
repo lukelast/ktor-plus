@@ -1,4 +1,4 @@
-package net.ghue.ktp.gradle.project.mods
+package net.ghue.ktp.gradle.project.features
 
 import org.gradle.api.JavaVersion
 import org.gradle.api.provider.Provider

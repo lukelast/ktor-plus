@@ -22,7 +22,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "admin@example.com",
                                     name = "Admin User",
                                     roles = setOf("admin"),
@@ -54,7 +54,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "Regular User",
                                     roles = setOf("user"),
@@ -86,7 +86,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "No Role User",
                                     roles = emptySet(),
@@ -152,7 +152,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "Multi Role User",
                                     roles = setOf("user", "admin", "editor"),
@@ -184,7 +184,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "Limited User",
                                     roles = setOf("user", "viewer"),
@@ -216,7 +216,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "Test User",
                                     roles = emptySet(),
@@ -248,7 +248,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "admin@example.com",
                                     name = "Admin User",
                                     roles = setOf("Admin"),
@@ -272,7 +272,7 @@ class RbacPluginTest :
             }
         }
 
-        "requireRole helper function works correctly" {
+        "requireRole applies to all nested routes" {
             testApplication {
                 application {
                     install(Authentication) {
@@ -280,7 +280,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "editor@example.com",
                                     name = "Editor User",
                                     roles = setOf("editor"),
@@ -310,7 +310,7 @@ class RbacPluginTest :
             }
         }
 
-        "works within authentication block" {
+        "sibling requireRole blocks enforce their roles independently" {
             testApplication {
                 application {
                     install(Authentication) {
@@ -318,7 +318,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "manager@example.com",
                                     name = "Manager User",
                                     roles = setOf("manager"),
@@ -360,7 +360,7 @@ class RbacPluginTest :
                             principal =
                                 UserSession(
                                     userId = UserId("user123"),
-                                    tenId = TenantId("test-tenant"),
+                                    tenantId = TenantId("test-tenant"),
                                     email = "user@example.com",
                                     name = "Test User",
                                     roles = setOf("user"),

@@ -1,4 +1,4 @@
-package net.ghue.ktp.gradle.project.mods
+package net.ghue.ktp.gradle.project.features
 
 import dev.detekt.gradle.extensions.DetektExtension
 import dev.detekt.gradle.plugin.DetektPlugin

@@ -9,7 +9,7 @@ data class UserSession(
     override val email: String,
     override val name: String,
     override val roles: Set<String>,
-    override val tenId: TenantId,
+    override val tenantId: TenantId,
 ) : UserPrincipal, HasRoles
 
 interface HasRoles {
@@ -21,7 +21,7 @@ interface HasRoles {
 
 interface UserPrincipal : HasRoles {
     override val userId: UserId
-    val tenId: TenantId
+    val tenantId: TenantId
     val email: String
     val name: String
     val nameFirst: String

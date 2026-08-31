@@ -22,13 +22,13 @@ private class FakeTicker : Ticker {
     }
 }
 
-class LazyWithExpirationTest :
+class LazyWithRefreshTest :
     StringSpec({
         "loads once and caches the value" {
             val loads = AtomicInteger()
             val holder =
                 object {
-                    val value by lazyWithExpiration(1.minutes) { loads.incrementAndGet() }
+                    val value by lazyWithRefresh(1.minutes) { loads.incrementAndGet() }
                 }
 
             holder.value shouldBe 1
@@ -41,7 +41,7 @@ class LazyWithExpirationTest :
             val holder =
                 object {
                     val value by
-                        lazyWithExpiration<Int>(1.minutes) {
+                        lazyWithRefresh<Int>(1.minutes) {
                             loads.incrementAndGet()
                             throw IllegalStateException("load failed")
                         }
@@ -57,7 +57,7 @@ class LazyWithExpirationTest :
             val loads = AtomicInteger()
             val holder =
                 object {
-                    val value by LazyWithExpiration(1.minutes, ticker) { loads.incrementAndGet() }
+                    val value by LazyWithRefresh(1.minutes, ticker) { loads.incrementAndGet() }
                 }
 
             holder.value shouldBe 1
@@ -72,7 +72,7 @@ class LazyWithExpirationTest :
             val holder =
                 object {
                     val value by
-                        LazyWithExpiration(1.minutes, ticker) {
+                        LazyWithRefresh(1.minutes, ticker) {
                             if (loads.incrementAndGet() > 1) {
                                 throw IllegalStateException("reload failed")
                             }
@@ -95,7 +95,7 @@ class LazyWithExpirationTest :
             val holder =
                 object {
                     val value by
-                        LazyWithExpiration(1.minutes, ticker) {
+                        LazyWithRefresh(1.minutes, ticker) {
                             val load = loads.incrementAndGet()
                             if (load > 1) {
                                 gate.await()

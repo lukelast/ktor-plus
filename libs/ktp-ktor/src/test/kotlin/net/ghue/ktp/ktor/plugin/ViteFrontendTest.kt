@@ -55,7 +55,7 @@ class ViteFrontendTest :
             config.staticPathSegment shouldBe "static"
             config.staticDir shouldBe Path("static")
             config.frontendDist shouldBe Path("frontend", "dist")
-            config.browserUriPathPrefix shouldBe "p"
+            config.frontendPathSegment shouldBe "p"
             config.frontendRoute shouldBe "/p/{...}"
             config.indexFilePath shouldBe Path("static").resolve(Path("src", "index.html"))
         }
@@ -67,14 +67,14 @@ class ViteFrontendTest :
             config.staticPathSegment = "assets"
             config.staticDir = Path("public")
             config.frontendDist = Path("build")
-            config.browserUriPathPrefix = "app"
+            config.frontendPathSegment = "app"
 
             config.vitePort shouldBe 3000
             config.indexFile shouldBe Path("custom.html")
             config.staticPathSegment shouldBe "assets"
             config.staticDir shouldBe Path("public")
             config.frontendDist shouldBe Path("build")
-            config.browserUriPathPrefix shouldBe "app"
+            config.frontendPathSegment shouldBe "app"
             config.frontendRoute shouldBe "/app/{...}"
             config.indexFilePath shouldBe Path("public").resolve(Path("custom.html"))
         }
@@ -187,7 +187,7 @@ class ViteFrontendTest :
 
                 application {
                     install(Koin) { modules(module { single { config } }) }
-                    install(ViteFrontendPlugin) { browserUriPathPrefix = "app" }
+                    install(ViteFrontendPlugin) { frontendPathSegment = "app" }
                 }
 
                 client.get("/app/dashboard").apply {

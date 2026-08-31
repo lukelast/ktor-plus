@@ -21,22 +21,22 @@ import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.start.ktpAppCreate
 import org.koin.ktor.ext.inject
 
-class KtpTestStartTest :
+class KtpTestAppTest :
     StringSpec({
-        "testKtpStart sets up application context" {
-            testKtpStart {
+        "ktpTestApp sets up application context" {
+            ktpTestApp {
                 val response = client.get("/test") {}
                 response.status shouldBe HttpStatusCode.NotFound
             }
         }
 
-        "testKtpStart injects KtpConfig" {
-            testKtpStart(start = false) {
+        "ktpTestApp injects KtpConfig" {
+            ktpTestApp(start = false) {
                 application {
                     routing {
                         get("/config") {
-                            val configManager by inject<KtpConfig>()
-                            configManager.shouldNotBeNull()
+                            val ktpConfig by inject<KtpConfig>()
+                            ktpConfig.shouldNotBeNull()
                             call.respond(HttpStatusCode.OK, "Config available")
                         }
                     }
@@ -48,8 +48,8 @@ class KtpTestStartTest :
             }
         }
 
-        "testKtpStart injects Application instance" {
-            testKtpStart(start = false) {
+        "ktpTestApp injects Application instance" {
+            ktpTestApp(start = false) {
                 application {
                     routing {
                         get("/app") {
@@ -66,7 +66,7 @@ class KtpTestStartTest :
             }
         }
 
-        "testKtpStart supports custom Koin modules" {
+        "ktpTestApp supports custom Koin modules" {
             abstract class TestService {
                 abstract fun getMessage(): String
             }
@@ -75,7 +75,7 @@ class KtpTestStartTest :
                 override fun getMessage() = "Hello from test service"
             }
 
-            testKtpStart(
+            ktpTestApp(
                 ktpAppCreate { addModule { single<TestService> { TestServiceImpl() } } },
                 start = false,
             ) {
@@ -94,8 +94,8 @@ class KtpTestStartTest :
             }
         }
 
-        "testKtpStart supports HTTP client testing" {
-            testKtpStart(start = false) {
+        "ktpTestApp supports HTTP client testing" {
+            ktpTestApp(start = false) {
                 application {
                     routing {
                         get("/health") { call.respond(HttpStatusCode.OK, "OK") }
@@ -120,8 +120,8 @@ class KtpTestStartTest :
             }
         }
 
-        "testKtpStart handles multiple routes" {
-            testKtpStart(start = false) {
+        "ktpTestApp handles multiple routes" {
+            ktpTestApp(start = false) {
                 application {
                     routing {
                         get("/") { call.respond(HttpStatusCode.OK, "Root") }

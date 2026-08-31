@@ -39,7 +39,10 @@ class KtpConfigBuilderTest :
 
         "buildConfig chooses highest priority entry" {
             val files =
-                listOf(fakeConfig(9, text = """v=default"""), fakeConfig(5, text = """v=app"""))
+                listOf(
+                        fakeConfigFile(9, text = """v=default"""),
+                        fakeConfigFile(5, text = """v=app"""),
+                    )
                     .shuffled()
             val config = buildConfig(Env.TEST_UNIT, files)
             val value = config.getValue("v")
@@ -51,9 +54,9 @@ class KtpConfigBuilderTest :
         "buildConfig prefers alphabetical names when priority matches" {
             val files =
                 listOf(
-                        fakeConfig(0, configName = "a", text = """v=a"""),
-                        fakeConfig(0, configName = "b", text = """v=b"""),
-                        fakeConfig(0, configName = "c", text = """v=c"""),
+                        fakeConfigFile(0, configName = "a", text = """v=a"""),
+                        fakeConfigFile(0, configName = "b", text = """v=b"""),
+                        fakeConfigFile(0, configName = "c", text = """v=c"""),
                     )
                     .shuffled()
 
@@ -62,7 +65,7 @@ class KtpConfigBuilderTest :
         }
 
         "buildConfig applies override map with highest precedence" {
-            val files = listOf(fakeConfig(0, text = """v=file"""))
+            val files = listOf(fakeConfigFile(0, text = """v=file"""))
             val config = buildConfig(Env.TEST_UNIT, files, mapOf("v" to "override"))
 
             config.getValue("v").unwrapped() shouldBe "override"
@@ -100,7 +103,7 @@ class KtpConfigBuilderTest :
         }
 
         "buildConfig rejects override keys missing from config files" {
-            val files = listOf(fakeConfig(0, text = """v=file"""))
+            val files = listOf(fakeConfigFile(0, text = """v=file"""))
             shouldThrow<IllegalArgumentException> {
                 buildConfig(Env.TEST_UNIT, files, mapOf("missing.path" to "x"))
             }

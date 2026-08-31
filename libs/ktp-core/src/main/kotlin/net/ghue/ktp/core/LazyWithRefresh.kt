@@ -10,10 +10,10 @@ import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 import net.ghue.ktp.log.log
 
-private val reloadExecutor = Executors.newVirtualThreadPerTaskExecutor()
+private val refreshExecutor = Executors.newVirtualThreadPerTaskExecutor()
 
-/** A lazy property delegate, but with an expiration time. */
-class LazyWithExpiration<T : Any>
+/** A lazy property delegate whose value is refreshed in the background after [refreshAfter]. */
+class LazyWithRefresh<T : Any>
 internal constructor(
     refreshAfter: Duration,
     ticker: Ticker = Ticker.systemTicker(),
@@ -27,7 +27,7 @@ internal constructor(
         Caffeine.newBuilder()
             .refreshAfterWrite(refreshAfter.toJavaDuration())
             .expireAfterWrite((refreshAfter * 2).toJavaDuration())
-            .executor(reloadExecutor)
+            .executor(refreshExecutor)
             .ticker(ticker)
             .build { load() }
 
@@ -36,7 +36,7 @@ internal constructor(
             loader().also { lastGood = it }
         } catch (ex: Exception) {
             val fallback = lastGood ?: throw ex
-            log {}.warn(ex) { "Reload failed, serving the previous value" }
+            log {}.warn(ex) { "Refresh failed, serving the previous value" }
             fallback
         }
 
@@ -44,13 +44,13 @@ internal constructor(
 }
 
 /**
- * Creates a [LazyWithExpiration] delegate whose value stays fresh for [refreshAfter]. A read past
- * that age starts one background reload on a virtual thread and returns the stale value (or the
- * fresh one, when the reload happens to complete immediately); past twice that age the entry is
- * evicted, and the next read blocks on a fresh load. Once a value has loaded successfully, the
- * delegate never throws again: a failed load (blocking or background) is logged, and the last good
- * value is served — and re-cached, so retries are paced by [refreshAfter]. Failures before the
- * first success propagate to the reader and the next read retries.
+ * Creates a [LazyWithRefresh] delegate whose value stays fresh for [refreshAfter]. A read past that
+ * age starts one background refresh on a virtual thread and returns the stale value (or the fresh
+ * one, when the refresh happens to complete immediately); past twice that age the entry is evicted,
+ * and the next read blocks on a fresh load. Once a value has loaded successfully, the delegate
+ * never throws again: a failed load (blocking or background) is logged, and the last good value is
+ * served — and re-cached, so retries are paced by [refreshAfter]. Failures before the first success
+ * propagate to the reader and the next read retries.
  */
-fun <T : Any> lazyWithExpiration(refreshAfter: Duration, loader: () -> T): LazyWithExpiration<T> =
-    LazyWithExpiration(refreshAfter, loader = loader)
+fun <T : Any> lazyWithRefresh(refreshAfter: Duration, loader: () -> T): LazyWithRefresh<T> =
+    LazyWithRefresh(refreshAfter, loader = loader)

@@ -36,9 +36,9 @@ class KtpConfigTest :
             assertBadConstructor<TestConfig> { newKtpConfig() }
         }
 
-        "getAllConfig renders masked values" {
+        "getAllConfigMasked renders masked values" {
             val ktp = newKtpConfig()
-            val allConfig = ktp.getAllConfig()
+            val allConfig = ktp.getAllConfigMasked()
             allConfig shouldBe
                 mapOf(
                     "app.name" to "",
@@ -56,7 +56,7 @@ class KtpConfigTest :
             shouldNotThrowAny { config.logAllConfig() }
         }
 
-        "extractChild deserializes nested config" {
+        "data property deserializes nested config" {
             val config = KtpConfig.create {
                 setUnitTestEnv()
                 overrideValue("app.name", "test-app")
@@ -65,6 +65,27 @@ class KtpConfigTest :
 
             config.data.app.name shouldBe "test-app"
             config.data.app.version shouldBe "1.0.0"
+        }
+
+        "extractChild deserializes the config block keyed by the class name" {
+            data class App(val name: String, val version: String)
+            val config = KtpConfig.create {
+                setUnitTestEnv()
+                overrideValue("app.name", "test-app")
+                overrideValue("app.version", "1.0.0")
+            }
+
+            config.extractChild<App>() shouldBe App(name = "test-app", version = "1.0.0")
+        }
+
+        "extractChild uses an explicit path when given" {
+            data class RenamedApp(val name: String)
+            val config = KtpConfig.create {
+                setUnitTestEnv()
+                overrideValue("app.name", "test-app")
+            }
+
+            config.extractChild<RenamedApp>("app").name shouldBe "test-app"
         }
 
         "config property exposes underlying Typesafe Config" {

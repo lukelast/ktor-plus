@@ -7,137 +7,130 @@ import kotlin.io.path.Path
 
 class PathTest :
     StringSpec({
-        "removePrefix removes matching first path component" {
+        "removeFirstFolder removes matching first path component" {
             val path = Path("static", "assets", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe Path("assets", "app.css")
         }
 
-        "removePrefix returns original path when first component doesn't match" {
+        "removeFirstFolder returns original path when first component doesn't match" {
             val path = Path("public", "assets", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe path
         }
 
-        "removePrefix handles single component path that matches" {
+        "removeFirstFolder throws when removing the only path component" {
             val path = Path("static")
 
-            shouldThrow<IllegalArgumentException> { path.removePrefix("static") }
+            shouldThrow<IllegalArgumentException> { path.removeFirstFolder("static") }
         }
 
-        "removePrefix handles single component path that doesn't match" {
+        "removeFirstFolder handles single component path that doesn't match" {
             val path = Path("public")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe path
         }
 
-        "removePrefix handles path with zero name count" {
+        "removeFirstFolder handles path with zero name count" {
             val path = Path("")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe path
         }
 
-        "removePrefix is case sensitive" {
+        "removeFirstFolder is case sensitive" {
             val path = Path("Static", "assets", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe path
         }
 
-        "removePrefix handles relative paths with dots" {
+        "removeFirstFolder handles relative paths with dots" {
             val path = Path("static", "..", "public", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe Path("..", "public", "app.css")
         }
 
-        "removePrefix handles paths with current directory references" {
+        "removeFirstFolder handles paths with current directory references" {
             val path = Path("static", ".", "assets", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe Path(".", "assets", "app.css")
         }
 
-        "removePrefix handles deep nested paths" {
+        "removeFirstFolder handles deep nested paths" {
             val path = Path("static", "js", "components", "ui", "button.js")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe Path("js", "components", "ui", "button.js")
         }
 
-        "removePrefix handles paths with special characters" {
+        "removeFirstFolder handles paths with special characters" {
             val path = Path("static", "file with spaces.txt")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe Path("file with spaces.txt")
         }
 
-        "removePrefix with empty string prefix doesn't match" {
+        "removeFirstFolder with empty string prefix doesn't match" {
             val path = Path("static", "app.css")
-            val result = path.removePrefix("")
+            val result = path.removeFirstFolder("")
 
             result shouldBe path
         }
 
-        "removePrefix handles absolute paths" {
+        "removeFirstFolder handles absolute paths" {
             val path = Path("/blah", "yo.txt")
-            val result = path.removePrefix("blah")
+            val result = path.removeFirstFolder("blah")
 
             result shouldBe Path("yo.txt")
         }
 
-        "removePrefix with multi-component prefix only checks first component" {
+        "removeFirstFolder with multi-component prefix only checks first component" {
             val path = Path("static", "assets", "app.css")
-            val result = path.removePrefix("static/assets")
+            val result = path.removeFirstFolder("static/assets")
 
             result shouldBe path
         }
 
-        "removePrefix handles paths with numeric components" {
+        "removeFirstFolder handles paths with numeric components" {
             val path = Path("v1", "api", "users")
-            val result = path.removePrefix("v1")
+            val result = path.removeFirstFolder("v1")
 
             result shouldBe Path("api", "users")
         }
 
-        "removePrefix preserves path type and structure" {
+        "removeFirstFolder preserves path type and structure" {
             val path = Path("static", "subfolder", "file.ext")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result.nameCount shouldBe 2
             result.getName(0).toString() shouldBe "subfolder"
             result.getName(1).toString() shouldBe "file.ext"
         }
 
-        "removePrefix handles Unicode folder names" {
+        "removeFirstFolder handles Unicode folder names" {
             val path = Path("静的", "assets", "app.css")
-            val result = path.removePrefix("静的")
+            val result = path.removeFirstFolder("静的")
 
             result shouldBe Path("assets", "app.css")
         }
 
-        "removePrefix with Unicode mismatch" {
+        "removeFirstFolder with Unicode mismatch" {
             val path = Path("static", "assets", "app.css")
-            val result = path.removePrefix("静的")
+            val result = path.removeFirstFolder("静的")
 
             result shouldBe path
         }
 
-        "removePrefix works with absolute path that doesn't match prefix" {
+        "removeFirstFolder works with absolute path that doesn't match prefix" {
             val path = Path("/", "public", "assets", "app.css")
-            val result = path.removePrefix("static")
+            val result = path.removeFirstFolder("static")
 
             result shouldBe path
-        }
-
-        "removePrefix works correctly with relative paths after absolute path fix" {
-            val path = Path("static", "assets", "app.css")
-            val result = path.removePrefix("static")
-
-            result shouldBe Path("assets", "app.css")
         }
     })

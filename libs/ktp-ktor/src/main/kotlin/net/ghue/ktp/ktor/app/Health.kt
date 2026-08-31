@@ -11,13 +11,13 @@ const val K8S_READINESS_PATH = "/readyz"
 /** Add Kubernetes health checks to the application. */
 fun Application.installK8sHealthCheck(
     /** If this returns false, K8s will restart the pod. */
-    healthCheck: () -> Boolean = { true },
+    livenessCheck: () -> Boolean = { true },
     /** If this returns false, K8s will not send traffic to the pod. */
     readinessCheck: () -> Boolean = { true },
 ) {
     routing {
         get(K8S_LIVENESS_PATH) {
-            if (healthCheck()) {
+            if (livenessCheck()) {
                 call.respondText("Alive", status = HttpStatusCode.OK)
             } else {
                 call.respondText("Not Alive", status = HttpStatusCode.ServiceUnavailable)

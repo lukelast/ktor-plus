@@ -5,7 +5,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder
 import ch.qos.logback.core.ConsoleAppender
 import org.slf4j.LoggerFactory
 
-fun installLocalDevConsoleLogger() {
+fun configureLocalDevConsoleLogFormat() {
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 
     // Assuming at most 1 console appender.

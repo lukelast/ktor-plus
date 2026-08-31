@@ -1,6 +1,6 @@
 package net.ghue.ktp.config
 
-fun fakeConfig(
+fun fakeConfigFile(
     priority: Int,
     configName: String = "",
     env: String = "",

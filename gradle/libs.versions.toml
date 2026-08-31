@@ -74,21 +74,21 @@ config4k = { module = "io.github.config4k:config4k", version.ref = "config4k" }
 classgraph = { module = "io.github.classgraph:classgraph", version.ref = "classgraph" }
 
 ## Koin dependencies
-koinBom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
-koinCore = { module = "io.insert-koin:koin-core" }
-koinAnnotations = { module = "io.insert-koin:koin-annotations" }
-koinKtor = { module = "io.insert-koin:koin-ktor" }
-koinLoggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j" }
-koinTest = { module = "io.insert-koin:koin-test" }
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
+koin-core = { module = "io.insert-koin:koin-core" }
+koin-annotations = { module = "io.insert-koin:koin-annotations" }
+koin-ktor = { module = "io.insert-koin:koin-ktor" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j" }
+koin-test = { module = "io.insert-koin:koin-test" }
 
 # Stripe dependencies
 stripe = { module = "com.stripe:stripe-java", version.ref = "stripe" }
 
 # Google Cloud Platform dependencies
 # Google Cloud BOM for version management: https://cloud.google.com/java/docs/bom
-gcpBom = { module = "com.google.cloud:libraries-bom", version.ref = "gcpBom" }
-gcpCore = { module = "com.google.cloud:google-cloud-core" }
-gcpFirestore = { module = "com.google.cloud:google-cloud-firestore" }
+gcp-bom = { module = "com.google.cloud:libraries-bom", version.ref = "gcpBom" }
+gcp-core = { module = "com.google.cloud:google-cloud-core" }
+gcp-firestore = { module = "com.google.cloud:google-cloud-firestore" }
 # Firebase Admin SDK - manages its own version but uses GCP BOM for transitive deps
 firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.10.0" }
 # Identity Platform Admin API. Stay on v2: Maven Central's <latest> is a 2018 legacy v3 artifact

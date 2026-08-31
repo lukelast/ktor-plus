@@ -10,14 +10,14 @@ import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.sha256
 import net.ghue.ktp.core.sha512
 
-const val AES128_KEY_SIZE = 128 / 8
+const val AES128_KEY_BYTES = 128 / 8
 
 fun KtpConfig.createSessionTransportTransformer(): SessionTransportTransformer {
     // Mixing in the env name blocks cookie replay across environments sharing an app secret.
     val secret = this.data.app.secret + this.env.name
 
     return SessionTransportTransformerEncrypt(
-        encryptionKey = secret.sha256().take(AES128_KEY_SIZE).toByteArray(),
+        encryptionKey = secret.sha256().take(AES128_KEY_BYTES).toByteArray(),
         signKey = secret.sha512(),
     )
 }

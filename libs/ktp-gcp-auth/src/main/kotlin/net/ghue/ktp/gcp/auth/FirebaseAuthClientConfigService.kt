@@ -9,7 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingContext
 import kotlin.time.Duration.Companion.minutes
-import net.ghue.ktp.core.lazyWithExpiration
+import net.ghue.ktp.core.lazyWithRefresh
 import net.ghue.ktp.log.log
 
 // Paces console-toggle propagation to the UI; keep it short enough that flipping a provider in
@@ -32,8 +32,7 @@ internal class FirebaseAuthClientConfigService(
         }
     private val projectName = "projects/$projectId"
 
-    private val cachedConfig by
-        lazyWithExpiration(AUTH_CLIENT_CONFIG_REFRESH_AFTER) { loadFromGcp() }
+    private val cachedConfig by lazyWithRefresh(AUTH_CLIENT_CONFIG_REFRESH_AFTER) { loadFromGcp() }
 
     suspend fun RoutingContext.handleClientConfig() {
         val authClientConfig =

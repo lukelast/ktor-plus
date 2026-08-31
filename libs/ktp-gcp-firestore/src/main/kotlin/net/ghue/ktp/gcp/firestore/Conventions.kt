@@ -28,19 +28,19 @@ interface DocTimes {
 }
 
 /** Extracts the value of the 'id' property from the given data object. */
-fun idFieldValue(item: Any): String {
+fun idFieldValue(document: Any): String {
     val idProperty =
-        item::class.memberProperties.find { it.name == "id" }
+        document::class.memberProperties.find { it.name == "id" }
             ?: ktpRspError {
                 title = "Missing ID Property"
-                detail = "Property 'id' not found on ${item::class.simpleName}"
+                detail = "Property 'id' not found on ${document::class.simpleName}"
             }
 
     val idValue =
-        idProperty.getter.call(item)
+        idProperty.getter.call(document)
             ?: ktpRspError {
                 title = "Null ID"
-                detail = "Property 'id' is null on ${item::class.simpleName}"
+                detail = "Property 'id' is null on ${document::class.simpleName}"
             }
 
     val stringValue =
@@ -56,7 +56,7 @@ fun idFieldValue(item: Any): String {
                 property.getter.call(idValue)
                     ?: ktpRspError {
                         title = "Null ID"
-                        detail = "Property 'id' is null on ${item::class.simpleName}"
+                        detail = "Property 'id' is null on ${document::class.simpleName}"
                     }
             innerValue.toString()
         } else {
@@ -66,7 +66,7 @@ fun idFieldValue(item: Any): String {
     if (stringValue.isEmpty()) {
         ktpRspError {
             title = "Empty ID"
-            detail = "Property 'id' is empty on ${item::class.simpleName}"
+            detail = "Property 'id' is empty on ${document::class.simpleName}"
         }
     }
     return stringValue

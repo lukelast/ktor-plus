@@ -1,6 +1,6 @@
 package net.ghue.ktp.gradle.project
 
-import net.ghue.ktp.gradle.project.mods.registerVerifyTask
+import net.ghue.ktp.gradle.project.features.registerVerifyTask
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
 

@@ -99,6 +99,47 @@ class FirebaseAuthPluginTest :
             }
         }
 
+        "defers auth client config initialization until requested" {
+            var initializationAttempts = 0
+
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+                val mockFirebaseAuth = mockk<FirebaseAuth>(relaxed = true)
+                val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
+
+                application {
+                    install(KoinIsolated) {
+                        modules(
+                            module {
+                                single { config }
+                                single {
+                                    FirebaseAuthService(
+                                        firebaseAuth = mockFirebaseAuth,
+                                        lifecycle = mockLifecycle,
+                                    )
+                                }
+                                single<FirebaseAuthClientConfigService> {
+                                    initializationAttempts++
+                                    throw IOException("ADC unavailable")
+                                }
+                            }
+                        )
+                    }
+
+                    install(FirebaseAuthPlugin)
+                }
+
+                startApplication()
+                initializationAttempts shouldBe 0
+
+                client.get(AuthUrls.CLIENT_CONFIG).apply {
+                    status shouldBe HttpStatusCode.ServiceUnavailable
+                    headers[HttpHeaders.CacheControl] shouldBe "no-store"
+                }
+                initializationAttempts shouldBe 1
+            }
+        }
+
         "serves public auth client configuration" {
             testApplication {
                 val config = KtpConfig.create { setUnitTestEnv() }
@@ -496,8 +537,6 @@ private fun authTestModule(
     config: KtpConfig,
     firebaseAuth: FirebaseAuth,
     lifecycle: AuthLifecycleHandler,
-    // The plugin resolves this eagerly at install; tests that never hit the config route still
-    // need a resolvable instance, backed by a strict mock that fails loudly if it is called.
     authClientConfigService: FirebaseAuthClientConfigService =
         FirebaseAuthClientConfigService(
             firebaseApp = mockFirebaseApp(),

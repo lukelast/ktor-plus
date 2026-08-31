@@ -22,12 +22,18 @@ internal fun Project.configureGcpEnvironment() {
  * - `gcp.projectId`: GCP project id. Default: the root project name.
  * - `gcp.appName`: app name for the Infra Manager deployment. Default: the root project name.
  * - `gcp.region`: deployment region. Default: `us-central1`.
- * - `gcp.github_owner`: passed to terraform when set, omitted otherwise.
- * - `gcp.github_repo`: passed to terraform. Default: the root project name.
+ * - `gcp.githubOwner`: passed to terraform when set, omitted otherwise.
+ * - `gcp.githubRepo`: passed to terraform. Default: the root project name.
  *
  * Terraform sources are expected at the `deploy/tf` convention location.
  */
 internal fun Project.registerGcloudTasks() {
+    // Renamed from snake_case; fail fast so stale gradle.properties keys aren't silently ignored.
+    for ((old, new) in listOf("gcp.github_owner" to "gcp.githubOwner", "gcp.github_repo" to "gcp.githubRepo")) {
+        check(findProperty(old) == null) {
+            "File 'gradle.properties', field '$old', is no longer supported. Use '$new' instead."
+        }
+    }
     val gcloudCommand =
         if (System.getProperty("os.name").startsWith("Windows")) "gcloud.cmd" else "gcloud"
     val gcpProjectId = findProperty("gcp.projectId")?.toString() ?: rootProject.name
@@ -70,7 +76,7 @@ internal fun Project.registerGcloudTasks() {
         )
     }
 
-    tasks.register<Exec>("gcloudDeployInfra") {
+    tasks.register<Exec>("gcloudInfraDeploy") {
         group = GCLOUD_GROUP
         description = "Deploys infrastructure using Google Cloud Infrastructure Manager."
         workingDir = projectDir
@@ -80,8 +86,8 @@ internal fun Project.registerGcloudTasks() {
                     "project_id=$gcpProjectId",
                     "app_name=$appName",
                     "region=$region",
-                    findProperty("gcp.github_owner")?.let { "github_owner=$it" },
-                    "github_repo=${findProperty("gcp.github_repo") ?: rootProject.name}",
+                    findProperty("gcp.githubOwner")?.let { "github_owner=$it" },
+                    "github_repo=${findProperty("gcp.githubRepo") ?: rootProject.name}",
                 )
                 .joinToString(",")
         runGcloud(

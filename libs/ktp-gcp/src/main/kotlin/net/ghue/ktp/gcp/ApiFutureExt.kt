@@ -4,6 +4,7 @@ import com.google.api.core.ApiFuture
 import com.google.api.core.ApiFutureCallback
 import com.google.api.core.ApiFutures
 import com.google.common.util.concurrent.MoreExecutors
+import java.util.concurrent.ExecutionException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -27,3 +28,11 @@ suspend fun <T> ApiFuture<T>.await(): T = suspendCancellableCoroutine { cont ->
 
     cont.invokeOnCancellation { this.cancel(true) }
 }
+
+/** Blocks until done (fine on ktp's virtual-thread requests), unwrapping [ExecutionException]. */
+fun <T> ApiFuture<T>.join(): T =
+    try {
+        get()
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    }

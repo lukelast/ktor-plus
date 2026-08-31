@@ -36,7 +36,7 @@ fun Routing.installStripeWebhook() {
         val webhookEvent = event.toWebhookEvent()
         withLoggingContext(
             "stripe-event-id" to webhookEvent.eventId.value,
-            "event-type" to webhookEvent.type,
+            "stripe-event-type" to webhookEvent.type,
             "stripe-object-id" to webhookEvent.objectIdRaw,
         ) {
             log {}.info { "Processing stripe event" }

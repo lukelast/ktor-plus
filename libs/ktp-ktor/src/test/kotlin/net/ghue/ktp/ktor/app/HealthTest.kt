@@ -30,7 +30,7 @@ class HealthTest :
 
         "health endpoint returns ServiceUnavailable when unhealthy" {
             testApplication {
-                application { installK8sHealthCheck(healthCheck = { false }) }
+                application { installK8sHealthCheck(livenessCheck = { false }) }
                 val response = client.get(K8S_LIVENESS_PATH)
                 response.status shouldBe HttpStatusCode.ServiceUnavailable
                 response.bodyAsText() shouldBe "Not Alive"

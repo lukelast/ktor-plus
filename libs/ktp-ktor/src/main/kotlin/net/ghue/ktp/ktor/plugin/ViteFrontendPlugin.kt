@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.Resource
-import net.ghue.ktp.core.removePrefix
+import net.ghue.ktp.core.removeFirstFolder
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
@@ -44,7 +44,7 @@ class ViteFrontendConfig {
 
     /** Where the frontend files are built during development. */
     var frontendDist: Path = Path("frontend", "dist")
-    var browserUriPathPrefix: String = "p"
+    var frontendPathSegment: String = "p"
 
     val staticRootPath: String = "/${staticPathSegment}"
 
@@ -52,7 +52,7 @@ class ViteFrontendConfig {
         get() = staticDir.resolve(indexFile)
 
     val indexFileText: String by lazy {
-        val altPath = staticDir.resolve(indexFile.removePrefix("src"))
+        val altPath = staticDir.resolve(indexFile.removeFirstFolder("src"))
         if (indexFilePath.isReadable()) {
             return@lazy indexFilePath.readText()
         } else if (altPath.isReadable()) {
@@ -63,9 +63,9 @@ class ViteFrontendConfig {
             ?: error("$indexFile not found")
     }
 
-    /** Catch-all under [browserUriPathPrefix] so client-side routes load on direct navigation. */
+    /** Catch-all under [frontendPathSegment] so client-side routes load on direct navigation. */
     val frontendRoute: String
-        get() = "/${browserUriPathPrefix}/{...}"
+        get() = "/${frontendPathSegment}/{...}"
 }
 
 val ViteFrontendPlugin =
@@ -149,18 +149,18 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
                 bytes = viteResponse.body,
             )
         } else {
-            serveFromFrontendFiles(path)
+            serveFromFrontendDist(path)
         }
     }
 
-    private suspend fun ApplicationCall.serveFromFrontendFiles(path: Path) {
-        val frontendFiles = frontendFilesOrNull()
-        if (frontendFiles == null) {
+    private suspend fun ApplicationCall.serveFromFrontendDist(path: Path) {
+        val frontendDistDir = frontendDistDirOrNull()
+        if (frontendDistDir == null) {
             log {}.warn { "Frontend dist directory not found for fallback: ${config.frontendDist}" }
             respond(HttpStatusCode.NotFound)
             return
         }
-        val file = frontendFiles.resolve(path.removePrefix(config.staticPathSegment))
+        val file = frontendDistDir.resolve(path.removeFirstFolder(config.staticPathSegment))
         if (file.isReadable()) {
             log {}.info { "Serving: $file" }
             respondPath(file)
@@ -171,7 +171,7 @@ private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
     }
 
     // Under Gradle the working dir is the server subproject, so the frontend may be a sibling.
-    private fun frontendFilesOrNull(): Path? =
+    private fun frontendDistDirOrNull(): Path? =
         listOf(config.frontendDist, Path("..").resolve(config.frontendDist))
             .map { it.normalize() }
             .firstOrNull { it.isDirectory() }

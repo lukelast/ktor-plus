@@ -105,7 +105,7 @@ class MyServiceConfig(config: KtpConfig) {
 val serviceConfig = config.get<MyServiceConfig>()
 
 // Debugging
-val allConfig = config.getAllConfig()  // Secrets masked
+val allConfig = config.getAllConfigMasked()  // Secrets masked
 config.logAllConfig()
 val env = config.env
 ```

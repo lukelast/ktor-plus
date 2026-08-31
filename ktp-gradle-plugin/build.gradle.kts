@@ -49,7 +49,7 @@ gradlePlugin {
             id = "$group.project"
             implementationClass = "net.ghue.ktp.gradle.project.ProjectPlugin"
         }
-        create("lukestackGradlePlugin") {
+        create("ktpGradleLukestackPlugin") {
             id = "$group.lukestack"
             implementationClass = "net.ghue.ktp.gradle.lukestack.LukestackPlugin"
         }
