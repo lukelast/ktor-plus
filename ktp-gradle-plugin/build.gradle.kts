@@ -129,7 +129,7 @@ val versionGenTask =
              * `implementation(KtpLibs.stripe)`.
              */
             object KtpLibs {
-                /** koin BOM, same version the plugin injects into consumer builds. */
+                /** koin BOM, matching the koin version the KTP libraries are built against. */
                 const val koinBom = "io.insert-koin:koin-bom:$koinVersion"
 
             %LIBS%

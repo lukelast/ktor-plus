@@ -12,10 +12,9 @@ KTP libraries and Gradle plugins are available via JitPack:
 
 https://jitpack.io/#lukelast/ktor-plus
 
-### Add Jitpack to settings.gradle.kts
+### Apply the settings plugin in settings.gradle.kts
 
 ```kotlin
-// In your settings.gradle.kts
 pluginManagement {
     repositories {
         gradlePluginPortal()
@@ -23,35 +22,37 @@ pluginManagement {
         maven { url = uri("https://jitpack.io") }
     }
 }
+
+// The one KTP version declaration for the whole build. Only this bare id
+// resolves by version from JitPack; the project plugins ride in on its jar.
+plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
-### Update build.gradle.kts
+### Pick the project plugin in gradle.properties
+
+```properties
+rootProject.name=my-app
+# Auto-apply the KTP project plugin to every project: 'ktp', or 'lukestack' for the full stack.
+ktp.plugin=ktp
+```
+
+### Declare optional KTP libraries in build.gradle.kts
 
 ```kotlin
-// Import the generated coordinates object; it ships inside the plugin jar.
+// The generated coordinates object ships inside the plugin jar.
 import net.ghue.ktp.lib.KtpLibs
 
-// If using libs.versions.toml
-plugins { alias(libs.plugins.ktp) }
-
-// Or directly
-plugins { id("com.github.lukelast.ktor-plus.project") version "VERSION" }
-
-// The plugin adds the ktp-ktor and ktp-test dependencies automatically.
-// Only the optional KTP libraries need declaring. KtpLibs pins every KTP
-// library to the plugin's own version, so no version is written anywhere:
+// ktp-ktor and ktp-test are added automatically. Optional KTP libraries are
+// declared through KtpLibs, which pins them to the plugin's own version, so
+// no version number is written anywhere:
 dependencies {
     implementation(KtpLibs.stripe)
 }
 ```
 
-### Update libs.versions.toml if you use it
-```toml
-[versions]
-ktp-version = "{{LATEST_VERSION}}"
-[plugins]
-ktp = { id = "com.github.lukelast.ktor-plus", version.ref = "ktp-version" }
-```
+Upgrading from an older release? Delete the committed `gradle/ktp.versions.toml` and commit
+the removal: the `ktp` version catalog was replaced by `KtpLibs`, and the file is no longer
+generated or read.
 
 ## KTP Libraries
 
@@ -67,7 +68,7 @@ Core utilities with minimal dependencies, providing essential building blocks fo
 - **Lazy Properties**: Utilities for lazy initialization
 - **Enum Utilities**: Helper functions for working with enums
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-core:VERSION")`
+**Dependency**: `implementation(KtpLibs.core)`
 
 ### [ktp-config](libs%2Fktp-config%2Freadme.md)
 
@@ -82,7 +83,7 @@ Configuration management built on Typesafe Config with layered, environment-spec
 - **HOCON Injection**: Inject configuration via `KTP_CONFIG` environment variable
 - **Testing Support**: Built-in helpers for unit and integration testing
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-config:VERSION")`
+**Dependency**: `implementation(KtpLibs.config)`
 
 ### ktp-ktor
 
@@ -96,7 +97,7 @@ Ktor-specific extensions and utilities for building production-ready microservic
 - **Default Plugins**: Pre-configured Ktor plugins with sensible defaults
 - **MDC Clearing**: Plugin for managing logging MDC context
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-ktor:VERSION")`
+**Dependency**: added automatically by the KTP project plugin (`KtpLibs.ktor`).
 
 ### ktp-gcp
 
@@ -109,7 +110,7 @@ Google Cloud Platform BOM and utilities for GCP integration:
 - **Region Detection**: Get GCP region from environment variables
 - **Metadata Utilities**: Access Cloud Run service name, revision, and configuration
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp:VERSION")`
+**Dependency**: `implementation(KtpLibs.gcp)`
 
 ### ktp-gcp-auth
 
@@ -120,7 +121,7 @@ Firebase and Google Cloud Platform authentication for Ktor applications:
 - **Debug Routes**: Pre-configured authenticated debug endpoints
 - **GCP Integration**: Seamless integration with Google Cloud services
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp-auth:VERSION")`
+**Dependency**: `implementation(KtpLibs.gcpAuth)`
 
 `FirebaseAuthPlugin` registers fixed auth routes — `GET /auth/config`, `POST /auth/login`, and
 `POST /auth/logout` (see `AuthUrls`); they are convention, not configuration. The config endpoint
@@ -139,7 +140,7 @@ Google Cloud Firestore integration utilities:
 - **Google Cloud Firestore**: Native Google Cloud Firestore client.
 - **Firebase Admin SDK**: Support for Firebase Admin SDK.
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-gcp-firestore:VERSION")`
+**Dependency**: `implementation(KtpLibs.gcpFirestore)`
 
 ### ktp-stripe
 
@@ -149,7 +150,7 @@ Stripe payment integration utilities for Ktor applications:
 - Payment processing utilities
 - Webhook handling
 
-**Dependency**: `implementation("com.github.lukelast.ktor-plus:ktp-stripe:VERSION")`
+**Dependency**: `implementation(KtpLibs.stripe)`
 
 ### ktp-test
 
@@ -160,7 +161,7 @@ Testing utilities and helpers for KTP applications:
 - Testing utilities for Ktor applications
 - Kotest integration
 
-**Dependency**: `testImplementation("com.github.lukelast.ktor-plus:ktp-test:VERSION")`
+**Dependency**: added automatically by the KTP project plugin (`KtpLibs.test`).
 
 
 ## Developing KTP
@@ -226,8 +227,9 @@ Features:
   one version declaration rules everything KTP, and library versions can never drift from the
   plugin. Settings plugins are visible to every project build script, so any module can
   `implementation(KtpLibs.stripe)` after one import; nothing is generated into the consumer's
-  tree, and the IDE resolves the accessors with plain Kotlin tooling. A stale
-  `gradle/ktp.versions.toml` generated by older releases is deleted automatically.
+  tree, and the IDE resolves the accessors with plain Kotlin tooling. Consumers upgrading
+  from an older release should delete the committed `gradle/ktp.versions.toml` themselves —
+  it is no longer generated or read.
 - **Toolchain resolver**: the Foojay resolver is applied, so a missing JDK downloads on demand.
 - **Project plugin auto-apply**: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
   plugin to every project — no per-project `plugins {}` blocks needed anywhere.
