@@ -23,7 +23,7 @@ import java.time.ZoneOffset
 import net.ghue.ktp.gcp.auth.LoginIdentity
 import net.ghue.ktp.gcp.auth.TenantId
 import net.ghue.ktp.gcp.auth.UserId
-import net.ghue.ktp.gcp.auth.UserInfo
+import net.ghue.ktp.gcp.auth.UserSession
 import net.ghue.ktp.gcp.firestore.toTimestamp
 
 private val NOW = Instant.parse("2026-09-04T12:00:00Z")
@@ -33,15 +33,15 @@ private val ALICE = LoginIdentity(UserId("dev-alice"), "alice@dev.test", "Alice"
 
 class FirestoreUserStoreTest :
     StringSpec({
-        "the login hook returns the stored record as session info" {
+        "the login hook returns the stored record as the session" {
             val db = MockDb()
             db.snapshotIsMissing()
             db.acceptCreate()
 
-            val info = db.store().onLogin(ALICE)
+            val session = db.store().onLogin(ALICE)
 
-            info shouldBe
-                UserInfo(
+            session shouldBe
+                UserSession(
                     userId = UserId("dev-alice"),
                     tenantId = TenantId("tenant-new"),
                     email = "alice@dev.test",

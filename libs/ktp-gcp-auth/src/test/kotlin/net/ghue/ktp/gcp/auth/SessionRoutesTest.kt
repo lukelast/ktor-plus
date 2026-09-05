@@ -181,7 +181,7 @@ private fun loginPassthrough(): AuthLifecycleHandler {
     coEvery { lifecycle.onLogin(any()) } answers
         {
             val identity = firstArg<LoginIdentity>()
-            UserInfo(
+            UserSession(
                 userId = identity.userId,
                 tenantId = TenantId("tenant-${identity.userId.value}"),
                 email = identity.email,

@@ -12,21 +12,14 @@ import kotlinx.serialization.json.Json
 /** Session bodies are per-user and the cookie is the whole session: never let a cache hold one. */
 internal const val NO_STORE = "no-store"
 
-/** Runs the app's login hook for [identity] and issues the session cookie. */
+/** Runs the app's login hook for [identity] and issues the session it returns as the cookie. */
 internal suspend fun ApplicationCall.startSession(
     lifecycle: AuthLifecycleHandler,
     identity: LoginIdentity,
     extraRoles: Set<String> = emptySet(),
 ): UserSession {
-    val userInfo = lifecycle.onLogin(identity)
-    val session =
-        UserSession(
-            userId = identity.userId,
-            tenantId = userInfo.tenantId,
-            email = userInfo.email,
-            name = userInfo.name,
-            roles = userInfo.roles + extraRoles,
-        )
+    val login = lifecycle.onLogin(identity)
+    val session = login.copy(roles = login.roles + extraRoles)
     sessions.set(session)
     return session
 }

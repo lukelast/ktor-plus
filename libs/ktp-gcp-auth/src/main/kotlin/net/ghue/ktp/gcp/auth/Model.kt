@@ -18,21 +18,13 @@ data class LoginIdentity(
 interface AuthLifecycleHandler {
     /**
      * Called once per session mint (login or dev login), never per page load. Persist the user here
-     * and return what the session cookie should carry; `FirestoreUserStore` in
+     * and return the session to issue as the cookie; `FirestoreUserStore` in
      * `ktp-gcp-auth-firestore` is the stock implementation.
      */
-    suspend fun onLogin(identity: LoginIdentity): UserInfo
+    suspend fun onLogin(identity: LoginIdentity): UserSession
 
     suspend fun onLogout(userSession: UserSession) {}
 }
-
-data class UserInfo(
-    val userId: UserId,
-    val tenantId: TenantId,
-    val email: String,
-    val name: String,
-    val roles: Set<String>,
-)
 
 @Serializable internal data class LoginRequest(val idToken: String)
 

@@ -7,7 +7,7 @@ import net.ghue.ktp.gcp.auth.AuthLifecycleHandler
 import net.ghue.ktp.gcp.auth.LoginIdentity
 import net.ghue.ktp.gcp.auth.TenantId
 import net.ghue.ktp.gcp.auth.UserId
-import net.ghue.ktp.gcp.auth.UserInfo
+import net.ghue.ktp.gcp.auth.UserSession
 import net.ghue.ktp.gcp.firestore.DocTimes
 import net.ghue.ktp.gcp.firestore.setMerge
 import net.ghue.ktp.gcp.firestore.toTimestamp
@@ -35,8 +35,8 @@ data class KtpUser(
     override val createTime: Instant? = null,
     override val updateTime: Instant? = null,
 ) : DocTimes {
-    fun toUserInfo(): UserInfo =
-        UserInfo(userId = id, tenantId = tenantId, email = email, name = name, roles = roles)
+    fun toSession(): UserSession =
+        UserSession(userId = id, tenantId = tenantId, email = email, name = name, roles = roles)
 }
 
 /**
@@ -63,7 +63,7 @@ class FirestoreUserStore(
 ) : AuthLifecycleHandler {
     private val users = db.typedCollection<KtpUser>(collectionName)
 
-    override suspend fun onLogin(identity: LoginIdentity): UserInfo = login(identity).toUserInfo()
+    override suspend fun onLogin(identity: LoginIdentity): UserSession = login(identity).toSession()
 
     /**
      * Records a login and returns the stored user, creating it and its tenant on first sight. First

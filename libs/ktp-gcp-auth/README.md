@@ -71,7 +71,7 @@ runs once per session, never per page load. An app that installs `Sessions` itse
 ## Login hook
 
 Every login, Firebase or dev, produces a `LoginIdentity` (user id, email, name) for the app's
-`AuthLifecycleHandler.onLogin`, which returns the `UserInfo` the cookie carries (tenant, roles).
+`AuthLifecycleHandler.onLogin`, which returns the `UserSession` the cookie carries (tenant, roles).
 An app using `ktp-gcp-auth-firestore` implements nothing: its `FirestoreUserStore` is the stock
 handler. An app wanting more defines its own handler (app definitions load after library modules,
 so theirs wins) and can wrap the store, calling `login` for the record.

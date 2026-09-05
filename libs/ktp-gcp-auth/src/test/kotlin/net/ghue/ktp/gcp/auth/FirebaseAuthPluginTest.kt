@@ -256,7 +256,7 @@ class FirebaseAuthPluginTest :
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns
                     createMockFirebaseToken()
                 coEvery { mockLifecycle.onLogin(any()) } returns
-                    UserInfo(
+                    UserSession(
                         userId = UserId("test-user-id"),
                         tenantId = TenantId("test-tenant"),
                         email = "test@example.com",
@@ -295,7 +295,7 @@ class FirebaseAuthPluginTest :
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
                 coEvery { mockLifecycle.onLogin(any()) } returns
-                    UserInfo(
+                    UserSession(
                         userId = UserId("test-user-id"),
                         tenantId = TenantId("test-tenant"),
                         email = "test@example.com",
@@ -365,7 +365,7 @@ class FirebaseAuthPluginTest :
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
                 coEvery { mockLifecycle.onLogin(any()) } returns
-                    UserInfo(
+                    UserSession(
                         userId = UserId("test-user-id"),
                         tenantId = TenantId("test-tenant"),
                         email = "test@example.com",
@@ -413,7 +413,7 @@ class FirebaseAuthPluginTest :
 
                 every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns mockToken
                 coEvery { mockLifecycle.onLogin(any()) } returns
-                    UserInfo(
+                    UserSession(
                         userId = UserId("test-user-id"),
                         tenantId = TenantId("test-tenant"),
                         email = "test@example.com",
