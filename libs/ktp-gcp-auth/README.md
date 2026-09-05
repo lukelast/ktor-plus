@@ -93,10 +93,11 @@ so theirs wins) and can wrap the store, calling `login` for the record.
 
 ## Local-dev login
 
-`GET /auth/dev/login?user=alice&roles=admin&redirect=/p/home` signs the browser in as `dev-alice`
+`GET /auth/dev/login?user=alice&redirect=/p/home` signs the browser in as `dev-alice`
 (`alice@dev.test`) through the normal login hook, so it gets a real record and tenant in the local
 database. Every `user` is its own set of test data; leaving it out signs in as the user `dev`.
-`roles` are added on top of the stored ones and `redirect` must be a same-origin path. The route is
+Every dev session includes the `admin` role. Optional `roles` are added on top of the stored ones
+and `redirect` must be a same-origin path. The route is
 registered only when the env is local dev, so elsewhere it does not exist. It is for browsers
 without the developer's Firebase state, such as coding agents driving a local instance.
 

@@ -100,9 +100,7 @@ class SessionRoutesTest :
             authApp(localDevConfig(), lifecycle = lifecycle) {
                 val browser = cookieClient()
                 val response =
-                    browser.get(
-                        "${AuthUrls.DEV_LOGIN}?user=alice-b&roles=admin,%20ops&redirect=/p/x"
-                    )
+                    browser.get("${AuthUrls.DEV_LOGIN}?user=alice-b&roles=%20ops&redirect=/p/x")
 
                 response.status shouldBe HttpStatusCode.Found
                 response.headers[HttpHeaders.Location] shouldBe "/p/x"
@@ -131,6 +129,12 @@ class SessionRoutesTest :
 
                     response.status shouldBe HttpStatusCode.Found
                     response.headers[HttpHeaders.Location] shouldBe "/"
+                    val user = browser.get(AuthUrls.SESSION).bodyAsText().sessionUser()
+                    user
+                        .getValue("roles")
+                        .jsonArray
+                        .map { it.jsonPrimitive.content }
+                        .toSet() shouldBe setOf("user", "admin")
                 }
                 coVerify(exactly = 2) {
                     lifecycle.onLogin(LoginIdentity(UserId("dev"), "dev@dev.test", "Dev"))
