@@ -25,6 +25,8 @@ val RbacPlugin =
         val config = pluginConfig
 
         on(AuthenticationChecked) { call ->
+            // Authentication may already have answered 401 or a retryable 503.
+            if (call.isHandled) return@on
             if (config.requiredRole.name.isBlank()) {
                 call.application.log.error(
                     "RbacPlugin installed with no required role. Denying access."

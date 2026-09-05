@@ -7,10 +7,7 @@ import net.ghue.ktp.config.parseDuration
 val KtpConfig.auth: Auth
     get() = this.extractChild()
 
-data class Auth(
-    val sessionTimeout: String,
-    val secureCookies: Boolean,
-) {
+data class Auth(val sessionTimeout: String, val secureCookies: Boolean) {
     val sessionTimeoutDuration: Duration
         get() = parseDuration(sessionTimeout)
 }

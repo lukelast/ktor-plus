@@ -25,6 +25,8 @@ private const val IDP_CONFIG_PAGE_SIZE = 100
 internal class FirebaseAuthClientConfigService(
     firebaseApp: FirebaseApp,
     private val identityToolkit: IdentityToolkit,
+    /** Whether [AuthUrls.DEV_LOGIN] is mounted; static for the life of the server, so cacheable. */
+    private val devLogin: Boolean = false,
 ) {
     private val projectId =
         requireNotNull(firebaseApp.options.projectId) {
@@ -41,7 +43,7 @@ internal class FirebaseAuthClientConfigService(
             } catch (ex: Exception) {
                 log {}.error(ex) { "Unable to load Firebase client configuration" }
                 // Never let the browser cache a failure, or recovery waits on its cache too.
-                call.response.headers.append(HttpHeaders.CacheControl, "no-store")
+                call.response.headers.append(HttpHeaders.CacheControl, NO_STORE)
                 return call.respond(HttpStatusCode.ServiceUnavailable)
             }
         call.response.headers.append(HttpHeaders.CacheControl, CLIENT_CONFIG_CACHE_CONTROL)
@@ -60,6 +62,7 @@ internal class FirebaseAuthClientConfigService(
         return AuthClientConfig(
             firebase = projectConfig.toClientConfig(),
             enabledProviders = enabledProviderIds(projectConfig, idpConfigs),
+            devLogin = devLogin,
         )
     }
 

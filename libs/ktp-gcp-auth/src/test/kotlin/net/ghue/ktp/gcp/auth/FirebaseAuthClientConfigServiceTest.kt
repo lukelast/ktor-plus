@@ -53,8 +53,21 @@ class FirebaseAuthClientConfigServiceTest :
                                 authDomain = "auth-example.firebaseapp.com",
                             ),
                         enabledProviders = listOf("anonymous", "google.com", "password", "phone"),
+                        devLogin = false,
                     )
             }
+        }
+
+        "advertises the dev login when the server mounts it" {
+            val sdk = mockIdentityToolkit(identityProjectConfig(), idpConfigs())
+            val service =
+                FirebaseAuthClientConfigService(
+                    firebaseApp = mockFirebaseApp(),
+                    identityToolkit = sdk.identityToolkit,
+                    devLogin = true,
+                )
+
+            service.getClientConfig().devLogin shouldBe true
         }
 
         "caches the loaded client config across calls" {
