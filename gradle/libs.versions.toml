@@ -3,18 +3,18 @@ kotlin = "2.4.10"
 koin = "4.2.2"
 koinPlugin = "1.1.0"
 ktor = "3.5.2"
-ktorPlugin = "3.5.1"
-versionCheck = "0.58.0"
+ktorPlugin = "3.5.2"
+versionCheck = "0.61.0"
 typesafeConfig = "1.4.9"
 config4k = "0.7.0"
-classgraph = "4.8.186"
-slf4j = "2.0.18"
+classgraph = "4.8.194"
+slf4j = "2.0.19"
 mockk = "1.14.11"
-byteBuddy = "1.18.11"
-stripe = "33.2.0"
-kotest = "6.2.3"
-gcpBom = "26.86.0"
-detekt = "2.0.0-alpha.5"
+byteBuddy = "1.18.13"
+stripe = "33.4.1"
+kotest = "6.2.4"
+gcpBom = "26.88.0"
+detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 
 [plugins]
@@ -96,7 +96,7 @@ firebaseAdmin = { module = "com.google.firebase:firebase-admin", version = "9.10
 identityToolkit = { module = "com.google.apis:google-api-services-identitytoolkit", version = "v2-rev20250130-2.0.0" }
 
 # Logging dependencies
-logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.1" }
+logbackClassic = { module = "ch.qos.logback:logback-classic", version = "1.6.3" }
 logstashLogbackEncoder = { module = "net.logstash.logback:logstash-logback-encoder", version = "9.0" }
 kotlinLogging = { module = "io.github.oshai:kotlin-logging-jvm", version = "8.0.4" }
 slf4jJcl = { module = "org.slf4j:jcl-over-slf4j", version.ref = "slf4j" }
