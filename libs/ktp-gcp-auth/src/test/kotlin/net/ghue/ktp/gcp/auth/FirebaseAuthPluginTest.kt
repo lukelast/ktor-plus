@@ -9,10 +9,14 @@ import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolk
 import com.google.api.services.identitytoolkit.v2.model.GoogleCloudIdentitytoolkitAdminV2SignInConfig
 import com.google.auth.oauth2.AccessToken
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.ErrorCode
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.auth.AuthErrorCode
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseToken
+import com.google.firebase.auth.UserRecord
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -116,6 +120,7 @@ class FirebaseAuthPluginTest :
                                     FirebaseAuthService(
                                         firebaseAuth = mockFirebaseAuth,
                                         lifecycle = mockLifecycle,
+                                        ktpConfig = config,
                                     )
                                 }
                                 single<FirebaseAuthClientConfigService> {
@@ -458,8 +463,14 @@ class FirebaseAuthPluginTest :
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>(relaxed = true)
 
-                every { mockFirebaseAuth.verifyIdToken(any()) } throws
-                    RuntimeException("Invalid token")
+                every { mockFirebaseAuth.verifyIdToken(any(), true) } throws
+                    FirebaseAuthException(
+                        ErrorCode.INVALID_ARGUMENT,
+                        "Invalid token",
+                        null,
+                        null,
+                        AuthErrorCode.INVALID_ID_TOKEN,
+                    )
 
                 application {
                     install(KoinIsolated) {
@@ -475,8 +486,7 @@ class FirebaseAuthPluginTest :
                         setBody(Json.encodeToString(LoginRequest("invalid-token")))
                     }
 
-                // Only FirebaseAuthException maps to a 4xx; any other failure is a 500.
-                response.status shouldBe HttpStatusCode.InternalServerError
+                response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
 
@@ -535,7 +545,16 @@ private fun authTestModule(
             identityToolkit = mockk(),
         ),
 ) = module {
+    every { firebaseAuth.getUser("test-user-id") } returns
+        mockk<UserRecord> {
+            every { isDisabled } returns false
+            every { isEmailVerified } returns true
+            every { email } returns "test@example.com"
+            every { displayName } returns "Test User"
+        }
     single { config }
-    single { FirebaseAuthService(firebaseAuth = firebaseAuth, lifecycle = lifecycle) }
+    single {
+        FirebaseAuthService(firebaseAuth = firebaseAuth, lifecycle = lifecycle, ktpConfig = config)
+    }
     single { authClientConfigService }
 }

@@ -8,6 +8,7 @@ import com.google.cloud.ServiceOptions
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
+import java.time.Clock
 import net.ghue.ktp.config.KtpConfig
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -57,6 +58,7 @@ fun firebaseAuthModule() = module {
             devLogin = get<KtpConfig>().env.isLocalDev,
         )
     }
+    single<Clock> { Clock.systemUTC() }
     factoryOf(::FirebaseAuthService)
     factoryOf(::DevLoginService)
 }

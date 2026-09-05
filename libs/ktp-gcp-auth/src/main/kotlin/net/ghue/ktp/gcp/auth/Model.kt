@@ -17,9 +17,10 @@ data class LoginIdentity(
 
 interface AuthLifecycleHandler {
     /**
-     * Called once per session mint (login or dev login), never per page load. Persist the user here
-     * and return the session to issue as the cookie; `FirestoreUserStore` in
-     * `ktp-gcp-auth-firestore` is the stock implementation.
+     * Called at login and when a Firebase session is due for revalidation. Apply the app's access
+     * rules, persist/load the user, and return current roles and tenant. Throw
+     * [AuthDeniedException] to deny access; other failures are retryable. `FirestoreUserStore` is
+     * the stock implementation.
      */
     suspend fun onLogin(identity: LoginIdentity): UserSession
 
@@ -44,10 +45,5 @@ internal data class LoginResponseUser(
 
 @JvmInline @Serializable value class TenantId(val value: String)
 
-val FirebaseToken.userId: UserId
-    get() = UserId(uid)
 val FirebaseToken.isAnonymous: Boolean
     get() = claims["provider_id"] == "anonymous"
-
-fun FirebaseToken.toLoginIdentity(): LoginIdentity =
-    LoginIdentity(userId = userId, email = email ?: "", name = name ?: "")

@@ -2,6 +2,7 @@ package net.ghue.ktp.gcp.auth
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseToken
+import com.google.firebase.auth.UserRecord
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -35,7 +36,7 @@ import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 
-/** `/auth/session` and the local-dev login; both mint or read the cookie, never Firebase. */
+/** Fresh cookie restoration and the local-dev login do not need a Firebase round trip. */
 class SessionRoutesTest :
     StringSpec({
         "session endpoint is 401 with no cookie and never cacheable" {
@@ -72,7 +73,7 @@ class SessionRoutesTest :
             }
         }
 
-        "session endpoint never verifies a Firebase token or touches the login hook" {
+        "fresh session restoration never verifies a Firebase token or touches the login hook" {
             val firebaseAuth = mockk<FirebaseAuth>()
             every { firebaseAuth.verifyIdToken(any(), any()) } returns firebaseToken()
             val lifecycle = loginPassthrough()
@@ -224,13 +225,20 @@ private fun authApp(
     lifecycle: AuthLifecycleHandler = loginPassthrough(),
     test: suspend ApplicationTestBuilder.() -> Unit,
 ) {
+    every { firebaseAuth.getUser("test-user-id") } returns
+        mockk<UserRecord> {
+            every { isDisabled } returns false
+            every { isEmailVerified } returns true
+            every { email } returns "test@example.com"
+            every { displayName } returns "Test User"
+        }
     testApplication {
         application {
             install(KoinIsolated) {
                 modules(
                     module {
                         single { config }
-                        single { FirebaseAuthService(firebaseAuth, lifecycle) }
+                        single { FirebaseAuthService(firebaseAuth, lifecycle, config) }
                         single { DevLoginService(lifecycle) }
                         single {
                             FirebaseAuthClientConfigService(

@@ -1,22 +1,18 @@
 package net.ghue.ktp.gcp.auth
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.application.log
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.session
-import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.cookie
 import io.ktor.server.sessions.maxAge
 import io.ktor.server.sessions.sameSite
-import io.ktor.server.sessions.sessions
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import org.koin.ktor.ext.inject
@@ -32,7 +28,7 @@ object AuthUrls {
     const val LOGIN: String = "/auth/login"
     const val LOGOUT: String = "/auth/logout"
 
-    /** `GET`: the signed-in user from the cookie alone; the page-load hot path. */
+    /** `GET`: the signed-in user; periodically rechecks account status and roles. */
     const val SESSION: String = "/auth/session"
 
     /** `GET`, local dev only: mints a session for a named dev user, then redirects. */
@@ -74,14 +70,10 @@ val FirebaseAuthPlugin =
         application.authentication {
             session<UserSession>(AuthProviderName.FIREBASE_SESSION) {
                 validate { session ->
-                    MDC.put("email", session.email)
-                    session
+                    val validated = with(authService) { validateSession(session) }
+                    validated?.also { MDC.put("email", it.email) }
                 }
-                challenge {
-                    call.sessions.clear<UserSession>()
-                    // APIs need an error; a browser would prefer a redirect (not detected yet).
-                    call.respond(HttpStatusCode.Unauthorized)
-                }
+                challenge { with(authService) { call.respondSessionFailure() } }
             }
         }
 

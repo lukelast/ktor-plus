@@ -10,6 +10,8 @@ data class UserSession(
     override val name: String,
     override val roles: Set<String>,
     override val tenantId: TenantId,
+    /** Epoch seconds of the last complete account/role check, independent of cookie renewal. */
+    val lastValidatedAt: Long = 0,
 ) : UserPrincipal, HasRoles
 
 interface HasRoles {
