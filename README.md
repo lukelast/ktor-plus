@@ -1,18 +1,13 @@
 # KTOR Plus (ktp)
 
-An opinionated microservice framework built on ktor.
-The objective of KTP is to turn Ktor into a batteries-included framework for building microservices that includes dependency injection,
-configuration management, logging, metrics, health checks, debug tools, and more.
+An opinionated microservice framework built on Ktor: dependency injection, configuration,
+logging, auth, debug tools, and GCP deployment, batteries included.
 
 ## Using KTP via JitPack
 
-KTP libraries and Gradle plugins are available via JitPack:
-
 [![](https://jitpack.io/v/lukelast/ktor-plus.svg)](https://jitpack.io/#lukelast/ktor-plus)
 
-https://jitpack.io/#lukelast/ktor-plus
-
-### Apply the settings plugin in settings.gradle.kts
+One version declaration rules everything KTP. Apply the settings plugin in `settings.gradle.kts`:
 
 ```kotlin
 pluginManagement {
@@ -23,226 +18,64 @@ pluginManagement {
     }
 }
 
-// The one KTP version declaration for the whole build. Only this bare id
-// resolves by version from JitPack; the project plugins ride in on its jar.
 plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
-### Pick the project plugin in gradle.properties
+Pick the project plugin in `gradle.properties`:
 
 ```properties
 rootProject.name=my-app
-# Auto-apply the KTP project plugin to every project: 'ktp', or 'lukestack' for the full stack.
+# Auto-applied to every project: 'ktp', or 'lukestack' for the full stack.
 ktp.plugin=ktp
 ```
 
-### Declare optional KTP libraries in build.gradle.kts
+Optional libraries come from the generated `KtpLibs` object, pinned to the plugin's own version
+(`ktp-ktor` and `ktp-test` are added automatically):
 
 ```kotlin
-// The generated coordinates object ships inside the plugin jar.
 import net.ghue.ktp.lib.KtpLibs
 
-// ktp-ktor and ktp-test are added automatically. Optional KTP libraries are
-// declared through KtpLibs, which pins them to the plugin's own version, so
-// no version number is written anywhere:
-dependencies {
-    implementation(KtpLibs.stripe)
-}
+dependencies { implementation(KtpLibs.stripe) }
 ```
 
-Upgrading from an older release? Delete the committed `gradle/ktp.versions.toml` and commit
-the removal: the `ktp` version catalog was replaced by `KtpLibs`, and the file is no longer
-generated or read.
+Upgrading from an older release? Delete the committed `gradle/ktp.versions.toml`; `KtpLibs`
+replaced it.
 
-## KTP Libraries
+## Libraries
 
-### ktp-core
+| Library                                     | `KtpLibs`          | What it gives you                                                                                                                                           |
+|---------------------------------------------|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ktp-core                                    | `core`             | Structured logging, hashing, path/resource/string helpers, lazy properties                                                                                  |
+| [ktp-config](libs/ktp-config/readme.md)     | `config`           | HOCON config layered as `<priority>.<name>.<env>.conf`; env from `KTP_ENV`/`ENV`; `CONFIG_FORCE_*` and `KTP_CONFIG` overrides; secret masking; test helpers |
+| ktp-ktor                                    | `ktor` (automatic) | App startup, default plugins, health endpoint, debug endpoints (config, GC log, threads, version), Vite frontend serving with a dev proxy                   |
+| ktp-gcp                                     | `gcp`              | GCP BOM, project id and region detection, Cloud Run metadata                                                                                                |
+| [ktp-gcp-auth](libs/ktp-gcp-auth/README.md) | `gcpAuth`          | Firebase login, encrypted cookie sessions, RBAC, local-dev login                                                                                            |
+| ktp-gcp-auth-firestore                      | `gcpAuthFirestore` | User records on Firestore for ktp-gcp-auth ([details](libs/ktp-gcp-auth/README.md#user-records-ktp-gcp-auth-firestore))                                    |
+| ktp-gcp-firestore                           | `gcpFirestore`     | Firestore client plus typed collection, read/write, query, batch, and transaction helpers                                                                   |
+| ktp-stripe                                  | `stripe`           | Stripe API and webhook helpers                                                                                                                              |
+| ktp-test                                    | `test` (automatic) | Test app builder, config helpers, Kotest integration                                                                                                        |
 
-Core utilities with minimal dependencies, providing essential building blocks for KTP applications:
+## Gradle plugins
 
-- **Logging**: Structured logging with `KtpLog` and Google Cloud Run detection
-- **Path Utilities**: Path manipulation and file operations
-- **Hash Functions**: Hashing utilities for strings and data
-- **Resource Loading**: Loading resources from classpath
-- **String Extensions**: Common string manipulation helpers
-- **Lazy Properties**: Utilities for lazy initialization
-- **Enum Utilities**: Helper functions for working with enums
+The `ktp-gradle-plugin` composite build ships three plugins in one jar:
 
-**Dependency**: `implementation(KtpLibs.core)`
-
-### [ktp-config](libs%2Fktp-config%2Freadme.md)
-
-Configuration management built on Typesafe Config with layered, environment-specific overrides:
-
-- **HOCON Format**: Human-optimized configuration using HOCON syntax
-- **Priority-Based Layering**: Files named `<priority>.<configName>.<environment>.conf` with configurable precedence
-- **Environment Detection**: Automatic detection via `KTP_ENV`, `ENV`, or Kubernetes namespace
-- **Secret Masking**: Automatic sanitization of sensitive values in logs
-- **Environment Variables**: Override any config value with `CONFIG_FORCE_` prefix
-- **Whitespace Trimming**: Leading/trailing ASCII whitespace is stripped from every string config value
-- **HOCON Injection**: Inject configuration via `KTP_CONFIG` environment variable
-- **Testing Support**: Built-in helpers for unit and integration testing
-
-**Dependency**: `implementation(KtpLibs.config)`
-
-### ktp-ktor
-
-Ktor-specific extensions and utilities for building production-ready microservices:
-
-- **Debug Endpoints**: HTML index page, configuration viewer, GC logs, thread dumps, version info
-- **DebugEndpointsPlugin**: Modern Ktor plugin with access control and configurable endpoints
-- **Health Checks**: Built-in health endpoint for liveness/readiness probes
-- **Vite Frontend**: Integration for serving Vite-built frontend applications
-- **KtpStart**: Application startup utilities and configuration
-- **Default Plugins**: Pre-configured Ktor plugins with sensible defaults
-- **MDC Clearing**: Plugin for managing logging MDC context
-
-**Dependency**: added automatically by the KTP project plugin (`KtpLibs.ktor`).
-
-### ktp-gcp
-
-Google Cloud Platform BOM and utilities for GCP integration:
-
-- **GCP BOM**: Provides the Google Cloud Platform Bill of Materials for consistent dependency version management
-- **Project ID Detection**: Get GCP project ID from application default credentials
-- **Cloud Run Detection**: Detect if running on Google Cloud Run and access Cloud Run metadata
-- **Environment Detection**: Check if running on any GCP platform
-- **Region Detection**: Get GCP region from environment variables
-- **Metadata Utilities**: Access Cloud Run service name, revision, and configuration
-
-**Dependency**: `implementation(KtpLibs.gcp)`
-
-### ktp-gcp-auth
-
-Firebase and Google Cloud Platform authentication for Ktor applications:
-
-- **Firebase Authentication**: Verify Firebase ID tokens
-- **Role-Based Access Control**: Protect routes with role requirements
-- **Debug Routes**: Pre-configured authenticated debug endpoints
-- **GCP Integration**: Seamless integration with Google Cloud services
-
-**Dependency**: `implementation(KtpLibs.gcpAuth)`
-
-`FirebaseAuthPlugin` registers fixed auth routes — `GET /auth/config`, `POST /auth/login`, and
-`POST /auth/logout` (see `AuthUrls`); they are convention, not configuration. The config endpoint
-serves the browser API key, auth domain, and enabled sign-in methods, loaded through Google's
-Identity Toolkit v2 SDK using Application Default Credentials — no Firebase browser values or
-provider list need to be duplicated in KTP configuration. The runtime service account needs the
-`roles/firebaseauth.viewer` role (listing IdP configs requires more than the
-`firebaseauth.configs.get` permission alone). Results are cached for 10 minutes on the server and
-in the browser (errors are never browser-cached), and the last known good value is served if a
-refresh fails; `503 Service Unavailable` is returned only until the first successful load.
-
-### ktp-gcp-firestore
-
-Google Cloud Firestore integration utilities:
-
-- **Google Cloud Firestore**: Native Google Cloud Firestore client.
-- **Firebase Admin SDK**: Support for Firebase Admin SDK.
-
-**Dependency**: `implementation(KtpLibs.gcpFirestore)`
-
-### ktp-stripe
-
-Stripe payment integration utilities for Ktor applications:
-
-- Stripe API integration helpers
-- Payment processing utilities
-- Webhook handling
-
-**Dependency**: `implementation(KtpLibs.stripe)`
-
-### ktp-test
-
-Testing utilities and helpers for KTP applications:
-
-- Test configuration helpers
-- Common test fixtures
-- Testing utilities for Ktor applications
-- Kotest integration
-
-**Dependency**: added automatically by the KTP project plugin (`KtpLibs.test`).
-
+- **Settings plugin** (`com.github.lukelast.ktor-plus`): the one versioned entry point (JitPack
+  only serves markers whose group equals the repo group). Reads `rootProject.name` from
+  `gradle.properties`, includes every subdirectory holding a `build.gradle.kts` or `package.json`,
+  ships `KtpLibs`, applies the Foojay toolchain resolver, and auto-applies the project plugin named
+  by `ktp.plugin`.
+- **Project plugin** (`com.github.lukelast.ktor-plus.project`): KTP conventions per project. Mode
+  is auto-detected or set with `ktp.mode`: `ktor` (default; adds ktp-ktor/ktp-test, formatting,
+  detekt, tests, fat jar), `library` (published Java 21 library), `frontend` (a `package.json`;
+  lifecycle tasks only), `root`. Every mode gets `check` (strict, what CI runs) and `verify`
+  (format, then `check`).
+- **Lukestack plugin** (`com.github.lukelast.ktor-plus.lukestack`): a personal stack on top: GCP
+  deployment (Cloud Run + Infrastructure Manager), Docker tasks, and a bun/Vite frontend whose dev
+  server starts with `run`. Other stacks should layer on the base plugin instead.
 
 ## Developing KTP
 
-* Test everything
-    * `./gradlew ktfmtFormat check`
-* Publish to your local maven repository for testing locally in another project.
-    * `./gradlew clean publishToMavenLocal`
-* Format code
-    * `./gradlew ktfmtFormat`
-
-## Gradle Plugins
-
-The `ktp-gradle-plugin` composite child project builds a Gradle plugin Jar with three plugins.
-
-### KTP Gradle Project Plugin
-
-Plugin ID: `com.github.lukelast.ktor-plus.project`
-
-Configures a project to follow the KTP Framework conventions. The project mode is auto-detected,
-with the `ktp.mode` Gradle property as the explicit override:
-
-- `ktor` (default): a Ktor application. Adds the `ktp-ktor`/`ktp-test` dependencies and
-  configures formatting, detekt, testing, and the fat jar. The build script sets
-  `application { mainClass.set(...) }`.
-- `library`: a published JVM library targeting Java 21.
-- `frontend`: auto-detected by a `package.json` in the project directory. Lifecycle tasks only;
-  toolchain-specific tasks come from a stack plugin layered on top.
-- `root`: auto-detected as the root of a multi-project build.
-
-All modes get `check` (strict verification, what CI runs — fails on unformatted code) and
-`verify` (format the code, then run the full `check`; the local dev loop).
-
-### KTP Settings Plugin
-
-Plugin ID: `com.github.lukelast.ktor-plus` — the settings plugin owns the bare repo-group id
-because it is the entry point consumers resolve by plugin marker, and JitPack can only serve
-markers whose group equals the repo group.
-
-Applied in `settings.gradle.kts`, which then needs nothing else:
-
-```kotlin
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-        maven { url = uri("https://jitpack.io") }
-    }
-}
-
-plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
-```
-
-Features:
-
-- **Root project name** comes from a `rootProject.name` entry in `gradle.properties`, so it
-  survives checkouts into differently named directories (Docker build stages).
-- **Project auto-include**: every direct subdirectory containing a `build.gradle.kts` or a
-  `package.json` becomes a project. A conventional frontend needs no Gradle file at all.
-- **KTP coordinates**: the plugin jar ships a generated `KtpLibs` object
-  (`net.ghue.ktp.lib.KtpLibs`) holding the coordinates of every KTP library
-  (`KtpLibs.stripe`, `KtpLibs.gcpAuth`, ...), pinned to the settings plugin's own version —
-  one version declaration rules everything KTP, and library versions can never drift from the
-  plugin. Settings plugins are visible to every project build script, so any module can
-  `implementation(KtpLibs.stripe)` after one import; nothing is generated into the consumer's
-  tree, and the IDE resolves the accessors with plain Kotlin tooling. Consumers upgrading
-  from an older release should delete the committed `gradle/ktp.versions.toml` themselves —
-  it is no longer generated or read.
-- **Toolchain resolver**: the Foojay resolver is applied, so a missing JDK downloads on demand.
-- **Project plugin auto-apply**: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
-  plugin to every project — no per-project `plugins {}` blocks needed anywhere.
-
-### Lukestack Plugin
-
-Plugin ID: `com.github.lukelast.ktor-plus.lukestack`
-
-An opinionated personal stack layered on the base plugin: GCP deployment (Cloud Run +
-Infrastructure Manager), Docker image tasks, and a bun/Vite frontend whose dev server starts
-alongside `run`. Lukestack repos apply this ID instead of the base one in every project; other
-stacks should apply the base plugin and build their own layer.
-
-## Releases
+- `./gradlew ktfmtFormat check`: format and run every check.
+- `./gradlew clean publishToMavenLocal`: install locally to test in another project.
 
 Releases and versioning happen automatically for each commit to the main branch.

@@ -4,9 +4,9 @@ import com.google.firebase.ErrorCode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseToken
-import com.google.gson.Gson
-import io.ktor.http.*
 import io.ktor.http.ContentType.Application.Json
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.server.request.*
@@ -46,38 +46,13 @@ class FirebaseAuthService(
 
             if (!firebaseToken.isAnonymous && !firebaseToken.isEmailVerified) {
                 throw AuthEx(
-                    message = "Email not verified: $firebaseToken.email",
+                    message = "Email not verified: ${firebaseToken.email}",
                     status = HttpStatusCode.Unauthorized,
                     userError = false,
                 )
             }
-            val userInfo = lifecycle.onLogin(firebaseToken)
-
-            val userSession =
-                UserSession(
-                    userId = firebaseToken.userId,
-                    tenantId = userInfo.tenantId,
-                    email = userInfo.email,
-                    name = userInfo.name,
-                    roles = userInfo.roles,
-                )
-            call.sessions.set(userSession)
-
-            val response =
-                LoginResponse(
-                    user =
-                        LoginResponseUser(
-                            userId = firebaseToken.userId.value,
-                            email = userSession.email,
-                            nameFull = userSession.name,
-                            nameFirst = userSession.nameFirst,
-                            roles = userInfo.roles,
-                            extra = userInfo.extra,
-                        )
-                )
-            // Gson rather than kotlinx because `extra` is an arbitrary Any.
-            val rspText = Gson().toJson(response)
-            call.respondText(rspText, Json, HttpStatusCode.OK)
+            val session = call.startSession(lifecycle, firebaseToken.toLoginIdentity())
+            call.respondSessionUser(session)
         } catch (ex: AuthEx) {
             if (ex.userError) {
                 log {}.info(ex) { ex.message }
@@ -89,6 +64,23 @@ class FirebaseAuthService(
             log {}.warn(ex) { "Unexpected login error" }
             call.respondText("{}", Json, InternalServerError)
         }
+    }
+
+    /**
+     * Restores the signed-in user from the session cookie alone: no Firebase, no storage. This is
+     * the page-load hot path, so the cookie is also re-issued to slide its expiry; an active user
+     * is never signed out mid-use. 401 (and a cleared cookie) when there is no valid session.
+     */
+    suspend fun RoutingContext.handleSession() {
+        val userSession = call.sessions.get<UserSession>()
+        if (userSession == null) {
+            call.sessions.clear<UserSession>()
+            call.response.headers.append(HttpHeaders.CacheControl, NO_STORE)
+            call.respondText(text = "{}", contentType = Json, status = HttpStatusCode.Unauthorized)
+            return
+        }
+        call.sessions.set(userSession)
+        call.respondSessionUser(userSession)
     }
 
     /**

@@ -99,7 +99,7 @@ class FirebaseAuthPluginTest :
             }
         }
 
-        "defers auth client config initialization until requested" {
+        "does not build the auth client config service at startup" {
             var initializationAttempts = 0
 
             testApplication {
@@ -130,13 +130,8 @@ class FirebaseAuthPluginTest :
                 }
 
                 startApplication()
-                initializationAttempts shouldBe 0
 
-                client.get(AuthUrls.CLIENT_CONFIG).apply {
-                    status shouldBe HttpStatusCode.ServiceUnavailable
-                    headers[HttpHeaders.CacheControl] shouldBe "no-store"
-                }
-                initializationAttempts shouldBe 1
+                initializationAttempts shouldBe 0
             }
         }
 
@@ -207,7 +202,8 @@ class FirebaseAuthPluginTest :
                                 "projectId": "test-project",
                                 "authDomain": "auth-example.firebaseapp.com"
                               },
-                              "enabledProviders": ["google.com", "password"]
+                              "enabledProviders": ["google.com", "password"],
+                              "devLogin": false
                             }"""
                         )
                 }
@@ -266,7 +262,6 @@ class FirebaseAuthPluginTest :
                         email = "test@example.com",
                         name = "Test User",
                         roles = setOf("user"),
-                        extra = null,
                     )
 
                 application {
@@ -306,7 +301,6 @@ class FirebaseAuthPluginTest :
                         email = "test@example.com",
                         name = "Test User",
                         roles = setOf("user"),
-                        extra = null,
                     )
 
                 application {
@@ -377,7 +371,6 @@ class FirebaseAuthPluginTest :
                         email = "test@example.com",
                         name = "Test User",
                         roles = setOf("user"),
-                        extra = null,
                     )
 
                 application {
@@ -426,7 +419,6 @@ class FirebaseAuthPluginTest :
                         email = "test@example.com",
                         name = "Test User",
                         roles = setOf("user"),
-                        extra = null,
                     )
                 coEvery { mockLifecycle.onLogout(any()) } returns Unit
 

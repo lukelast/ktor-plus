@@ -1,6 +1,5 @@
 package net.ghue.ktp.gcp.auth
 
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
@@ -32,6 +31,12 @@ object AuthUrls {
     const val CLIENT_CONFIG: String = "/auth/config"
     const val LOGIN: String = "/auth/login"
     const val LOGOUT: String = "/auth/logout"
+
+    /** `GET`: the signed-in user from the cookie alone; the page-load hot path. */
+    const val SESSION: String = "/auth/session"
+
+    /** `GET`, local dev only: mints a session for a named dev user, then redirects. */
+    const val DEV_LOGIN: String = "/auth/dev/login"
 }
 
 class FirebaseAuthPluginConfig {
@@ -70,7 +75,6 @@ val FirebaseAuthPlugin =
             session<UserSession>(AuthProviderName.FIREBASE_SESSION) {
                 validate { session ->
                     MDC.put("email", session.email)
-                    // TODO Refresh the cookie if it's close to expiring?
                     session
                 }
                 challenge {
@@ -82,22 +86,17 @@ val FirebaseAuthPlugin =
         }
 
         application.routing {
-            get(AuthUrls.CLIENT_CONFIG) {
-                val service =
-                    try {
-                        authClientConfigService
-                    } catch (ex: Exception) {
-                        call.application.log.error(
-                            "Unable to initialize Firebase client configuration",
-                            ex,
-                        )
-                        call.response.headers.append(HttpHeaders.CacheControl, "no-store")
-                        call.respond(HttpStatusCode.ServiceUnavailable)
-                        return@get
-                    }
-                with(service) { handleClientConfig() }
-            }
+            get(AuthUrls.CLIENT_CONFIG) { with(authClientConfigService) { handleClientConfig() } }
             post(AuthUrls.LOGIN) { with(authService) { handleLogin() } }
             post(AuthUrls.LOGOUT) { with(authService) { handleLogout() } }
+            get(AuthUrls.SESSION) { with(authService) { handleSession() } }
+
+            // Not a guarded handler but an absent route: outside local dev it 404s like any
+            // other unknown path, so there is nothing to misconfigure in production.
+            if (ktpConfig.env.isLocalDev) {
+                val devLoginService: DevLoginService by application.inject()
+                application.log.warn("Dev login enabled at ${AuthUrls.DEV_LOGIN} (local dev only)")
+                get(AuthUrls.DEV_LOGIN) { with(devLoginService) { handleDevLogin() } }
+            }
         }
     }

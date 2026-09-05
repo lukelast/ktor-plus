@@ -14,4 +14,6 @@ data class FirebaseClientConfig(
 data class AuthClientConfig(
     val firebase: FirebaseClientConfig,
     val enabledProviders: List<String>,
+    /** Whether dev login exists on this server; lets the login page offer it. */
+    val devLogin: Boolean,
 )
