@@ -9,7 +9,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -35,7 +34,6 @@ class KtpConfigFirestoreTest :
                 every { builder.setDatabaseId("test-db") } returns builder
                 every { builder.build() } returns options
                 every { options.service } returns firestore
-                justRun { firestore.close() }
 
                 val config = testConfig()
                 val koinApp = koinApplication {
@@ -48,7 +46,6 @@ class KtpConfigFirestoreTest :
                 } finally {
                     koinApp.close()
                 }
-                verify(exactly = 1) { firestore.close() }
             } finally {
                 unmockkStatic(FirestoreOptions::class)
             }

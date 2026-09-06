@@ -3,7 +3,6 @@ package net.ghue.ktp.gcp.firestore
 import com.google.cloud.firestore.FirestoreOptions
 import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.module
-import org.koin.dsl.onClose
 
 val KtpConfig.google: Google
     get() = extractChild()
@@ -18,6 +17,4 @@ data class Google(val firestore: Firestore) {
     }
 }
 
-fun firestoreModule() = module {
-    single { get<KtpConfig>().google.firestore.createClient() } onClose { it?.close() }
-}
+fun firestoreModule() = module { single { get<KtpConfig>().google.firestore.createClient() } }

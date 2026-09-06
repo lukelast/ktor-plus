@@ -16,6 +16,7 @@ import net.ghue.ktp.log.log
 import org.koin.core.module.Module
 import org.koin.dsl.KoinConfiguration
 import org.koin.dsl.module
+import org.koin.ktor.ext.getKoin
 import org.koin.ktor.plugin.KoinIsolated
 import org.koin.logger.slf4jLogger
 import org.slf4j.LoggerFactory
@@ -86,6 +87,7 @@ data class KtpApp(
             modules(modules)
             koinConfigs.forEach { config -> config.appDeclaration(this) }
         }
+        app.getKoin().autoCloseInstances()
     }
 
     suspend fun runAppInits(app: Application) {
