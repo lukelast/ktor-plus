@@ -8,7 +8,6 @@ import com.google.cloud.ServiceOptions
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.auth.FirebaseAuth
-import java.time.Clock
 import net.ghue.ktp.config.KtpConfig
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -18,6 +17,10 @@ import org.koin.dsl.module
 private const val GCP_CONNECT_TIMEOUT_MS = 5_000
 private const val GCP_READ_TIMEOUT_MS = 10_000
 
+/**
+ * Firebase Admin, Identity Toolkit, and the auth services. Session timing uses the
+ * `java.time.Clock` the app builder binds (system UTC unless the app defines its own).
+ */
 fun firebaseAuthModule() = module {
     single {
         // initializeApp throws if the JVM-global default app exists (Koin rebuilt between tests).
@@ -58,7 +61,6 @@ fun firebaseAuthModule() = module {
             devLogin = get<KtpConfig>().env.isLocalDev,
         )
     }
-    single<Clock> { Clock.systemUTC() }
     factoryOf(::FirebaseAuthService)
     factoryOf(::DevLoginService)
 }

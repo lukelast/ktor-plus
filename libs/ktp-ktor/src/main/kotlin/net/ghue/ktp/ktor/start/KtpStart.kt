@@ -7,6 +7,7 @@ import io.ktor.server.engine.applicationEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
@@ -28,11 +29,12 @@ typealias KtpAppBuilderFactory = () -> KtpAppBuilder
  * Mutable builder for the immutable [KtpApp].
  *
  * Koin definitions load in this order, and a later definition of the same type replaces an earlier
- * one: the built-in [KtpConfig] and [Application] singles, then [addModule] modules in the order
- * added (library modules such as `firebaseAuthModule()`), then [addKoinConfig] configs (the app's
- * compiler-plugin `@Single`/`@Factory` definitions, so an app definition beats a library one), then
- * [addOverrideModule] modules. A test swapping a `@Singleton` service for a mock therefore uses
- * [addOverrideModule]; an [addModule] definition would lose to the compiler-plugin one.
+ * one: the built-in [KtpConfig], system-UTC [Clock], and [Application] singles, then [addModule]
+ * modules in the order added (library modules such as `firebaseAuthModule()`), then [addKoinConfig]
+ * configs (the app's compiler-plugin `@Single`/`@Factory` definitions, so an app definition beats a
+ * library one), then [addOverrideModule] modules. A test swapping a `@Singleton` service for a mock
+ * therefore uses [addOverrideModule]; an [addModule] definition would lose to the compiler-plugin
+ * one.
  */
 class KtpAppBuilder {
     init {
@@ -84,7 +86,13 @@ class KtpAppBuilder {
     fun build(): KtpApp {
         val config = createKtpConfig()
         val allModules = buildList {
-            add(module { single { config } })
+            add(
+                module {
+                    single { config }
+                    // Injected into services so tests can fix time; an app definition replaces it.
+                    single<Clock> { Clock.systemUTC() }
+                }
+            )
             addAll(modules)
         }
         return KtpApp(

@@ -5,6 +5,9 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
 import io.ktor.server.testing.testApplication
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
@@ -161,6 +164,54 @@ class KtpStartTest :
                 application {
                     app.installKoin(this)
                     getKoin().get<CharSequence>() shouldBe "override"
+                }
+                startApplication()
+            }
+        }
+
+        "the builder binds a system UTC Clock" {
+            val app =
+                ktpAppCreate { createKtpConfig = { KtpConfig.create { setUnitTestEnv() } } }()
+                    .build()
+
+            testApplication {
+                application {
+                    app.installKoin(this)
+                    getKoin().get<Clock>() shouldBe Clock.systemUTC()
+                }
+                startApplication()
+            }
+        }
+
+        "an addModule Clock replaces the built-in one" {
+            val fixed = Clock.fixed(Instant.parse("2024-01-01T00:00:00Z"), ZoneOffset.UTC)
+            val app =
+                ktpAppCreate {
+                        createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+                        addModule { single<Clock> { fixed } }
+                    }()
+                    .build()
+
+            testApplication {
+                application {
+                    app.installKoin(this)
+                    getKoin().get<Clock>() shouldBe fixed
+                }
+                startApplication()
+            }
+        }
+
+        "an override module Clock replaces the built-in one" {
+            val fixed = Clock.fixed(Instant.parse("2024-01-01T00:00:00Z"), ZoneOffset.UTC)
+            val app =
+                ktpAppCreate { createKtpConfig = { KtpConfig.create { setUnitTestEnv() } } }
+                        .update { addOverrideModule { single<Clock> { fixed } } }()
+                    .build()
+
+            testApplication {
+                application {
+                    app.installKoin(this)
+                    getKoin().get<Clock>() shouldBe fixed
                 }
                 startApplication()
             }
