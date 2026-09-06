@@ -40,7 +40,7 @@ class ApiCronTest :
                         )
                     }
 
-                    routing { installApiCronRoutes() }
+                    routing { installApiRoutesCron() }
                 }
 
                 val client = createClient { install(io.ktor.client.plugins.resources.Resources) }
@@ -67,7 +67,7 @@ class ApiCronTest :
                             }
                         )
                     }
-                    routing { installApiCronRoutes() }
+                    routing { installApiRoutesCron() }
                 }
 
                 val client = createClient { install(io.ktor.client.plugins.resources.Resources) }

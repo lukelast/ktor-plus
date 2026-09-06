@@ -10,8 +10,11 @@ import java.time.ZoneOffset
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.getKoin
 
-/** Make sure you implement [CronHandler] and annotate it with [org.koin.core.annotation.Factory] */
-fun Route.installApiCronRoutes() {
+/**
+ * Mounts `GET|POST /api/cron/hourly` for Cloud Scheduler. Implement [CronHandler] and bind it in
+ * Koin (`@Single`), or the first hit fails with an error naming the missing binding.
+ */
+fun Route.installApiRoutesCron() {
     val handler: CronHandler by lazy {
         application.getKoin().getOrNull<CronHandler>()
             ?: error("You must implement ${CronHandler::class.simpleName}")
