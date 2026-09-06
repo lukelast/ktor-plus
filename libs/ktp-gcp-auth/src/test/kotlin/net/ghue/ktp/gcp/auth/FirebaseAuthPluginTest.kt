@@ -51,6 +51,7 @@ import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
+import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
@@ -96,6 +97,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
 
                     pluginOrNull(Sessions) shouldNotBe null
@@ -131,6 +133,7 @@ class FirebaseAuthPluginTest :
                         )
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -192,6 +195,7 @@ class FirebaseAuthPluginTest :
                     }
 
                     install(ContentNegotiation) { json() }
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -241,6 +245,7 @@ class FirebaseAuthPluginTest :
                         )
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -274,6 +279,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -313,6 +319,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -346,6 +353,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
 
                     routing {
@@ -383,6 +391,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -432,6 +441,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -477,6 +487,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 
@@ -502,6 +513,7 @@ class FirebaseAuthPluginTest :
                         modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
                     }
 
+                    install(RequestVirtualThreadPlugin)
                     install(FirebaseAuthPlugin)
                 }
 

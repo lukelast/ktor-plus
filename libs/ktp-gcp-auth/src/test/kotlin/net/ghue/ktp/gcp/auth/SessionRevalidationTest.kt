@@ -47,6 +47,7 @@ import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
+import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 
@@ -292,9 +293,14 @@ private class RecheckFixture {
         }
 
     init {
-        every { firebase.verifyIdToken("valid-token", true) } returns token
+        every { firebase.verifyIdToken("valid-token", true) } answers
+            {
+                Thread.currentThread().isVirtual shouldBe true
+                token
+            }
         every { firebase.getUser("alice") } answers
             {
+                Thread.currentThread().isVirtual shouldBe true
                 lookupFailure?.let { throw it }
                 user
             }
@@ -321,6 +327,7 @@ private class RecheckFixture {
                     },
                 )
             }
+            install(RequestVirtualThreadPlugin)
             install(FirebaseAuthPlugin)
             routing {
                 get("/seed") {
