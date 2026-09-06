@@ -30,7 +30,6 @@ import org.slf4j.event.Level
 const val MIN_COMPRESS_SIZE_BYTES = 512L
 
 fun Application.installDefaultPlugins(config: KtpConfig) {
-    install(RequestVirtualThreadPlugin)
     install(ContentNegotiation) { json() }
     install(Compression) {
         minimumSize(MIN_COMPRESS_SIZE_BYTES)

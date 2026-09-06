@@ -9,6 +9,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
 import net.ghue.ktp.log.configureLocalDevConsoleLogFormat
 import net.ghue.ktp.log.installSlf4jBridge
 import net.ghue.ktp.log.log
@@ -121,6 +122,7 @@ fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
         serverConfig(ktorEnv) {
             developmentMode = ktpApp.config.env.isLocalDev
             module {
+                install(RequestVirtualThreadPlugin)
                 ktpApp.installKoin(this)
                 ktpApp.runAppInits(this)
             }
@@ -130,6 +132,15 @@ fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
             factory = Netty,
             rootConfig = serverConfig,
             configure = {
+                // One acceptor thread is enough for a single connector.
+                connectionGroupSize = 1
+                // RequestVirtualThreadPlugin runs every call on a virtual thread, so the event
+                // loops only do I/O and dispatch. Share one group of workerGroupSize (CPUs/2+1)
+                // threads; Ktor adds callGroupSize to it when shared, so 0 keeps it that size.
+                // callGroupSize = 0 is only valid with shareWorkGroup = true: Netty silently sizes
+                // a standalone 0-thread group to 2xCPUs instead of failing.
+                callGroupSize = 0
+                shareWorkGroup = true
                 connector {
                     port = ktpApp.config.data.app.server.port
                     host = ktpApp.config.data.app.server.host

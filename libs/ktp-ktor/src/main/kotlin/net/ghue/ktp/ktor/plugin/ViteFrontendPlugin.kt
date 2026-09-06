@@ -1,8 +1,5 @@
 package net.ghue.ktp.ktor.plugin
 
-import io.ktor.client.*
-import io.ktor.client.engine.java.*
-import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -17,16 +14,18 @@ import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import java.net.ConnectException
 import java.nio.file.Path
-import java.util.concurrent.Executors
 import kotlin.io.path.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
+import kotlin.time.Duration.Companion.minutes
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.Resource
 import net.ghue.ktp.core.removeFirstFolder
+import net.ghue.ktp.ktor.http.connectTimeout
+import net.ghue.ktp.ktor.http.createKtorHttpClient
+import net.ghue.ktp.ktor.http.requestTimeout
+import net.ghue.ktp.ktor.http.useHttp1
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
@@ -109,27 +108,19 @@ private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
 }
 
 private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {
-    // Without an explicit executor the JDK client creates its own cached pool of platform threads.
-    private val clientExecutor = Executors.newVirtualThreadPerTaskExecutor()
-
-    val client =
-        HttpClient(Java) {
-            engine {
-                // Default HTTP_2 sends `Connection: Upgrade`; Vite routes that to its HMR WebSocket
-                // handler, which never responds and hangs the request.
-                protocolVersion = java.net.http.HttpClient.Version.HTTP_1_1
-                config {
-                    // Short so requests fall back to built files quickly when Vite is down.
-                    connectTimeout(500.milliseconds.toJavaDuration())
-                    executor(clientExecutor)
-                }
-            }
-            install(HttpTimeout) { requestTimeoutMillis = 10.seconds.inWholeMilliseconds }
-        }
+    val client = createKtorHttpClient {
+        // Default HTTP_2 sends `Connection: Upgrade`; Vite routes that to its HMR WebSocket
+        // handler, which never responds and hangs the request.
+        useHttp1()
+        // Short so requests fall back to built files quickly when Vite is down.
+        connectTimeout(500.milliseconds)
+        // Bounds the whole fetch including the body; Vite stalls requests while it pre-bundles
+        // dependencies on a cold start, which can take well over ten seconds.
+        requestTimeout(1.minutes)
+    }
 
     override fun close() {
         client.close()
-        clientExecutor.shutdown()
     }
 
     fun registerRoutes(app: Application) {
