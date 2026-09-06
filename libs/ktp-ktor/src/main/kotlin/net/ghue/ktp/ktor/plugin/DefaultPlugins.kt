@@ -18,13 +18,11 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.resources.Resources
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.error.KtpRspEx
 import net.ghue.ktp.ktor.error.processKtpRspEx
-import net.ghue.ktp.log.log
 import org.slf4j.event.Level
 
 const val MIN_COMPRESS_SIZE_BYTES = 512L
@@ -62,13 +60,11 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         exception<BadRequestException>(::processRequestDecodingFailure)
         exception<ContentTransformationException>(::processRequestDecodingFailure)
 
+        // Not logged here: processKtpRspEx logs every 5xx once, with the cause's stack trace.
         exception<Throwable> { call, cause ->
-            log {}
-                .warn(cause) {
-                    "Unhandled exception in request: ${call.request.path()} " +
-                        "with method: ${call.request.httpMethod.value}"
-                }
-            processKtpRspEx(call, KtpRspEx(cause = cause))
+            val root = generateSequence(cause) { it.cause }.last()
+            val summary = if (root === cause) "$cause" else "$cause, root cause: $root"
+            processKtpRspEx(call, KtpRspEx(internalMessage = "Unhandled $summary", cause = cause))
         }
     }
     install(Resources)

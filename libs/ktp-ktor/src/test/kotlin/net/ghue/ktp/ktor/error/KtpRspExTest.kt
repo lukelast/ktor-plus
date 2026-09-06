@@ -44,6 +44,18 @@ class KtpRspExTest :
                 mapOf("attempt" to 3, "retryable" to true, "correlationId" to "abc-123")
         }
 
+        "message combines status, title, detail, and internalMessage" {
+            KtpRspEx().message shouldBe "500 Internal Server Error"
+            KtpRspEx(
+                    status = HttpStatusCode.BadRequest,
+                    title = "Bad Request",
+                    detail = "The request body could not be parsed.",
+                    internalMessage = "Unexpected EOF at offset 12",
+                )
+                .message shouldBe
+                "400 Bad Request: The request body could not be parsed. (Unexpected EOF at offset 12)"
+        }
+
         "KtpRspExBuilder.buildExtraFields returns a copy" {
             val builder = KtpRspExBuilder()
             builder.extra("initial", "one")

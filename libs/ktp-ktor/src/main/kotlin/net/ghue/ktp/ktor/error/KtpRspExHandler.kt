@@ -49,9 +49,10 @@ suspend fun processKtpRspEx(call: ApplicationCall, ex: KtpRspEx) {
     }
 
     val logMessage =
-        "Error processing ${call.request.httpMethod.value} on $requestPath: '${ex.message}' $problemJson"
+        "Error processing ${call.request.httpMethod.value} on $requestPath: ${ex.message} $problemJson"
     if (ex.status.value >= HttpStatusCode.InternalServerError.value) {
-        log {}.error(ex) { logMessage }
+        // The cause holds the real throw site; the wrapper's own frames are pipeline plumbing.
+        log {}.error(ex.cause ?: ex) { logMessage }
     } else {
         // 4xx responses are client faults, not server problems.
         log {}.info { logMessage }

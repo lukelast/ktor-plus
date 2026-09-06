@@ -1,14 +1,17 @@
 package net.ghue.ktp.ktor.app.debug
 
+import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.plugin.installDefaultPlugins
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
@@ -439,6 +442,41 @@ class DebugEndpointsTest :
                 with(client.get("/debug${DebugEndpoints.CONFIG}")) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldContain "App Configuration"
+                }
+            }
+        }
+
+        "/debug/errors lists every error case as a button" {
+            testApplication {
+                application {
+                    installDefaultPlugins(KtpConfig.create { setUnitTestEnv() })
+                    install(DebugEndpointsPlugin)
+                }
+                with(client.get("/debug${DebugEndpoints.ERRORS}")) {
+                    status shouldBe HttpStatusCode.OK
+                    val body = bodyAsText()
+                    debugErrorCases.forEach { body shouldContain "data-id=\"${it.id}\"" }
+                }
+            }
+        }
+
+        "every error case answers its expected status without leaking internals" {
+            testApplication {
+                application {
+                    installDefaultPlugins(KtpConfig.create { setUnitTestEnv() })
+                    install(DebugEndpointsPlugin)
+                }
+                debugErrorCases.forEach { case ->
+                    val response =
+                        client.request("/debug${DebugEndpoints.ERRORS}/${case.id}") {
+                            method = case.method
+                            case.requestContentType?.let { contentType(it) }
+                            case.requestBody?.let { setBody(it) }
+                        }
+                    withClue(case.id) {
+                        response.status shouldBe case.expectedStatus
+                        response.bodyAsText() shouldNotContain "Debug:"
+                    }
                 }
             }
         }

@@ -58,7 +58,7 @@ private fun Iterable<ConfigRecord>.toHtmlRows(includeSource: Boolean): String =
             .joinToString(separator = "", prefix = "<tr>", postfix = "</tr>")
     }
 
-private fun String.escapeHtml(): String =
+internal fun String.escapeHtml(): String =
     this.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")

@@ -22,7 +22,17 @@ open class KtpRspEx(
     val detail: String = "",
     val extraFields: Map<String, Any> = emptyMap(),
     override val cause: Throwable? = null,
-) : RuntimeException(internalMessage, cause)
+) : RuntimeException(cause) {
+    /**
+     * Status, title, detail, and internal message, so a log never shows a bare `KtpRspEx: null`.
+     */
+    override val message: String
+        get() = buildString {
+            append(status.value).append(' ').append(title.ifBlank { status.description })
+            if (detail.isNotBlank()) append(": ").append(detail)
+            if (!internalMessage.isNullOrBlank()) append(" (").append(internalMessage).append(')')
+        }
+}
 
 /**
  * DSL builder for [ktpRspError]. Fields map to RFC 7807 Problem JSON members; `instance` is set

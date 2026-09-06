@@ -26,6 +26,12 @@ private fun buildEndpointList(config: DebugEndpointsConfig): List<DebugEndpointR
             isEnabled = config.enableConfigEndpoint,
         ),
         DebugEndpointRow(
+            path = config.routePrefix + DebugEndpoints.ERRORS,
+            description =
+                "Buttons that trigger each kind of request failure to inspect its log output",
+            isEnabled = config.enableErrorsEndpoint,
+        ),
+        DebugEndpointRow(
             path = config.routePrefix + DebugEndpoints.GC_LOG,
             description = "Garbage collection log file contents",
             isEnabled = config.enableGcLogEndpoint,

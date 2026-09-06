@@ -10,6 +10,7 @@ import net.ghue.ktp.log.log
 object DebugEndpoints {
     const val BASE = "/debug"
     const val CONFIG = "/config"
+    const val ERRORS = "/errors"
     const val GC_LOG = "/gclog"
     const val THREADS = "/threads"
     const val VERSION = "/version"
@@ -22,6 +23,9 @@ class DebugEndpointsConfig {
 
     /** Serves the config page at [DebugEndpoints.CONFIG]. */
     var enableConfigEndpoint: Boolean = true
+
+    /** Serves the error-trigger page and endpoints at [DebugEndpoints.ERRORS]. */
+    var enableErrorsEndpoint: Boolean = true
 
     /** Serves the GC log at [DebugEndpoints.GC_LOG]. */
     var enableGcLogEndpoint: Boolean = true
@@ -37,8 +41,8 @@ class DebugEndpointsConfig {
 }
 
 /**
- * Serves debug index, config, GC log, thread dump, and version pages; they expose sensitive data,
- * so set [DebugEndpointsConfig.accessControl] in production.
+ * Serves debug index, config, error triggers, GC log, thread dump, and version pages; they expose
+ * sensitive data, so set [DebugEndpointsConfig.accessControl] in production.
  */
 val DebugEndpointsPlugin =
     createApplicationPlugin(
@@ -67,6 +71,10 @@ private fun Route.installDebugEndpoints(pluginConfig: DebugEndpointsConfig) {
             }
             call.respondConfigHtml()
         }
+    }
+
+    if (pluginConfig.enableErrorsEndpoint) {
+        route(DebugEndpoints.ERRORS) { installDebugErrorRoutes(pluginConfig.accessControl) }
     }
 
     if (pluginConfig.enableGcLogEndpoint) {
