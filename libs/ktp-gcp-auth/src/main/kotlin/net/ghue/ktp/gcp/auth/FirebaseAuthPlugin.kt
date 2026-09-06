@@ -36,8 +36,13 @@ object AuthUrls {
 }
 
 class FirebaseAuthPluginConfig {
+    /**
+     * Whether the session cookie carries `Secure`. Off in local dev and in the test environments
+     * (`setUnitTestEnv()` / `setIntegrationTestEnv()`), where the server speaks plain HTTP and a
+     * client would never send a `Secure` cookie back; otherwise `auth.secureCookies`.
+     */
     var secureCookiesProvider: (ktpConfig: KtpConfig, env: Env) -> Boolean = { ktpConfig, env ->
-        !env.isLocalDev && ktpConfig.auth.secureCookies
+        !env.isLocalDev && !env.isTest && ktpConfig.auth.secureCookies
     }
 }
 

@@ -16,6 +16,9 @@ exceptions:
 naming:
   MatchingDeclarationName:
     active: true
+    # Per-feature API files are named for their role, not their one class: `Rpc.kt` holds the
+    # feature's wire types (often a single one) and `Resource.kt` its `@Resource` routes.
+    excludes: ['**/Rpc.kt', '**/Resource.kt']
 
 complexity:
   ComplexCondition:

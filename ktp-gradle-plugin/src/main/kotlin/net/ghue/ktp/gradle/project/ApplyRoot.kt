@@ -13,7 +13,10 @@ fun Project.applyRoot() {
     // form and IDE task invocations need real task-graph edges to the subprojects.
     tasks.register("verify") {
         group = LifecycleBasePlugin.VERIFICATION_GROUP
-        description = "Runs verify in every subproject."
-        dependsOn(subprojects.map { "${it.path}:verify" })
+        description = "Runs verify in every subproject that has one."
+        // Resolved when the task graph is built, after every subproject is configured. A module
+        // KTP does not manage (a Kotlin Multiplatform module, say) registers no verify task and
+        // must not break the aggregate; nor must it be forced to define a stub.
+        dependsOn(provider { subprojects.mapNotNull { it.tasks.findByName("verify") } })
     }
 }

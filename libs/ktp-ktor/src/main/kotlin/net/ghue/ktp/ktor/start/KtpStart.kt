@@ -24,7 +24,16 @@ import org.slf4j.LoggerFactory
 /** Lazily supplies the [KtpAppBuilder] to run; may return the same instance on every call. */
 typealias KtpAppBuilderFactory = () -> KtpAppBuilder
 
-/** Mutable builder for the immutable [KtpApp]. */
+/**
+ * Mutable builder for the immutable [KtpApp].
+ *
+ * Koin definitions load in this order, and a later definition of the same type replaces an earlier
+ * one: the built-in [KtpConfig] and [Application] singles, then [addModule] modules in the order
+ * added (library modules such as `firebaseAuthModule()`), then [addKoinConfig] configs (the app's
+ * compiler-plugin `@Single`/`@Factory` definitions, so an app definition beats a library one), then
+ * [addOverrideModule] modules. A test swapping a `@Singleton` service for a mock therefore uses
+ * [addOverrideModule]; an [addModule] definition would lose to the compiler-plugin one.
+ */
 class KtpAppBuilder {
     init {
         installSlf4jBridge()
@@ -32,6 +41,7 @@ class KtpAppBuilder {
 
     internal val modules = mutableListOf<Module>()
     internal val koinConfigs = mutableListOf<KoinConfiguration>()
+    internal val overrideModules = mutableListOf<Module>()
     internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
 
     var createKtpConfig: () -> KtpConfig = { KtpConfig.create() }
@@ -47,6 +57,19 @@ class KtpAppBuilder {
 
     fun addModule(configModule: Module.() -> Unit) {
         addModule(module { configModule() })
+    }
+
+    /**
+     * Adds a module loaded after every [addModule] module and [addKoinConfig] config, so its
+     * definitions replace same-type definitions from both. For tests: `addOverrideModule {
+     * single<FirestoreService> { mockk() } }`.
+     */
+    fun addOverrideModule(module: Module) {
+        overrideModules.add(module)
+    }
+
+    fun addOverrideModule(configModule: Module.() -> Unit) {
+        addOverrideModule(module { configModule() })
     }
 
     fun addAppInit(appInit: suspend Application.(KtpConfig) -> Unit) {
@@ -69,6 +92,7 @@ class KtpAppBuilder {
             modules = allModules,
             koinConfigs = koinConfigs.toList(),
             appInits = appInits.toList(),
+            overrideModules = overrideModules.toList(),
         )
     }
 }
@@ -78,14 +102,17 @@ data class KtpApp(
     val modules: List<Module>,
     val koinConfigs: List<KoinConfiguration>,
     val appInits: List<suspend Application.(KtpConfig) -> Unit>,
+    val overrideModules: List<Module> = emptyList(),
 ) {
 
+    /** Loads Koin in the order [KtpAppBuilder] documents: modules, then configs, then overrides. */
     fun installKoin(app: Application) {
         app.install(KoinIsolated) {
             slf4jLogger()
             modules(module { single { app } })
             modules(modules)
             koinConfigs.forEach { config -> config.appDeclaration(this) }
+            modules(overrideModules)
         }
         app.getKoin().autoCloseInstances()
     }

@@ -62,6 +62,8 @@ val versionGenTask =
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
         val projectGroup = project.group.toString()
         val projectVersion = project.version.toString()
+        val kotlinVersion = libs.versions.kotlin.get()
+        val ktorVersion = libs.versions.ktor.get()
         val koinVersion = libs.versions.koin.get()
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
@@ -79,6 +81,8 @@ val versionGenTask =
 
         inputs.property("group", projectGroup)
         inputs.property("version", projectVersion)
+        inputs.property("kotlinVersion", kotlinVersion)
+        inputs.property("ktorVersion", ktorVersion)
         inputs.property("koinVersion", koinVersion)
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
@@ -111,6 +115,15 @@ val versionGenTask =
             object KtpVersion {
                 /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
+
+                /**
+                 * Kotlin version the plugin puts on the build classpath, for plugins that must
+                 * match it exactly (the Compose compiler plugin of a Multiplatform module).
+                 */
+                const val KOTLIN = "$kotlinVersion"
+
+                /** Ktor version the KTP libraries are built against. */
+                const val KTOR = "$ktorVersion"
 
                 /** kotest BOM version this plugin injects into consumer builds. */
                 const val KOTEST = "$kotestVersion"

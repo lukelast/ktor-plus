@@ -4,8 +4,11 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldNotBeSameInstanceAs
+import io.ktor.server.testing.testApplication
 import net.ghue.ktp.config.KtpConfig
+import org.koin.dsl.koinConfiguration
 import org.koin.dsl.module
+import org.koin.ktor.ext.getKoin
 
 class KtpStartTest :
     StringSpec({
@@ -116,5 +119,50 @@ class KtpStartTest :
 
             firstBuild.modules.size shouldBe 3
             secondBuild.modules.size shouldBe 3
+        }
+
+        "a Koin config definition replaces an addModule one of the same type" {
+            val app =
+                ktpAppCreate {
+                        createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+                        addModule { single<CharSequence> { "module" } }
+                        addKoinConfig(
+                            koinConfiguration {
+                                modules(module { single<CharSequence> { "config" } })
+                            }
+                        )
+                    }()
+                    .build()
+
+            testApplication {
+                application {
+                    app.installKoin(this)
+                    getKoin().get<CharSequence>() shouldBe "config"
+                }
+                startApplication()
+            }
+        }
+
+        "an override module replaces both addModule and Koin config definitions" {
+            val app =
+                ktpAppCreate {
+                        createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+                        addModule { single<CharSequence> { "module" } }
+                        addKoinConfig(
+                            koinConfiguration {
+                                modules(module { single<CharSequence> { "config" } })
+                            }
+                        )
+                    }
+                        .update { addOverrideModule { single<CharSequence> { "override" } } }()
+                    .build()
+
+            testApplication {
+                application {
+                    app.installKoin(this)
+                    getKoin().get<CharSequence>() shouldBe "override"
+                }
+                startApplication()
+            }
         }
     })

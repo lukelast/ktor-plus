@@ -33,6 +33,14 @@
     </else>
   </if>
 
+  <!-- Wire and header logging print bearer tokens verbatim (the GCP SDKs run on Apache HttpClient).
+       Pinned so a DEBUG root, e.g. from an app's logback-dev.xml, cannot leak credentials; raise
+       them deliberately in that file when a wire trace is really wanted. -->
+  <logger name="org.apache.http.wire" level="INFO"/>
+  <logger name="org.apache.http.headers" level="INFO"/>
+  <logger name="org.apache.hc.client5.http.wire" level="INFO"/>
+  <logger name="org.apache.hc.client5.http.headers" level="INFO"/>
+
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
   </root>

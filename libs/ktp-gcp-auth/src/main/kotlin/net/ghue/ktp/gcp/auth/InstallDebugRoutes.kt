@@ -11,7 +11,12 @@ import net.ghue.ktp.ktor.app.debug.respondGcLog
 import net.ghue.ktp.ktor.app.debug.respondThreadDump
 import net.ghue.ktp.ktor.app.debug.respondVersion
 
-fun Application.installDebugRoutes(role: Role = Role("admin")) {
+/**
+ * Mounts the ktp-ktor debug pages under `/debug` behind `authenticateFirebase` and [role].
+ * Installing `FirebaseAuthPlugin` must come first. Every route, `/debug/version` included, needs a
+ * signed-in session holding [role]; the 401 for a missing cookie is answered from the cookie alone.
+ */
+fun Application.installDebugRoutes(role: Role = Role.ADMIN) {
     routing {
         authenticateFirebase {
             requireRole(role) {

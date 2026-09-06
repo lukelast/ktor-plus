@@ -298,7 +298,8 @@ class FirebaseAuthPluginTest :
 
         "creates session cookie with correct attributes" {
             testApplication {
-                val config = KtpConfig.create { setUnitTestEnv() }
+                // A deployed env: the test envs, like local dev, never get Secure cookies.
+                val config = KtpConfig.create { env = Env("prod") }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
                 val mockLifecycle = mockk<AuthLifecycleHandler>()
@@ -336,8 +337,48 @@ class FirebaseAuthPluginTest :
                 cookies?.any { it.contains("HttpOnly") } shouldBe true
                 cookies?.any { it.contains("SameSite=Lax") || it.contains("SameSite=lax") } shouldBe
                     true
-                // Outside local dev the default is auth.secureCookies = true.
+                // Outside local dev and the test envs the default is auth.secureCookies = true.
                 cookies?.any { it.contains("Secure") } shouldBe true
+            }
+        }
+
+        "uses non-secure cookies in the unit test environment" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                val mockFirebaseAuth = mockk<FirebaseAuth>()
+                val mockLifecycle = mockk<AuthLifecycleHandler>()
+
+                every { mockFirebaseAuth.verifyIdToken(any(), any()) } returns
+                    createMockFirebaseToken()
+                coEvery { mockLifecycle.onLogin(any()) } returns
+                    UserSession(
+                        userId = UserId("test-user-id"),
+                        tenantId = TenantId("test-tenant"),
+                        email = "test@example.com",
+                        name = "Test User",
+                        roles = setOf("user"),
+                    )
+
+                application {
+                    install(KoinIsolated) {
+                        modules(authTestModule(config, mockFirebaseAuth, mockLifecycle))
+                    }
+
+                    install(RequestVirtualThreadPlugin)
+                    install(FirebaseAuthPlugin)
+                }
+
+                val response =
+                    client.post("/auth/login") {
+                        contentType(ContentType.Application.Json)
+                        setBody(Json.encodeToString(LoginRequest("valid-token")))
+                    }
+                response.status shouldBe HttpStatusCode.OK
+
+                val cookies = response.headers.getAll(HttpHeaders.SetCookie)
+                cookies shouldNotBe null
+                cookies?.none { it.contains("Secure") } shouldBe true
             }
         }
 

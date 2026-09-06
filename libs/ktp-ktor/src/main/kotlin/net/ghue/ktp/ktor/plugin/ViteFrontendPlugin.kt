@@ -31,8 +31,21 @@ import org.koin.ktor.ext.inject
 
 private const val DEFAULT_VITE_PORT = 5173
 
+/**
+ * In local dev every frontend request is proxied to the dev server on [vitePort], falling back to
+ * [frontendDist] when it is down. Elsewhere the bundle is served from [staticDir] (a directory next
+ * to the jar, else classpath resources) with the SPA fallback on `/` and [frontendRoute].
+ */
 class ViteFrontendConfig {
     var vitePort: Int = DEFAULT_VITE_PORT
+
+    /**
+     * The SPA entry, relative to [staticDir], as the bundler writes it. Vite keeps the source
+     * layout so the default is `src/index.html`; a bundler that emits it at the root (webpack,
+     * Compose for Web) sets `Path("index.html")`. Production also tries the root form when the
+     * `src/` one is missing, but local dev proxies exactly this path, so set it to match the dev
+     * server.
+     */
     var indexFile: Path = Path("src", "index.html")
     /**
      * URI segment static files are served under; no slashes, must match `base` in vite.config.ts.
@@ -41,7 +54,11 @@ class ViteFrontendConfig {
     /** The directory on the production backend where static files are stored. */
     var staticDir: Path = Path(staticPathSegment)
 
-    /** Where the frontend files are built during development. */
+    /**
+     * Where the frontend's production bundle lands, for the local-dev fallback when the dev server
+     * is down; resolved from the working directory and then from its parent, since Gradle runs the
+     * backend in its own subproject directory.
+     */
     var frontendDist: Path = Path("frontend", "dist")
     var frontendPathSegment: String = "p"
 

@@ -14,7 +14,7 @@ internal fun Project.applyDetekt() {
         doLast {
             val configResource = DetektPlugin::class.java.classLoader.getResourceAsStream("detekt.yml")
                 ?: error("Could not find detekt.yml in resources")
-            
+
             val file = configFile.get().asFile
             file.parentFile.mkdirs()
             file.writeBytes(configResource.readAllBytes())

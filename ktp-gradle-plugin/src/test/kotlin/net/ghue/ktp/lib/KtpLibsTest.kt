@@ -62,6 +62,15 @@ class KtpLibsTest {
     }
 
     @Test
+    fun `KtpVersion carries the kotlin and ktor versions from the version catalog`() {
+        val catalog = File("../gradle/libs.versions.toml").readText()
+        fun version(key: String) =
+            Regex("""(?m)^$key\s*=\s*"([^"]+)"""").find(catalog)?.groupValues?.get(1)
+        assertEquals(version("kotlin"), KtpVersion.KOTLIN)
+        assertEquals(version("ktor"), KtpVersion.KTOR)
+    }
+
+    @Test
     fun `koinBom carries the koin version from the version catalog`() {
         val koinVersion =
             Regex("""(?m)^koin\s*=\s*"([^"]+)"""")

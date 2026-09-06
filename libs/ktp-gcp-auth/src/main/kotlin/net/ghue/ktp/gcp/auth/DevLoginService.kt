@@ -57,7 +57,11 @@ internal class DevLoginService(private val lifecycle: AuthLifecycleHandler) {
                 .orEmpty()
 
         val session =
-            call.startSession(lifecycle, devLoginIdentity(slug), extraRoles = roles + "admin")
+            call.startSession(
+                lifecycle,
+                devLoginIdentity(slug),
+                extraRoles = roles + Role.ADMIN.name,
+            )
         log {}.info { "Dev login as ${session.userId.value} with roles ${session.roles}" }
         call.respondRedirect(redirect)
     }

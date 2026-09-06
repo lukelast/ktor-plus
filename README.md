@@ -41,6 +41,30 @@ dependencies { implementation(KtpLibs.stripe) }
 Upgrading from an older release? Delete the committed `gradle/ktp.versions.toml`; `KtpLibs`
 replaced it.
 
+## Wiring an app
+
+```kotlin
+fun main() = app.start()
+
+val app = ktpAppCreate {
+    addKoinConfig(koinConfiguration<MyApp>()) // the app's @Single/@Factory definitions
+    addModule(firebaseAuthModule())           // library modules
+    addAppInit { config ->
+        installDefaultPlugins(config)
+        install(FirebaseAuthPlugin)
+        installApi()
+        install(ViteFrontendPlugin)
+    }
+}
+```
+
+Koin definitions load in this order, later ones replacing earlier ones of the same type:
+`addModule` modules, then `addKoinConfig` configs (so an app definition beats a library one), then
+`addOverrideModule` modules. Tests build on the real app with `app.update { ... }` and swap a
+compiler-plugin `@Singleton` for a mock through `addOverrideModule`; an `addModule` definition
+would lose to it. `ktpTestApp(app) { client.get(...) }` from ktp-test runs the result in Ktor's
+test host with the unit-test config env.
+
 ## Libraries
 
 | Library                                     | `KtpLibs`          | What it gives you                                                                                                                                           |
@@ -66,9 +90,14 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
   by `ktp.plugin`.
 - **Project plugin** (`com.github.lukelast.ktor-plus.project`): KTP conventions per project. Mode
   is auto-detected or set with `ktp.mode`: `ktor` (default; adds ktp-ktor/ktp-test, formatting,
-  detekt, tests, fat jar), `library` (published Java 21 library), `frontend` (a `package.json`;
-  lifecycle tasks only), `root`. Every mode gets `check` (strict, what CI runs) and `verify`
-  (format, then `check`).
+  detekt, tests, fat jar; compiles for and runs on JDK 25, which the Foojay resolver downloads
+  when missing), `library` (published Java 21 library), `frontend` (a `package.json`; lifecycle
+  tasks only), `root`. Every mode gets `check` (strict, what CI runs) and `verify` (format, then
+  `check`); the root `verify` aggregates the subprojects that have one. Modules the plugin does not
+  manage (Kotlin Multiplatform, say) need `ktp.plugin` left unset and the plugin applied per
+  project. `ktor` mode applies the Ktor Gradle plugin, so its extension is available as is: for
+  example `ktor { openApi { enabled = true } }` turns on route metadata inference (Kotlin 2.4+),
+  though KTP serves no spec endpoint yet.
 - **Lukestack plugin** (`com.github.lukelast.ktor-plus.lukestack`): a personal stack on top: GCP
   deployment (Cloud Run + Infrastructure Manager), Docker tasks, and a bun/Vite frontend whose dev
   server starts with `run`. Other stacks should layer on the base plugin instead.
