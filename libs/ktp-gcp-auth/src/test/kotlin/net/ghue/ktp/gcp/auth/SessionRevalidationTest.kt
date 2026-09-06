@@ -108,7 +108,7 @@ class SessionRevalidationTest :
                 "application access denial" to { loginFailure = AuthDeniedException() },
             )
         for ((reason, deny) in denials) {
-            for (path in listOf(AuthUrls.SESSION, "/private", "/admin")) {
+            for (path in listOf(AuthUrls.SESSION, "/private", "/admin", "/optional")) {
                 "$reason clears the cookie and denies $path" {
                     val fixture = RecheckFixture().apply(deny)
                     fixture.app { browser ->
@@ -131,7 +131,7 @@ class SessionRevalidationTest :
             }
         }
 
-        for (path in listOf(AuthUrls.SESSION, "/private", "/admin")) {
+        for (path in listOf(AuthUrls.SESSION, "/private", "/admin", "/optional")) {
             for (dependency in listOf("Firebase", "user store")) {
                 "$dependency failure preserves the cookie and retries on $path" {
                     val fixture = RecheckFixture()
@@ -233,6 +233,35 @@ class SessionRevalidationTest :
             fixture.app { browser ->
                 browser.get("/seed")
                 browser.get("/private").status shouldBe HttpStatusCode.Unauthorized
+                browser.get("/seed")
+                browser.get("/optional").status shouldBe HttpStatusCode.Unauthorized
+                fixture.protectedCalls shouldBe 0
+            }
+        }
+
+        "an optional route serves a request with no cookie as anonymous" {
+            val fixture = RecheckFixture()
+            fixture.app { browser ->
+                val response = browser.get("/optional")
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe "anonymous"
+                fixture.protectedCalls shouldBe 1
+                verify(exactly = 0) { fixture.firebase.getUser(any()) }
+            }
+        }
+
+        "an optional route rechecks a due cookie and passes a fresh one without Firebase" {
+            val fixture = RecheckFixture()
+            fixture.roles = setOf("user")
+            fixture.app { browser ->
+                browser.get("/seed")
+                val refreshed = browser.get("/optional").session()
+                refreshed.roles shouldBe setOf("user")
+                refreshed.lastValidatedAt shouldBe NOW.epochSecond
+                fixture.clock.advance(1.days)
+                browser.get("/optional").session().lastValidatedAt shouldBe NOW.epochSecond
+                fixture.protectedCalls shouldBe 2
+                verify(exactly = 1) { fixture.firebase.getUser("alice") }
             }
         }
     })
@@ -356,6 +385,16 @@ private class RecheckFixture {
                             protectedCalls++
                             call.respond(HttpStatusCode.OK)
                         }
+                    }
+                }
+                // Mixed route: anonymous passes, a present cookie is checked like /private.
+                authenticateFirebase(optional = true) {
+                    get("/optional") {
+                        protectedCalls++
+                        val principal = call.principal<UserSession>()
+                        call.respondText(
+                            if (principal == null) "anonymous" else Json.encodeToString(principal)
+                        )
                     }
                 }
             }

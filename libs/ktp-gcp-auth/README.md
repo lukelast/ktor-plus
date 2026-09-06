@@ -26,12 +26,20 @@ routing {
         get("/api/me") { call.respond(call.userOrError()) }
         requireRole(Role("admin")) { get("/api/admin") { ... } }
     }
+    // Signed-out visitors too; a cookie that is present is still fully checked.
+    authenticateFirebase(optional = true) {
+        post("/api/roast") { val user = call.userOrNull() ... }
+    }
 }
 ```
 
 Inside `authenticateFirebase {}` the principal is a `UserPrincipal` (`userId`, `tenantId`,
 `email`, `name`, `roles`) from `call.userOrNull()` or `call.userOrError()`. `requireRole` nests
-inside it and answers 403 to anyone without the role.
+inside it and answers 403 to anyone without the role. With `optional = true` the block also serves
+requests with no cookie, where `call.userOrNull()` is null; a cookie that is present passes the
+same checks as on a required route, including the periodic recheck below, and a failed check gets
+the same 401 or 503, so a disabled or deleted account cannot keep its signed-in benefits by holding
+on to its cookie. Never read `UserSession` from `call.sessions` on a route: that skips the recheck.
 
 Config (`9.auth.conf`, override in the app's own layer):
 

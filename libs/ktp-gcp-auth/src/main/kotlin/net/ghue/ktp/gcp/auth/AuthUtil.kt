@@ -34,5 +34,10 @@ suspend fun ApplicationCall.userOrError(): UserPrincipal {
         }
 }
 
-fun Route.authenticateFirebase(build: Route.() -> Unit): Route =
-    authenticate(AuthProviderName.FIREBASE_SESSION, build = build)
+/**
+ * Routes for signed-in users. With [optional], no cookie proceeds with a null [userOrNull], but a
+ * cookie that is present is still fully checked (periodic recheck included), so a stale cookie for
+ * a disabled or deleted account is refused. Never read [UserSession] from the sessions API instead.
+ */
+fun Route.authenticateFirebase(optional: Boolean = false, build: Route.() -> Unit): Route =
+    authenticate(AuthProviderName.FIREBASE_SESSION, optional = optional, build = build)
