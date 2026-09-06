@@ -33,6 +33,7 @@ import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.KtpConfigBuilder
 import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
+import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 
@@ -253,6 +254,7 @@ private fun authApp(
                     }
                 )
             }
+            install(RequestVirtualThreadPlugin)
             install(FirebaseAuthPlugin)
         }
         test()

@@ -18,8 +18,6 @@ import java.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.KtpConfig
@@ -52,11 +50,8 @@ class FirebaseAuthService(
             return
         }
         try {
-            val session =
-                withContext(Dispatchers.IO) {
-                    val token = verifyToken(loginRequest.idToken)
-                    createFirebaseSession(UserId(token.uid), token.isAnonymous)
-                }
+            val token = verifyToken(loginRequest.idToken)
+            val session = createFirebaseSession(UserId(token.uid), token.isAnonymous)
             call.sessions.set(session)
             call.respondSessionUser(session)
         } catch (_: AuthDeniedException) {
@@ -83,10 +78,7 @@ class FirebaseAuthService(
         val age = clock.instant().epochSecond - session.lastValidatedAt
         if (age in 0 until SESSION_RECHECK_INTERVAL.inWholeSeconds) return session
         return try {
-            val refreshed =
-                withContext(Dispatchers.IO) {
-                    createFirebaseSession(session.userId, session.isAnonymous)
-                }
+            val refreshed = createFirebaseSession(session.userId, session.isAnonymous)
             sessions.set(refreshed)
             refreshed
         } catch (_: AuthDeniedException) {
