@@ -6,15 +6,16 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
-import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import java.io.File
 import java.net.ConnectException
 import java.nio.file.Path
 import kotlin.io.path.*
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -22,6 +23,7 @@ import kotlin.time.Duration.Companion.minutes
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.Resource
 import net.ghue.ktp.core.removeFirstFolder
+import net.ghue.ktp.core.sha256
 import net.ghue.ktp.ktor.http.connectTimeout
 import net.ghue.ktp.ktor.http.createKtorHttpClient
 import net.ghue.ktp.ktor.http.requestTimeout
@@ -62,6 +64,33 @@ class ViteFrontendConfig {
     var frontendDist: Path = Path("frontend", "dist")
     var frontendPathSegment: String = "p"
 
+    /**
+     * Files served at the site root as well as under [staticDir], because browsers and crawlers
+     * request them by fixed name regardless of what index.html links: `/favicon.ico` for any tab
+     * without an icon link (JSON responses, error pages) and `/robots.txt`. Each is looked up as
+     * `staticDir/<name>`; a missing `favicon.ico` answers 204 rather than 404 so the noise stays
+     * out of error counts, anything else missing is 404. Vite copies `frontend/public/` to the root
+     * of the bundle, so that is where an app drops them.
+     */
+    var rootFiles: Set<String> = setOf("favicon.ico", "robots.txt")
+
+    /**
+     * Subdirectory of [staticDir] holding content-hashed files, which get a one-year `immutable`
+     * cache. Everything else under [staticDir] keeps a plain URL and gets [staticMaxAge]. Matches
+     * Vite's default `build.assetsDir`.
+     */
+    var hashedAssetsDir: String = "assets"
+
+    /** Browser cache lifetime of un-hashed static files (favicon, manifest, robots). */
+    var staticMaxAge: Duration = 1.hours
+
+    /**
+     * Browser cache lifetime of index.html. Bounds how long a fresh navigation after a deploy can
+     * pick up an HTML page whose entry script has since been replaced; conditional requests then
+     * revalidate against the ETag, so a 304 is the common case.
+     */
+    var indexMaxAge: Duration = 10.minutes
+
     val staticRootPath: String = "/${staticPathSegment}"
 
     val indexFilePath: Path
@@ -77,6 +106,13 @@ class ViteFrontendConfig {
         Resource.readOrNull(indexFilePath.toString())
             ?: Resource.readOrNull(altPath.toString())
             ?: error("$indexFile not found")
+    }
+
+    /**
+     * ETag value (unquoted) of [indexFileText]: a cached copy revalidates to a 304 until a deploy.
+     */
+    val indexFileETag: String by lazy {
+        indexFileText.sha256().take(16).joinToString("") { "%02x".format(it) }
     }
 
     /** Catch-all under [frontendPathSegment] so client-side routes load on direct navigation. */
@@ -99,7 +135,14 @@ val ViteFrontendPlugin =
         } else {
             application.routing {
                 fun StaticContentConfig<*>.configCache() {
-                    cacheControl { listOf(cacheControlMaxAge(7.days)) }
+                    cacheControl { resource ->
+                        val path = resource.toString().replace(File.separatorChar, '/')
+                        val hashed = path.contains("/${config.hashedAssetsDir}/")
+                        listOf(
+                            if (hashed) cacheControlImmutable(365.days)
+                            else cacheControlMaxAge(config.staticMaxAge)
+                        )
+                    }
                 }
                 if (config.staticDir.isDirectory()) {
                     staticFiles(config.staticRootPath, config.staticDir.toFile()) { configCache() }
@@ -110,18 +153,48 @@ val ViteFrontendPlugin =
                 }
                 get("/") { call.serveIndexHtml(config) }
                 get(config.frontendRoute) { call.serveIndexHtml(config) }
+                for (name in config.rootFiles) {
+                    get("/$name") { call.serveRootFile(config, name) }
+                }
             }
         }
     }
 
 private suspend fun ApplicationCall.serveIndexHtml(config: ViteFrontendConfig) {
-    try {
-        caching = CachingOptions(cacheControl = cacheControlMaxAge(1.hours))
-        respondText(config.indexFileText, contentType = ContentType.Text.Html)
-    } catch (ex: IllegalStateException) {
-        log {}.warn(ex) { "Serving index html: ${config.indexFile}" }
-        respond(HttpStatusCode.NotFound)
+    val html =
+        try {
+            config.indexFileText
+        } catch (ex: IllegalStateException) {
+            log {}.warn(ex) { "Serving index html: ${config.indexFile}" }
+            respond(HttpStatusCode.NotFound)
+            return
+        }
+    response.cacheControl(cacheControlMaxAge(config.indexMaxAge))
+    respond(
+        TextContent(html, ContentType.Text.Html.withCharset(Charsets.UTF_8)).apply {
+            versions += EntityTagVersion(config.indexFileETag)
+        }
+    )
+}
+
+/**
+ * `/favicon.ico` and friends: the same file from [ViteFrontendConfig.staticDir], see `rootFiles`.
+ */
+private suspend fun ApplicationCall.serveRootFile(config: ViteFrontendConfig, name: String) {
+    val contentType = ContentType.defaultForFilePath(name)
+    val file = config.staticDir.resolve(name)
+    if (file.isReadable()) {
+        response.cacheControl(cacheControlMaxAge(config.staticMaxAge))
+        respond(LocalPathContent(file, contentType))
+        return
     }
+    val resource = Resource.urlOrNull(config.staticDir.resolve(name).joinToString("/"))
+    if (resource != null) {
+        response.cacheControl(cacheControlMaxAge(config.staticMaxAge))
+        respond(URIFileContent(resource, contentType))
+        return
+    }
+    respond(if (name == "favicon.ico") HttpStatusCode.NoContent else HttpStatusCode.NotFound)
 }
 
 private class ViteDevProxy(val config: ViteFrontendConfig) : Closeable {

@@ -2,12 +2,15 @@ package net.ghue.ktp.ktor.plugin
 
 import com.sun.net.httpserver.HttpServer
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.testing.*
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -199,6 +202,88 @@ class ViteFrontendTest :
                     status shouldBe HttpStatusCode.OK
                     bodyAsText().shouldContain("Test Index Page")
                 }
+            }
+        }
+
+        "index html is cached for ten minutes and revalidates by ETag" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ConditionalHeaders)
+                    install(ViteFrontendPlugin)
+                }
+
+                val first = client.get("/p/some/page")
+                first.status shouldBe HttpStatusCode.OK
+                first.headers[HttpHeaders.CacheControl] shouldBe "max-age=600, public"
+                val etag = first.headers[HttpHeaders.ETag].shouldNotBeNull()
+
+                client.get("/") { header(HttpHeaders.IfNoneMatch, etag) }.status shouldBe
+                    HttpStatusCode.NotModified
+            }
+        }
+
+        "hashed assets are immutable and other static files are not" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
+
+                client.get("/static/assets/app-abc123.js").apply {
+                    status shouldBe HttpStatusCode.OK
+                    headers[HttpHeaders.CacheControl] shouldBe "max-age=31536000, public, immutable"
+                }
+                client.get("/static/app.css").apply {
+                    status shouldBe HttpStatusCode.OK
+                    headers[HttpHeaders.CacheControl] shouldBe "max-age=3600, public"
+                }
+            }
+        }
+
+        "favicon.ico and robots.txt are served at the site root" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin)
+                }
+
+                client.get("/favicon.ico").apply {
+                    status shouldBe HttpStatusCode.OK
+                    contentType() shouldBe ContentType.Image.XIcon
+                    headers[HttpHeaders.CacheControl] shouldBe "max-age=3600, public"
+                    readRawBytes().size shouldBe 116
+                }
+                client.get("/robots.txt").apply {
+                    status shouldBe HttpStatusCode.OK
+                    bodyAsText().shouldContain("User-agent")
+                }
+            }
+        }
+
+        "missing root files answer 204 for favicon and 404 otherwise" {
+            testApplication {
+                val config = KtpConfig.create { setUnitTestEnv() }
+
+                application {
+                    install(Koin) { modules(module { single { config } }) }
+                    install(ViteFrontendPlugin) {
+                        staticDir = Path("missing-static")
+                        indexFile = Path("nonexistent.html")
+                    }
+                }
+
+                client.get("/favicon.ico").apply {
+                    status shouldBe HttpStatusCode.NoContent
+                    headers[HttpHeaders.CacheControl].shouldBeNull()
+                }
+                client.get("/robots.txt").status shouldBe HttpStatusCode.NotFound
             }
         }
     })
