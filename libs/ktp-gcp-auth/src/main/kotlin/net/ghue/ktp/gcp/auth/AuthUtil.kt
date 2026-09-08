@@ -3,12 +3,12 @@ package net.ghue.ktp.gcp.auth
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.core.sha256
 import net.ghue.ktp.core.sha512
+import net.ghue.ktp.ktor.error.KtpRspEx
 
 const val AES128_KEY_BYTES = 128 / 8
 
@@ -28,10 +28,10 @@ fun ApplicationCall.userOrNull(): UserPrincipal? {
 
 suspend fun ApplicationCall.userOrError(): UserPrincipal {
     return userOrNull()
-        ?: run {
-            respond(HttpStatusCode.Unauthorized)
-            error("User session not found, redirected to login")
-        }
+        ?: throw KtpRspEx(
+            status = HttpStatusCode.Unauthorized,
+            detail = "User session not found",
+        )
 }
 
 /**
