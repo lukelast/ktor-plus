@@ -17,6 +17,7 @@ dependencies {
     api(libs.ktor.cachingHeaders)
     api(libs.ktor.conditionalHeaders)
     api(libs.ktor.hsts)
+    api(libs.ktor.bodyLimit)
     api(libs.ktor.resources)
 
     // Ktor Client

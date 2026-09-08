@@ -1,13 +1,9 @@
 package net.ghue.ktp.ktor.plugin
 
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
-import io.ktor.server.plugins.BadRequestException
-import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.cachingheaders.CachingHeaders
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.compression.Compression
@@ -17,12 +13,9 @@ import io.ktor.server.plugins.conditionalheaders.ConditionalHeaders
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.hsts.HSTS
-import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.path
 import io.ktor.server.resources.Resources
 import net.ghue.ktp.config.KtpConfig
-import net.ghue.ktp.ktor.error.KtpRspEx
-import net.ghue.ktp.ktor.error.processKtpRspEx
 import org.slf4j.event.Level
 
 const val MIN_COMPRESS_SIZE_BYTES = 512L
@@ -48,6 +41,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
         install(HSTS)
     }
     install(SecurityHeadersPlugin) { ktpConfig = config }
+    installBodyLimit(config)
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("favicon").not() }
@@ -55,33 +49,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
             disableDefaultColors()
         }
     }
-    install(StatusPages) {
-        exception<KtpRspEx>(::processKtpRspEx)
-        // Decode errors arrive as BadRequestException unless no converter ran (wrong Content-Type).
-        exception<BadRequestException>(::processRequestDecodingFailure)
-        exception<ContentTransformationException>(::processRequestDecodingFailure)
-
-        // Not logged here: processKtpRspEx logs every 5xx once, with the cause's stack trace.
-        exception<Throwable> { call, cause ->
-            val root = generateSequence(cause) { it.cause }.last()
-            val summary = if (root === cause) "$cause" else "$cause, root cause: $root"
-            processKtpRspEx(call, KtpRspEx(internalMessage = "Unhandled $summary", cause = cause))
-        }
-    }
+    installStatusPages()
     install(Resources)
     install(CachingHeaders)
-}
-
-private suspend fun processRequestDecodingFailure(call: ApplicationCall, cause: Throwable) {
-    processKtpRspEx(
-        call,
-        KtpRspEx(
-            // Logged server-side only, so serializer internals never leak to the client.
-            internalMessage = generateSequence(cause) { it.cause }.last().message,
-            status = HttpStatusCode.BadRequest,
-            title = "Bad Request",
-            detail = "The request body could not be parsed.",
-            cause = cause,
-        ),
-    )
 }

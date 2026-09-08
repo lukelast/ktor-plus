@@ -110,6 +110,13 @@ class FirebaseAuthPluginTest :
                             "https://identitytoolkit.googleapis.com",
                             "https://securetoken.googleapis.com",
                         )
+                    cspSources[CspDirective.IMG_SRC] shouldBe
+                        setOf(
+                            "https://lh3.googleusercontent.com",
+                            "https://avatars.githubusercontent.com",
+                            "https://graph.facebook.com",
+                            "https://*.fbsbx.com",
+                        )
                 }
             }
         }

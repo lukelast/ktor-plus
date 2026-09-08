@@ -59,6 +59,7 @@ ktor-forwardedHeader = { module = "io.ktor:ktor-server-forwarded-header" }
 ktor-cachingHeaders = { module = "io.ktor:ktor-server-caching-headers" }
 ktor-conditionalHeaders = { module = "io.ktor:ktor-server-conditional-headers" }
 ktor-hsts = { module = "io.ktor:ktor-server-hsts" }
+ktor-bodyLimit = { module = "io.ktor:ktor-server-body-limit" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
 ktor-sessions = { module = "io.ktor:ktor-server-sessions" }
 ktor-auth = { module = "io.ktor:ktor-server-auth" }

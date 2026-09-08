@@ -70,6 +70,15 @@ val FirebaseAuthPlugin =
                 "https://identitytoolkit.googleapis.com",
                 "https://securetoken.googleapis.com",
             )
+            // Where the user's photoURL points for the providers ktp-login-react offers, so any
+            // app can render the avatar. Microsoft returns no photoURL; email sign-in has none.
+            add(
+                CspDirective.IMG_SRC,
+                "https://lh3.googleusercontent.com",
+                "https://avatars.githubusercontent.com",
+                "https://graph.facebook.com",
+                "https://*.fbsbx.com",
+            )
         }
 
         // An app that installs Sessions itself must register cookie<UserSession>, or login throws.
