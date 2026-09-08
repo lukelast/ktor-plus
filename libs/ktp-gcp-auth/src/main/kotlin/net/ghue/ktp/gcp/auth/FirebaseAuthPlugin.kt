@@ -15,6 +15,8 @@ import io.ktor.server.sessions.maxAge
 import io.ktor.server.sessions.sameSite
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.plugin.CspDirective
+import net.ghue.ktp.ktor.plugin.cspSources
 import org.koin.ktor.ext.inject
 import org.slf4j.MDC
 
@@ -57,6 +59,18 @@ val FirebaseAuthPlugin =
         val authService: FirebaseAuthService by application.inject()
         val authClientConfigService: FirebaseAuthClientConfigService by application.inject()
         val useSecureCookies = pluginConfig.secureCookiesProvider(ktpConfig, ktpConfig.env)
+
+        // What the Firebase Auth web SDK's popup sign-in loads: the gapi loader, its auth iframe
+        // on the project's firebaseapp.com authDomain, and the Identity Toolkit / token APIs.
+        application.cspSources.apply {
+            add(CspDirective.SCRIPT_SRC, "https://apis.google.com")
+            add(CspDirective.FRAME_SRC, "https://*.firebaseapp.com")
+            add(
+                CspDirective.CONNECT_SRC,
+                "https://identitytoolkit.googleapis.com",
+                "https://securetoken.googleapis.com",
+            )
+        }
 
         // An app that installs Sessions itself must register cookie<UserSession>, or login throws.
         if (application.pluginOrNull(Sessions) == null) {

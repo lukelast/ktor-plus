@@ -51,7 +51,9 @@ import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
+import net.ghue.ktp.ktor.plugin.CspDirective
 import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
+import net.ghue.ktp.ktor.plugin.cspSources
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
@@ -101,6 +103,13 @@ class FirebaseAuthPluginTest :
                     install(FirebaseAuthPlugin)
 
                     pluginOrNull(Sessions) shouldNotBe null
+                    cspSources[CspDirective.SCRIPT_SRC] shouldBe setOf("https://apis.google.com")
+                    cspSources[CspDirective.FRAME_SRC] shouldBe setOf("https://*.firebaseapp.com")
+                    cspSources[CspDirective.CONNECT_SRC] shouldBe
+                        setOf(
+                            "https://identitytoolkit.googleapis.com",
+                            "https://securetoken.googleapis.com",
+                        )
                 }
             }
         }

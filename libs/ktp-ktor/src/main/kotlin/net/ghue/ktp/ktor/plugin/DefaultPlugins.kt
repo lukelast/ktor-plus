@@ -47,6 +47,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
     if (!config.env.isLocalDev) {
         install(HSTS)
     }
+    install(SecurityHeadersPlugin) { ktpConfig = config }
     install(CallLogging) {
         level = Level.INFO
         filter { call -> call.request.path().contains("favicon").not() }

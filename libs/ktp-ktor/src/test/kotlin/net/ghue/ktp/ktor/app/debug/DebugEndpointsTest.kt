@@ -460,6 +460,23 @@ class DebugEndpointsTest :
             }
         }
 
+        "/debug/errors loads its script from a file so it runs under the csp" {
+            testApplication {
+                application {
+                    installDefaultPlugins(KtpConfig.create { setUnitTestEnv() })
+                    install(DebugEndpointsPlugin)
+                }
+                val page = client.get("/debug${DebugEndpoints.ERRORS}").bodyAsText()
+                page shouldNotContain "<script>"
+                page shouldContain "<script src=\"/debug${DebugEndpoints.ERRORS}/script.js\">"
+                with(client.get("/debug${DebugEndpoints.ERRORS}/script.js")) {
+                    status shouldBe HttpStatusCode.OK
+                    contentType()?.withoutParameters() shouldBe ContentType.Text.JavaScript
+                    bodyAsText() shouldContain "run-all"
+                }
+            }
+        }
+
         "every error case answers its expected status without leaking internals" {
             testApplication {
                 application {

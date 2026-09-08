@@ -110,40 +110,51 @@ internal const val ERRORS_TEMPLATE =
                 {{CASE_ROWS}}
             </tbody>
         </table>
-        <script>
-            const base = location.pathname.replace(/\/+$/, '');
-
-            async function run(button) {
-                const id = button.dataset.id;
-                const result = document.getElementById('result-' + id);
-                result.className = '';
-                result.textContent = 'Running...';
-                const options = { method: button.dataset.method };
-                if (button.dataset.contentType) {
-                    options.headers = { 'Content-Type': button.dataset.contentType };
-                    options.body = button.dataset.body;
-                }
-                try {
-                    const response = await fetch(base + '/' + id, options);
-                    const text = await response.text();
-                    result.className =
-                        String(response.status) === button.dataset.expected ? 'match' : 'mismatch';
-                    result.textContent = response.status + ' ' + response.statusText + '\n' + text;
-                } catch (error) {
-                    result.className = 'mismatch';
-                    result.textContent = 'Request failed: ' + error;
-                }
-            }
-
-            document.querySelectorAll('button[data-id]').forEach((button) => {
-                button.addEventListener('click', () => run(button));
-            });
-            document.getElementById('run-all').addEventListener('click', async () => {
-                for (const button of document.querySelectorAll('button[data-id]')) {
-                    await run(button);
-                }
-            });
-        </script>
+        <script src="{{SCRIPT_URL}}"></script>
     </body>
     </html>
+    """
+
+/** File name the page's script is served under, next to the page. */
+internal const val ERRORS_SCRIPT_FILE = "script.js"
+
+/**
+ * The page's script, served as a file because the CSP allows no inline scripts. Runs after the
+ * table, so it resolves the case endpoints from the page URL and wires up the buttons directly.
+ */
+// language=JavaScript
+internal const val ERRORS_SCRIPT =
+    """
+    const base = location.pathname.replace(/\/+$/, '');
+
+    async function run(button) {
+        const id = button.dataset.id;
+        const result = document.getElementById('result-' + id);
+        result.className = '';
+        result.textContent = 'Running...';
+        const options = { method: button.dataset.method };
+        if (button.dataset.contentType) {
+            options.headers = { 'Content-Type': button.dataset.contentType };
+            options.body = button.dataset.body;
+        }
+        try {
+            const response = await fetch(base + '/' + id, options);
+            const text = await response.text();
+            result.className =
+                String(response.status) === button.dataset.expected ? 'match' : 'mismatch';
+            result.textContent = response.status + ' ' + response.statusText + '\n' + text;
+        } catch (error) {
+            result.className = 'mismatch';
+            result.textContent = 'Request failed: ' + error;
+        }
+    }
+
+    document.querySelectorAll('button[data-id]').forEach((button) => {
+        button.addEventListener('click', () => run(button));
+    });
+    document.getElementById('run-all').addEventListener('click', async () => {
+        for (const button of document.querySelectorAll('button[data-id]')) {
+            await run(button);
+        }
+    });
     """

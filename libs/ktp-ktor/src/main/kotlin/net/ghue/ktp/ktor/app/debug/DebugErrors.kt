@@ -5,6 +5,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -171,6 +172,10 @@ fun Route.installDebugErrorRoutes(accessControl: (suspend ApplicationCall.() -> 
             }
         }
     }
+    // Holds nothing sensitive, so no access check.
+    get(ERRORS_SCRIPT_FILE) {
+        call.respondText(ERRORS_SCRIPT.trimIndent(), ContentType.Text.JavaScript)
+    }
     get("") {
         if (accessControl?.invoke(call) == false) {
             call.respond(HttpStatusCode.Forbidden)
@@ -200,6 +205,9 @@ suspend fun RoutingCall.respondDebugErrors() {
             """
                 .trimIndent()
         }
-    val html = ERRORS_TEMPLATE.trimIndent().replace("{{CASE_ROWS}}", rows)
+    val html =
+        ERRORS_TEMPLATE.trimIndent()
+            .replace("{{SCRIPT_URL}}", "${request.path().trimEnd('/')}/$ERRORS_SCRIPT_FILE")
+            .replace("{{CASE_ROWS}}", rows)
     respondText(html, ContentType.Text.Html.withCharset(Charsets.UTF_8))
 }
