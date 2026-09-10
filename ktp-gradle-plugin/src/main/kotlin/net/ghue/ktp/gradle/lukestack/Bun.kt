@@ -7,22 +7,8 @@ import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
-/**
- * Wraps the frontend's package.json scripts in Gradle tasks so the root lifecycle covers the
- * frontend too: `assemble` bundles, `check` verifies without writing anything, and `verify`
- * formats first — the same strict-check/fixing-verify split the JVM modules follow.
- *
- * Lukestack frontends are built with bun. The package.json script contract is:
- * - `dev`: dev server (started by the Vite dev-server integration, not a task here)
- * - `format`: Biome fix mode, mutates sources (`biome check --write src`)
- * - `lint`: strict Biome + TypeScript checks, never writes (`biome ci src && tsc --noEmit`)
- * - `build`: production bundle into `dist/`
- * - `test`: test suite
- */
+/** Calls to the frontend's package.json. */
 internal fun Project.registerBunTasks() {
-    // Everything except dependencies and outputs feeds the scripts: sources, public assets,
-    // configs, .env files, helper scripts. A denylist keeps newly added files covered as inputs
-    // without needing a plugin change.
     val sourceFiles =
         fileTree(projectDir) { exclude("node_modules/**", "dist/**", "build/**", ".gradle/**") }
 
@@ -34,9 +20,7 @@ internal fun Project.registerBunTasks() {
             commandLine("bun", "install")
             inputs.file("package.json")
             inputs.files("bun.lock", "bun.lockb")
-            // Deliberately not an output directory: Gradle would fingerprint the tens of
-            // thousands of files in node_modules before and after every run. Directory
-            // existence plus the manifest inputs above decide whether install must rerun.
+            // Not an output: fingerprinting node_modules costs more than rerunning install.
             val nodeModules = projectDir.resolve("node_modules")
             outputs.upToDateWhen { nodeModules.isDirectory }
         }
@@ -85,9 +69,6 @@ internal fun Project.registerBunTasks() {
             outputs.upToDateWhen { true }
         }
 
-    // Ordering only, never dependencies: plain `check` stays a strict verifier that runs no
-    // formatter, while `verify` (format + check in one task graph) is race-free because the
-    // source-reading tasks wait for the formatter when both are scheduled.
     listOf(lint, bundle, test).forEach { task -> task.configure { mustRunAfter(format) } }
 
     tasks.named<Delete>(LifecycleBasePlugin.CLEAN_TASK_NAME) { delete("dist") }
