@@ -2,6 +2,7 @@ package net.ghue.ktp.gradle.lukestack
 
 import java.net.Socket
 import java.util.concurrent.TimeUnit
+import net.ghue.ktp.gradle.project.booleanProperty
 import org.gradle.api.Project
 import org.gradle.api.logging.Logging
 import org.gradle.api.file.DirectoryProperty
@@ -28,17 +29,7 @@ private const val DEFAULT_PORT = 5173
  * - `ktp.vite.port`: port checked to detect an externally started dev server. Default: `5173`.
  */
 internal fun Project.applyViteDev() {
-    val forced =
-        when (val enabledProp = findProperty(ENABLED_KEY)?.toString()) {
-            null -> null
-            "true" -> true
-            "false" -> false
-            else ->
-                error(
-                    "File 'gradle.properties', field '$ENABLED_KEY', has invalid value " +
-                        "'$enabledProp'. Valid values are: true, false."
-                )
-        }
+    val forced = booleanProperty(ENABLED_KEY)
     if (forced == false) return
 
     val frontendDir = rootProject.layout.projectDirectory.dir(FRONTEND_DIR)
