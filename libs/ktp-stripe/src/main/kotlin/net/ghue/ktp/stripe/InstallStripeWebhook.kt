@@ -7,8 +7,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.createRouteFromPath
 import io.ktor.server.routing.post
 import net.ghue.ktp.config.KtpConfig
+import net.ghue.ktp.ktor.openapi.excludeFromOpenApi
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.inject
 
@@ -16,7 +18,8 @@ fun Routing.installStripeWebhook() {
     val config: KtpConfig by inject()
     val handler: StripeWebhookHandler by inject()
     val webhookSecret = config.stripe.webhookSecret
-    post("/api/stripe/event") {
+    val webhook = createRouteFromPath("/api/stripe/event").excludeFromOpenApi()
+    webhook.post {
         val payload: String = call.receive()
         val stripeSigHeaderName = "Stripe-Signature"
         val signature = call.request.headers[stripeSigHeaderName]

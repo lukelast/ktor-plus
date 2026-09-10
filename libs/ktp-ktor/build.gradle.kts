@@ -19,6 +19,7 @@ dependencies {
     api(libs.ktor.hsts)
     api(libs.ktor.bodyLimit)
     api(libs.ktor.resources)
+    api(libs.ktor.routingOpenapi)
 
     // Ktor Client
     api(libs.ktor.client.core)

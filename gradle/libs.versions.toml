@@ -61,6 +61,7 @@ ktor-conditionalHeaders = { module = "io.ktor:ktor-server-conditional-headers" }
 ktor-hsts = { module = "io.ktor:ktor-server-hsts" }
 ktor-bodyLimit = { module = "io.ktor:ktor-server-body-limit" }
 ktor-resources = { module = "io.ktor:ktor-server-resources" }
+ktor-routingOpenapi = { module = "io.ktor:ktor-server-routing-openapi" }
 ktor-sessions = { module = "io.ktor:ktor-server-sessions" }
 ktor-auth = { module = "io.ktor:ktor-server-auth" }
 ktor-test = { module = "io.ktor:ktor-server-test-host" }

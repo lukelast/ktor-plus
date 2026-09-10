@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.time.Instant
 import java.time.ZoneOffset
+import net.ghue.ktp.ktor.openapi.excludeFromOpenApi
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.getKoin
 
@@ -36,6 +37,7 @@ fun Route.installApiRoutesCron() {
             post { handle() }
         }
     }
+        .excludeFromOpenApi()
 }
 
 @Resource("/api")

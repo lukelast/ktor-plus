@@ -23,6 +23,7 @@ class LukestackPlugin : Plugin<Project> {
             ProjectMode.KTOR -> {
                 project.configureGcpEnvironment()
                 project.configureTesting()
+                project.configureKtpOpenApi()
                 project.applyViteDev()
             }
             ProjectMode.FRONTEND -> project.registerBunTasks()

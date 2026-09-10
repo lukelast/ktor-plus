@@ -78,4 +78,5 @@ internal fun Project.registerBunTasks() {
         dependsOn(test)
     }
     tasks.named("verify") { dependsOn(format) }
+    registerOpenApiTypesTasks()
 }
