@@ -63,6 +63,33 @@ class OpenApiDocumentTest :
                 empty.containsKey("requestBody") shouldBe false
             }
         }
+        "header parameters are dropped and the others kept" {
+            testApplication {
+                lateinit var app: Application
+                application {
+                    app = this
+                    routing {
+                        get("/api/item/{id}") { call.respond(HttpStatusCode.NoContent) }
+                            .describe {
+                                parameters {
+                                    path("id")
+                                    query("limit")
+                                    header("X-Forwarded-For")
+                                }
+                            }
+                        get("/api/logged") { call.respond(HttpStatusCode.NoContent) }
+                            .describe { parameters { header("Forwarded") } }
+                    }
+                }
+                startApplication()
+                val paths = Json.parseToJsonElement(app.openApiDocument()).jsonObject["paths"]!!
+                val item = paths.jsonObject["/api/item/{id}"]!!.jsonObject["get"]!!.jsonObject
+                val names = item["parameters"]!!.jsonArray.map { it.jsonObject["name"] }
+                names shouldBe listOf(JsonPrimitive("id"), JsonPrimitive("limit"))
+                val logged = paths.jsonObject["/api/logged"]!!.jsonObject["get"]!!.jsonObject
+                logged.containsKey("parameters") shouldBe false
+            }
+        }
     })
 
 @Serializable private data class TestBody(val name: String)

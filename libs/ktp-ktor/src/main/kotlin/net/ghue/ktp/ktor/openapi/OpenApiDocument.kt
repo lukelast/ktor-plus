@@ -42,28 +42,43 @@ fun Application.openApiDocument(
     val defaults = OpenApiDoc(info = OpenApiInfo(title, "1"))
     val document = Json.parseToJsonElement(source.read(this, defaults).content).jsonObject
     val json = Json { prettyPrint = true }
-    return json.encodeToString(canonicalJson(document.withRequiredBodies())) + "\n"
+    val contract = document.mapOperations { it.withRequiredBody().withoutHeaderParameters() }
+    return json.encodeToString(canonicalJson(contract)) + "\n"
 }
 
 private fun String.matchesPrefix(prefix: String): Boolean =
     this == prefix.trimEnd('/') || startsWith(prefix.trimEnd('/') + "/")
 
-/** KTP routes call `receive<T>()` unconditionally; Ktor's inference leaves bodies optional. */
-private fun JsonObject.withRequiredBodies(): JsonObject {
+/** The operations are the objects in a path item; its other members are strings and arrays. */
+private fun JsonObject.mapOperations(transform: (JsonObject) -> JsonObject): JsonObject {
     val paths = this["paths"]?.jsonObject ?: return this
-    val required = paths.mapValues { (_, item) ->
+    val mapped = paths.mapValues { (_, item) ->
         JsonObject(
-            item.jsonObject.mapValues { (_, operation) ->
-                val body = (operation as? JsonObject)?.get("requestBody") as? JsonObject
-                if (body == null) operation
-                else {
-                    val requiredBody = JsonObject(body + ("required" to JsonPrimitive(true)))
-                    JsonObject(operation + ("requestBody" to requiredBody))
-                }
+            item.jsonObject.mapValues { (_, member) ->
+                if (member is JsonObject) transform(member) else member
             }
         )
     }
-    return JsonObject(this + ("paths" to JsonObject(required)))
+    return JsonObject(this + ("paths" to JsonObject(mapped)))
+}
+
+/** KTP routes call `receive<T>()` unconditionally; Ktor's inference leaves bodies optional. */
+private fun JsonObject.withRequiredBody(): JsonObject {
+    val body = this["requestBody"] as? JsonObject ?: return this
+    val requiredBody = JsonObject(body + ("required" to JsonPrimitive(true)))
+    return JsonObject(this + ("requestBody" to requiredBody))
+}
+
+/**
+ * Ktor records every request header a handler reads (a logged `X-Forwarded-For`, say) as a
+ * parameter of the operation. The SPA sets no headers, its session is a cookie, so they would only
+ * be noise in its generated types.
+ */
+private fun JsonObject.withoutHeaderParameters(): JsonObject {
+    val parameters = this["parameters"] as? JsonArray ?: return this
+    val kept = parameters.filterNot { (it as? JsonObject)?.get("in") == JsonPrimitive("header") }
+    return if (kept.isEmpty()) JsonObject(this - "parameters")
+    else JsonObject(this + ("parameters" to JsonArray(kept)))
 }
 
 private fun canonicalJson(element: JsonElement): JsonElement =
