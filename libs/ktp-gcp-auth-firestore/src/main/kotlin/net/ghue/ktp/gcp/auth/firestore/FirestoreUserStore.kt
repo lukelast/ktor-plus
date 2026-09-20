@@ -13,10 +13,11 @@ import net.ghue.ktp.gcp.firestore.setMerge
 import net.ghue.ktp.gcp.firestore.toTimestamp
 import net.ghue.ktp.gcp.firestore.typedCollection
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-/** Default Firestore collection holding one [KtpUser] document per user id. */
+/** Firestore collection holding one [KtpUser] document per user id. */
 const val USER_COLLECTION = "user"
 
 /**
@@ -52,16 +53,15 @@ private fun loginFields(identity: LoginIdentity, at: Instant): Map<String, Any> 
     )
 
 /**
- * User records on Firestore, keyed by user id in [collectionName], and the stock
+ * User records on Firestore, keyed by user id in [USER_COLLECTION], and the stock
  * [AuthLifecycleHandler] that every login runs through. An app wanting extra behaviour wraps this
  * in a handler of its own and calls [login] for the stored record.
  */
 class FirestoreUserStore(
     db: Firestore,
     private val clock: Clock = Clock.systemUTC(),
-    collectionName: String = USER_COLLECTION,
 ) : AuthLifecycleHandler {
-    private val users = db.typedCollection<KtpUser>(collectionName)
+    private val users = db.typedCollection<KtpUser>(USER_COLLECTION)
 
     override suspend fun onLogin(identity: LoginIdentity): UserSession = login(identity).toSession()
 
@@ -106,18 +106,6 @@ class FirestoreUserStore(
         )
 }
 
-/**
- * Binds one [FirestoreUserStore], also as the [AuthLifecycleHandler]. An app that needs its own
- * handler just defines one: app definitions are applied after library modules, so theirs wins. Uses
- * the app's [Clock] binding when there is one.
- */
-fun firestoreUserStoreModule(collectionName: String = USER_COLLECTION): Module = module {
-    single {
-        FirestoreUserStore(
-            db = get(),
-            clock = getOrNull() ?: Clock.systemUTC(),
-            collectionName = collectionName,
-        )
-    }
-        .bind<AuthLifecycleHandler>()
+fun firestoreUserStoreModule(): Module = module {
+    singleOf(::FirestoreUserStore).bind<AuthLifecycleHandler>()
 }
