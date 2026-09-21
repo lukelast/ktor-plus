@@ -39,7 +39,11 @@ private const val DEFAULT_VITE_PORT = 5173
  * to the jar, else classpath resources) with the SPA fallback on `/` and [frontendRoute].
  */
 class ViteFrontendConfig {
-    var vitePort: Int = DEFAULT_VITE_PORT
+    /**
+     * The lukestack Gradle plugin's `run` starts the dev server on a free port and passes it as
+     * `KTP_VITE_PORT`; a backend started any other way gets Vite's own default.
+     */
+    var vitePort: Int = System.getenv("KTP_VITE_PORT")?.toIntOrNull() ?: DEFAULT_VITE_PORT
 
     /**
      * The SPA entry, relative to [staticDir], as the bundler writes it. Vite keeps the source
