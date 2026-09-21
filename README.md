@@ -100,7 +100,9 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
   though KTP serves no spec endpoint yet.
 - **Lukestack plugin** (`com.github.lukelast.ktor-plus.lukestack`): a personal stack on top: GCP
   deployment (Cloud Run + Infrastructure Manager), Docker tasks, and a bun/Vite frontend whose dev
-  server starts with `run`. Other stacks should layer on the base plugin instead. With
+  server starts with `run` on a free port, passed to the backend as `KTP_VITE_PORT`, so several
+  apps or worktrees run at once; a backend port already in use fails local dev startup with the
+  `0.local.localdev.conf` line that fixes it. Other stacks should layer on the base plugin instead. With
   `ktp.openapi=true` in `gradle.properties`, `:backend:openApiExport` runs the app's
   `OpenApiExportTest` to write the OpenAPI contract, and `:frontend:apiGenerate` turns it into
   `src/api/schema.d.ts`; `:frontend:apiCheck` (part of `check`) fails when that file is stale.
