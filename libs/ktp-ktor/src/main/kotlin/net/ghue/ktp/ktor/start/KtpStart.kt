@@ -7,6 +7,8 @@ import io.ktor.server.engine.applicationEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.net.BindException
+import java.net.ServerSocket
 import java.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
@@ -195,5 +197,28 @@ fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
                 log {}.info { "Server is shut down" }
             }
         )
-    server.start(true)
+    try {
+        server.start(true)
+    } catch (ex: Exception) {
+        val port = ktpApp.config.data.app.server.port
+        val portTaken = generateSequence<Throwable>(ex) { it.cause }.any { it is BindException }
+        if (portTaken && ktpApp.config.env.isLocalDev) {
+            throw IllegalStateException(localDevPortTakenMessage(port), ex)
+        }
+        throw ex
+    }
+}
+
+/**
+ * Two apps, or two worktrees of one app, cannot share a port, and whoever hits that (often an agent
+ * in a fresh worktree) needs the exact fix rather than a bare BindException.
+ */
+internal fun localDevPortTakenMessage(port: Int): String {
+    val free =
+        (port + 1..port + 100).firstOrNull { runCatching { ServerSocket(it).close() }.isSuccess }
+    return "Port $port (config 'app.server.port') is already in use, probably by another app or " +
+        "another worktree of this one. Give this checkout its own port: add the line " +
+        "'app.server.port = ${free ?: "<free port>"}' to the git-ignored file " +
+        "'backend/src/main/resources/ktp/0.local.localdev.conf' (create it if missing), then run " +
+        "again and open http://localhost:${free ?: "<free port>"}."
 }
