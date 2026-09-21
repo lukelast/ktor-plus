@@ -15,6 +15,9 @@ import io.ktor.server.testing.*
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeText
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
@@ -242,6 +245,46 @@ class ViteFrontendTest :
                     status shouldBe HttpStatusCode.OK
                     headers[HttpHeaders.CacheControl] shouldBe "max-age=3600, public"
                 }
+            }
+        }
+
+        "a precompressed sibling is served to clients that accept it" {
+            val staticDir = createTempDirectory("ktp-static")
+            val assets = staticDir.resolve("assets").createDirectories()
+            assets.resolve("app-abc123.wasm").writeText("plain")
+            assets.resolve("app-abc123.wasm.br").writeText("brotli")
+            assets.resolve("app-abc123.wasm.gz").writeText("gzip")
+            try {
+                testApplication {
+                    val config = KtpConfig.create { setUnitTestEnv() }
+
+                    application {
+                        install(Koin) { modules(module { single { config } }) }
+                        install(ViteFrontendPlugin) { this.staticDir = staticDir }
+                    }
+
+                    suspend fun get(acceptEncoding: String?) =
+                        client.get("/static/assets/app-abc123.wasm") {
+                            acceptEncoding?.let { header(HttpHeaders.AcceptEncoding, it) }
+                        }
+                    get("gzip, br").apply {
+                        headers[HttpHeaders.ContentEncoding] shouldBe "br"
+                        contentType() shouldBe ContentType.Application.Wasm
+                        headers[HttpHeaders.CacheControl] shouldBe
+                            "max-age=31536000, public, immutable"
+                        bodyAsText() shouldBe "brotli"
+                    }
+                    get("gzip").apply {
+                        headers[HttpHeaders.ContentEncoding] shouldBe "gzip"
+                        bodyAsText() shouldBe "gzip"
+                    }
+                    get(null).apply {
+                        headers[HttpHeaders.ContentEncoding].shouldBeNull()
+                        bodyAsText() shouldBe "plain"
+                    }
+                }
+            } finally {
+                staticDir.toFile().deleteRecursively()
             }
         }
 

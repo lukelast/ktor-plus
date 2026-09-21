@@ -138,7 +138,11 @@ val ViteFrontendPlugin =
             viteDev.registerRoutes(application)
         } else {
             application.routing {
-                fun StaticContentConfig<*>.configCache() {
+                fun StaticContentConfig<*>.configStatic() {
+                    // A `<file>.br` or `<file>.gz` the build left next to a file is served in its
+                    // place when the client accepts it, skipping per-request compression; files
+                    // without one still go through the Compression plugin.
+                    preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
                     cacheControl { resource ->
                         val path = resource.toString().replace(File.separatorChar, '/')
                         val hashed = path.contains("/${config.hashedAssetsDir}/")
@@ -149,10 +153,10 @@ val ViteFrontendPlugin =
                     }
                 }
                 if (config.staticDir.isDirectory()) {
-                    staticFiles(config.staticRootPath, config.staticDir.toFile()) { configCache() }
+                    staticFiles(config.staticRootPath, config.staticDir.toFile()) { configStatic() }
                 } else {
                     staticResources(config.staticRootPath, config.staticDir.toString()) {
-                        configCache()
+                        configStatic()
                     }
                 }
                 get("/") { call.serveIndexHtml(config) }
