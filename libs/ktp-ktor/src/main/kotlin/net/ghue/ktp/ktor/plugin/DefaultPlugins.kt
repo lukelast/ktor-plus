@@ -29,6 +29,7 @@ fun Application.installDefaultPlugins(config: KtpConfig) {
             ContentType.Application.Json,
             ContentType.Application.Xml,
             ContentType.Application.JavaScript,
+            ContentType.Application.Wasm,
             ContentType.Image.SVG,
         )
         default()
