@@ -11,15 +11,12 @@ import net.ghue.ktp.ktor.openapi.excludeFromOpenApi
 import net.ghue.ktp.log.log
 import org.koin.ktor.ext.getKoin
 
-/**
- * Mounts `GET|POST /api/cron/hourly` for Cloud Scheduler. Implement [CronHandler] and bind it in
- * Koin (`@Single`), or the first hit fails with an error naming the missing binding.
- */
+/** Mounts the Cloud Scheduler routes; implement [CronHandler] and bind it in Koin (`@Single`). */
 fun Route.installApiRoutesCron() {
-    val handler: CronHandler by lazy {
+    // Resolved at install so a missing or broken handler fails boot, not the first scheduled run.
+    val handler: CronHandler =
         application.getKoin().getOrNull<CronHandler>()
-            ?: error("You must implement ${CronHandler::class.simpleName}")
-    }
+            ?: error("No ${CronHandler::class.simpleName} is bound in Koin")
     suspend fun RoutingContext.handle() {
         log {}.info { "Doing hourly cron job" }
         val utcHour = Instant.now().atOffset(ZoneOffset.UTC).hour
