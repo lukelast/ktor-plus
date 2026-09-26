@@ -10,6 +10,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.mockk
 import java.time.Instant
+import java.time.LocalDate
 import java.util.Date
 import net.ghue.ktp.ktor.error.KtpRspEx
 
@@ -65,6 +66,10 @@ class SerializeTest :
             val expected = Timestamp.of(date)
 
             FirestoreSerializer.serialize(date) shouldBe expected
+        }
+
+        "LocalDate is stored as ISO-8601 text by default" {
+            FirestoreSerializer.serialize(LocalDate.of(2024, 1, 31)) shouldBe "2024-01-31"
         }
 
         "custom serializers support exact and assignable registered types" {

@@ -11,6 +11,7 @@ import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
+import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import kotlin.reflect.full.createType
@@ -61,6 +62,24 @@ class DeserializeTest :
 
             // Timestamp holds nanos but Date only millis; starting from a Date keeps this lossless.
             result shouldBe date
+        }
+
+        "ISO text to LocalDate" {
+            val result =
+                FirestoreDeserializer.deserialize("2024-01-31", LocalDate::class.createType())
+
+            result shouldBe LocalDate.of(2024, 1, 31)
+        }
+
+        "a non-text value in a LocalDate field is reported with the value" {
+            val error =
+                shouldThrow<IllegalArgumentException> {
+                    FirestoreDeserializer.deserialize(
+                        Timestamp.MIN_VALUE,
+                        LocalDate::class.createType(),
+                    )
+                }
+            error.message shouldContain "stored value is a Timestamp"
         }
 
         "value class deserialization" {
