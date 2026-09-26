@@ -127,8 +127,10 @@ class DebugEndpointsTest :
                     }
                     install(DebugEndpointsPlugin) { accessControl = { false } }
                 }
-                with(client.get("/debug/version")) { status shouldBe HttpStatusCode.Forbidden }
+                // The version is the one page access control never covers.
+                with(client.get("/debug/version")) { status shouldBe HttpStatusCode.OK }
                 with(client.get("/debug/config")) { status shouldBe HttpStatusCode.Forbidden }
+                with(client.get("/debug")) { status shouldBe HttpStatusCode.Forbidden }
             }
         }
 
@@ -151,8 +153,11 @@ class DebugEndpointsTest :
                         accessControl = { request.headers["X-Debug-Token"] == "secret" }
                     }
                 }
-                with(client.get("/debug/version")) { status shouldBe HttpStatusCode.Forbidden }
-                with(client.get("/debug/version") { header("X-Debug-Token", "secret") }) {
+                with(client.get("/debug/config")) { status shouldBe HttpStatusCode.Forbidden }
+                with(client.get("/debug/config") { header("X-Debug-Token", "secret") }) {
+                    status shouldBe HttpStatusCode.OK
+                }
+                with(client.get("/debug/version")) {
                     status shouldBe HttpStatusCode.OK
                     bodyAsText() shouldBe "1.0.0"
                 }

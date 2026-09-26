@@ -30,13 +30,13 @@ class DebugEndpointsConfig {
     /** Serves the GC log at [DebugEndpoints.GC_LOG]. */
     var enableGcLogEndpoint: Boolean = true
 
-    /** Serves the version at [DebugEndpoints.VERSION]. */
+    /** Serves the version publicly at [DebugEndpoints.VERSION]. */
     var enableVersionEndpoint: Boolean = true
 
     /** Serves the thread dump at [DebugEndpoints.THREADS]. */
     var enableThreadDumpEndpoint: Boolean = true
 
-    /** Guards all debug endpoints; false yields 403 Forbidden, null (default) allows everyone. */
+    /** Guards every endpoint but the version; false yields 403, null (default) allows everyone. */
     var accessControl: (suspend ApplicationCall.() -> Boolean)? = null
 }
 
@@ -98,13 +98,7 @@ private fun Route.installDebugEndpoints(pluginConfig: DebugEndpointsConfig) {
     }
 
     if (pluginConfig.enableVersionEndpoint) {
-        get(DebugEndpoints.VERSION) {
-            if (pluginConfig.accessControl?.invoke(call) == false) {
-                call.respond(HttpStatusCode.Forbidden)
-                return@get
-            }
-            call.respondVersion()
-        }
+        get(DebugEndpoints.VERSION) { call.respondVersion() }
     }
 
     // Registered last so child routes are matched first.
