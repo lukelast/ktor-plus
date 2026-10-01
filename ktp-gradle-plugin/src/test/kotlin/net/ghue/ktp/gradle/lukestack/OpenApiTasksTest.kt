@@ -18,13 +18,13 @@ class OpenApiTasksTest {
         val frontend = frontend(root)
         frontend.registerOpenApiTypesTasks()
 
-        val generate = frontend.tasks.getByName("apiGenerate")
-        val check = frontend.tasks.getByName("apiCheck")
-        assertContains(generate.dependencies(), export)
-        assertContains(check.dependencies(), export)
-        assertContains(frontend.tasks.getByName("check").dependencies(), check)
-        assertFalse(check.dependencies().contains(generate))
-        assertTrue(generate.outputs.files.files.contains(frontend.file("src/api/schema.d.ts")))
+        val apiGenerate = frontend.tasks.getByName("apiGenerate")
+        val apiCheck = frontend.tasks.getByName("apiCheck")
+        assertContains(apiGenerate.dependencies(), export)
+        assertContains(apiCheck.dependencies(), export)
+        assertContains(frontend.tasks.getByName("check").dependencies(), apiCheck)
+        assertFalse(apiCheck.dependencies().contains(apiGenerate))
+        assertTrue(apiGenerate.outputs.files.files.contains(frontend.file("src/api/schema.d.ts")))
     }
 
     @Test

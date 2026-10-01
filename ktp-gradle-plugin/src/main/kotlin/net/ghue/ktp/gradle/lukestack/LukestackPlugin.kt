@@ -8,9 +8,9 @@ import org.gradle.api.Project
 
 /**
  * The lukestack Gradle plugin: the GCP + Docker + bun/Vite stack layered on top of the generic
- * ktor-plus plugin. Lukestack repos apply this plugin id (instead of the base ktp one) to every
+ * ktor-plus plugin. Lukestack repos apply this plugin id (instead of the ktp project one) to every
  * project; it applies the ktp plugin itself and then adds the stack pieces for the project's
- * mode. Other stacks built on ktor-plus apply the base plugin and never see any of this.
+ * mode. Other stacks built on ktor-plus apply the project plugin and never see any of this.
  */
 class LukestackPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -24,7 +24,7 @@ class LukestackPlugin : Plugin<Project> {
                 project.configureGcpEnvironment()
                 project.configureTesting()
                 project.configureKtpOpenApi()
-                project.applyViteDev()
+                project.configureViteDev()
             }
             ProjectMode.FRONTEND -> project.registerBunTasks()
             ProjectMode.LIBRARY -> {}

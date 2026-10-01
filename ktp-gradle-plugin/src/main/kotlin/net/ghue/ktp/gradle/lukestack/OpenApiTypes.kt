@@ -22,7 +22,7 @@ internal fun Project.registerOpenApiTypesTasks() {
     val arguments = CommandLineArgumentProvider {
         listOf(spec.get().asFile.path, "-o", schema.path)
     }
-    val generate =
+    val apiGenerate =
         tasks.register<Exec>("apiGenerate") {
             group = LifecycleBasePlugin.BUILD_GROUP
             description = "Generates $SCHEMA from the backend's OpenAPI export."
@@ -31,19 +31,19 @@ internal fun Project.registerOpenApiTypesTasks() {
             inputs.files(openApiExport)
             outputs.file(schema)
         }
-    val check =
+    val apiCheck =
         tasks.register<Exec>("apiCheck") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description = "Checks that $SCHEMA matches the backend's OpenAPI export."
             commandLine("bunx", GENERATOR)
             argumentProviders.add(arguments)
             argumentProviders.add(CommandLineArgumentProvider { listOf("--check") })
-            mustRunAfter(generate)
+            mustRunAfter(apiGenerate)
             inputs.files(openApiExport, schema)
             outputs.upToDateWhen { true }
         }
-    tasks.named("check") { dependsOn(check) }
+    tasks.named("check") { dependsOn(apiCheck) }
     listOf("format", "lint", "test", "bundle").forEach { name ->
-        tasks.named(name) { mustRunAfter(generate) }
+        tasks.named(name) { mustRunAfter(apiGenerate) }
     }
 }

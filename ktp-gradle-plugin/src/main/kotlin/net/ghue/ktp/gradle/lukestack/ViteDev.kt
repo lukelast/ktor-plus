@@ -29,7 +29,7 @@ internal const val VITE_PORT_ENV = "KTP_VITE_PORT"
  * - `ktp.vite`: `false` disables it (run the dev server yourself on Vite's default 5173), `true`
  *   requires it (the build fails if no frontend is found).
  */
-internal fun Project.applyViteDev() {
+internal fun Project.configureViteDev() {
     val forced = booleanProperty(ENABLED_KEY)
     if (forced == false) return
 

@@ -30,7 +30,7 @@ fun Project.installKotest() {
     }
     project.tasks.withType<Test>().configureEach {
         // Avoid dynamic Java agent loading warnings from MockK's Byte Buddy agent.
-        jvmArgumentProviders.add(ByteBuddyAgentArgumentProvider(testJavaAgent))
+        jvmArgumentProviders.add(JavaAgentArgumentProvider(testJavaAgent))
         // Avoid JDK 23+ warnings for terminally deprecated sun.misc.Unsafe memory access.
         jvmArgumentProviders.add(SunMiscUnsafeMemoryAccessArgumentProvider(javaLauncher))
         // Avoid CDS warnings when test agents append to the bootstrap classpath.
@@ -64,7 +64,7 @@ fun Project.installKotest() {
     }
 }
 
-private class ByteBuddyAgentArgumentProvider(
+private class JavaAgentArgumentProvider(
     @get:Classpath val agentClasspath: FileCollection
 ) : CommandLineArgumentProvider {
     override fun asArguments(): Iterable<String> =
