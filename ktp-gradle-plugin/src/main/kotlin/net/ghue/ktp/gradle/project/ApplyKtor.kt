@@ -48,7 +48,7 @@ fun Project.applyKtor() {
     applyKtfmt()
     applyKoinCompilerPlugin()
     configureShadow()
-    installKotest()
+    configureKotest()
     registerVerifyTask()
 
     // Every ktor-plus app uses the runtime library and the test harness. Always the external

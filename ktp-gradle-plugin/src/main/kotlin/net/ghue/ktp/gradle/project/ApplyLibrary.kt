@@ -45,7 +45,7 @@ fun Project.applyLibrary() {
 
     configureJavaPublishing()
 
-    installKotest()
+    configureKotest()
     registerVerifyTask()
 }
 
