@@ -15,12 +15,12 @@ class KtpConfigTest :
         }
 
         "get provides sub-config instances" {
-            val config = newKtpConfig()
+            val config = testConfig()
             config.get<CorrectTestConfig>().msg shouldBe "hi"
         }
 
         "sub-config lookup caches instances" {
-            val config = newKtpConfig()
+            val config = testConfig()
             val result1 = config.get<CorrectTestConfig>()
             val result2 = config.get<CorrectTestConfig>()
             result1 shouldBeSameInstanceAs result2
@@ -28,16 +28,16 @@ class KtpConfigTest :
 
         "get fails when constructor parameter has wrong type" {
             class TestConfig(private val config: String)
-            assertBadConstructor<TestConfig> { newKtpConfig() }
+            assertBadConstructor<TestConfig> { testConfig() }
         }
 
         "get fails when constructor has additional parameters" {
             class TestConfig(private val config: KtpConfig, val yo: String)
-            assertBadConstructor<TestConfig> { newKtpConfig() }
+            assertBadConstructor<TestConfig> { testConfig() }
         }
 
         "getAllConfigMasked renders masked values" {
-            val ktp = newKtpConfig()
+            val ktp = testConfig()
             val allConfig = ktp.getAllConfigMasked()
             allConfig shouldBe
                 mapOf(
@@ -52,7 +52,7 @@ class KtpConfigTest :
         }
 
         "logAllConfig prints without throwing" {
-            val config = newKtpConfig()
+            val config = testConfig()
             shouldNotThrowAny { config.logAllConfig() }
         }
 
@@ -79,7 +79,7 @@ class KtpConfigTest :
         }
 
         "config property exposes underlying Typesafe Config" {
-            val config = newKtpConfig()
+            val config = testConfig()
             config.config.hasPath("app.name") shouldBe true
         }
 
@@ -89,14 +89,14 @@ class KtpConfigTest :
         }
 
         "constructor trims string config values" {
-            val config = newKtpConfig(appName = "  test app\r\n")
+            val config = testConfig(appName = "  test app\r\n")
 
             config.data.app.name shouldBe "test app"
             config.config.getString("app.name") shouldBe "test app"
         }
     })
 
-private fun newKtpConfig(appName: String = ""): KtpConfig =
+private fun testConfig(appName: String = ""): KtpConfig =
     KtpConfig(
         ConfigFactory.parseMap(
             mapOf(

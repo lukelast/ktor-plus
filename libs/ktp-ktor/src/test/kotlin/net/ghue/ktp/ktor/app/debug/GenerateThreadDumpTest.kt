@@ -13,7 +13,7 @@ class GenerateThreadDumpTest :
             dump.isNotEmpty() shouldBe true
         }
 
-        "thread dump contains header with timestamp" {
+        "thread dump header names the JVM and Kotlin versions" {
             val dump = generateThreadDump()
             dump shouldContain "Full thread dump"
             dump shouldContain "JVM:"

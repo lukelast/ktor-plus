@@ -39,7 +39,10 @@ suspend fun RoutingCall.respondConfigHtml() {
             .replace("{{CONFIG_ROWS}}", configRecords.toHtmlRows(includeSource = true))
             .replace("{{RUNTIME_ROWS}}", runtimeRecords.toHtmlRows(includeSource = false))
             .replace("{{ENVIRONMENT_ROWS}}", environmentRecords.toHtmlRows(includeSource = false))
-            .replace("{{SYSTEM_ROWS}}", systemPropertyRecords.toHtmlRows(includeSource = false))
+            .replace(
+                "{{SYSTEM_PROPERTY_ROWS}}",
+                systemPropertyRecords.toHtmlRows(includeSource = false),
+            )
 
     respondText(html, ContentType.Text.Html.withCharset(Charsets.UTF_8))
 }

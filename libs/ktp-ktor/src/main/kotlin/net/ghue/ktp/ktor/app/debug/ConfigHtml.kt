@@ -121,7 +121,7 @@ internal const val CONFIG_TEMPLATE =
                     </tr>
                 </thead>
                 <tbody>
-                    {{SYSTEM_ROWS}}
+                    {{SYSTEM_PROPERTY_ROWS}}
                 </tbody>
             </table>
         </div>

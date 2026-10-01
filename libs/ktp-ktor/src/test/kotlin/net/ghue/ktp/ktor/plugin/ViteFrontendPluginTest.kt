@@ -174,7 +174,7 @@ class ViteFrontendPluginTest :
             }
         }
 
-        "custom staticPathSegment routes are configured correctly" {
+        "a custom staticPathSegment answers 404 for a missing file under it" {
             testApplication {
                 val config = KtpConfig.create { setUnitTestEnv() }
 
