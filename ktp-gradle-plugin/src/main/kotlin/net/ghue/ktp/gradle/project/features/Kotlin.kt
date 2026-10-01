@@ -30,7 +30,7 @@ fun Project.applySerialization() {
 
 fun Project.configureKotlinCompileOptions() {
     project.tasks.withType<KotlinCompile>().configureEach {
-        // the "-Xjsr305=strict" option enables strict nullability checks for java types.
-        compilerOptions { freeCompilerArgs.set(listOf("-Xjsr305=strict")) }
+        // Strict nullability for Java types; add, not set, so -Xjdk-release and app flags survive.
+        compilerOptions { freeCompilerArgs.add("-Xjsr305=strict") }
     }
 }
