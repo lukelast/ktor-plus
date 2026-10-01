@@ -13,10 +13,11 @@ import org.koin.ktor.ext.getKoin
 
 /** Mounts the Cloud Scheduler routes; implement [CronHandler] and bind it in Koin (`@Single`). */
 fun Route.installApiRoutesCron() {
-    // Resolved at install so a missing or broken handler fails boot, not the first scheduled run.
-    val handler: CronHandler =
+    // Resolved on the first run so boot never builds the clients the job depends on.
+    val handler: CronHandler by lazy {
         application.getKoin().getOrNull<CronHandler>()
             ?: error("No ${CronHandler::class.simpleName} is bound in Koin")
+    }
     suspend fun RoutingContext.handle() {
         log {}.info { "Doing hourly cron job" }
         val utcHour = Instant.now().atOffset(ZoneOffset.UTC).hour

@@ -4,10 +4,13 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.ktor.client.plugins.resources.get
 import io.ktor.client.plugins.resources.post
+import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.resources.Resources
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -76,6 +79,32 @@ class ApiCronTest :
                     status shouldBe HttpStatusCode.TooManyRequests
                 }
                 coVerify(exactly = 1) { cronHandler.hourly(any()) }
+            }
+        }
+
+        "a handler that cannot be built fails its first run, not boot" {
+            testApplication {
+                application {
+                    val config = mockk<KtpConfig> { coEvery { env } returns Env("localdev") }
+                    install(Resources)
+                    install(KoinIsolated) {
+                        modules(
+                            module {
+                                single<CronHandler> { error("no credentials") }
+                                single { config }
+                            }
+                        )
+                    }
+                    routing {
+                        installApiRoutesCron()
+                        get("/up") { call.respondText("up") }
+                    }
+                }
+
+                val client = createClient { install(io.ktor.client.plugins.resources.Resources) }
+
+                client.get("/up").status shouldBe HttpStatusCode.OK
+                client.get(Api.Cron.Hourly()).status shouldBe HttpStatusCode.InternalServerError
             }
         }
     })
