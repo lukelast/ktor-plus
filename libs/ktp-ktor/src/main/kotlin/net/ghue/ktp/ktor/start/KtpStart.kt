@@ -85,7 +85,7 @@ class KtpAppBuilder {
         appInits.clear()
     }
 
-    // Must not mutate this builder: [update] factories reuse one instance across builds.
+    // Must not mutate this builder: a factory may return one instance on every call.
     fun build(): KtpApp {
         val ktpConfig = createKtpConfig()
         val allModules = buildList {
@@ -148,10 +148,9 @@ fun ktpAppCreate(buildBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory = {
     ktpAppBuilder
 }
 
-fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory {
-    val ktpAppBuilder = this()
-    ktpAppBuilder.updateBlock()
-    return { ktpAppBuilder }
+/** Each call of the result builds afresh from this factory, so updating never alters it. */
+fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory = {
+    this().apply(updateBlock)
 }
 
 fun KtpAppBuilderFactory.start() {

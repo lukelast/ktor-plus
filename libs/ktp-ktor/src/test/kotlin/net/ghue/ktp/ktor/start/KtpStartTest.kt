@@ -74,6 +74,18 @@ class KtpStartTest :
             finalApp.appInits.size shouldBe 1
         }
 
+        "updating an updated factory leaves it unchanged" {
+            val originalFactory = ktpAppCreate {
+                createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
+            }
+            val updatedFactory = originalFactory.update { addModule(module {}) }
+
+            val twiceUpdatedFactory = updatedFactory.update { addModule(module {}) }
+
+            twiceUpdatedFactory().build().modules.size shouldBe 2 + BUILT_IN_MODULES
+            updatedFactory().build().modules.size shouldBe 1 + BUILT_IN_MODULES
+        }
+
         "update with empty block still produces new builder" {
             val originalFactory = ktpAppCreate {
                 addModule(module {})

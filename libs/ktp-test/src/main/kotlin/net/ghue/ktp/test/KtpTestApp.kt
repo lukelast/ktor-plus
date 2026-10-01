@@ -1,5 +1,8 @@
 package net.ghue.ktp.test
 
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.resources.*
 import io.ktor.serialization.kotlinx.json.*
@@ -25,13 +28,19 @@ fun ktpTestApp(
         }
         val app = appBuilder.build()
         application { app.install(this) }
-        client = createClient {
-            install(Resources)
-            install(ContentNegotiation) { json() }
-        }
+        client = ktpTestClient()
         if (start) {
             startApplication()
         }
         test()
     }
+}
+
+/** The client [ktpTestApp] installs (typed Resources requests, JSON bodies) plus [configure]. */
+fun ApplicationTestBuilder.ktpTestClient(
+    configure: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
+): HttpClient = createClient {
+    install(Resources)
+    install(ContentNegotiation) { json() }
+    configure()
 }
