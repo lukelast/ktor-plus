@@ -1,6 +1,9 @@
 package net.ghue.ktp.config
 
+import com.typesafe.config.ConfigException
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.inspectors.forAll
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -63,40 +66,19 @@ class BuildConfigFromEnvVarTest :
             resolved.getString("apiUrl") shouldBe "https://example.com/api"
         }
 
-        "buildConfigFromEnvVar returns null for invalid config syntax" {
-            val configText = "invalid { syntax [ = "
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
-        "buildConfigFromEnvVar returns null for mismatched braces" {
-            val configText = "app { name = \"test\" "
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
-        "buildConfigFromEnvVar returns null for unclosed quotes" {
-            val configText = "key = \"value without closing quote"
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
-        "buildConfigFromEnvVar returns null for malformed arrays" {
-            val configText = "items = [\"item1\", \"item2\""
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
-        "buildConfigFromEnvVar returns null for incomplete key-value pairs" {
-            val configText = "key = "
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
-        "buildConfigFromEnvVar returns null for missing equals sign" {
-            val configText = "key value"
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
+        "buildConfigFromEnvVar throws for invalid syntax so a bad secret cannot be ignored" {
+            val invalidTexts =
+                listOf(
+                    "invalid { syntax [ = ",
+                    "app { name = \"test\" ",
+                    "key = \"value without closing quote",
+                    "items = [\"item1\", \"item2\"",
+                    "key = ",
+                    "key value",
+                    "key = \"invalid \\x escape\"",
+                    "outer { inner [ key = value ] }",
+                )
+            invalidTexts.forAll { shouldThrow<ConfigException.Parse> { buildConfigFromEnvVar(it) } }
         }
 
         "buildConfigFromEnvVar allows trailing comma in object" {
@@ -106,24 +88,12 @@ class BuildConfigFromEnvVarTest :
             result.getString("app.name") shouldBe "test"
         }
 
-        "buildConfigFromEnvVar returns null for invalid escape sequences" {
-            val configText = "key = \"invalid \\x escape\""
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
-        }
-
         "buildConfigFromEnvVar parses duplicate keys with last value winning" {
             // Typesafe Config accepts duplicate keys at the same level; the last value wins.
             val configText = "key = \"value1\"\nkey = \"value2\""
             val result = buildConfigFromEnvVar(configText)
             result.shouldNotBeNull()
             result.getString("key") shouldBe "value2"
-        }
-
-        "buildConfigFromEnvVar returns null for nested mismatched brackets" {
-            val configText = "outer { inner [ key = value ] }"
-            val result = buildConfigFromEnvVar(configText)
-            result.shouldBeNull()
         }
 
         "buildConfigFromEnvVar parses unquoted strings as valid HOCON" {

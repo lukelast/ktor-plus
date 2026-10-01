@@ -107,13 +107,9 @@ fun buildConfigFromEnvVar(
     if (configText.isBlank()) {
         return null
     }
-    return try {
-        ConfigFactory.parseString(
-            configText,
-            ConfigParseOptions.defaults().setOriginDescription(KtpConfig.KTP_CONFIG_ENV_VAR),
-        )
-    } catch (ex: Exception) {
-        log {}.warn(ex) { "Failed to parse config from ENV var: ${KtpConfig.KTP_CONFIG_ENV_VAR}" }
-        null
-    }
+    // Throws on bad syntax: ignoring it would run a deploy on the committed secrets instead.
+    return ConfigFactory.parseString(
+        configText,
+        ConfigParseOptions.defaults().setOriginDescription(KtpConfig.KTP_CONFIG_ENV_VAR),
+    )
 }

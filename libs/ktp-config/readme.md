@@ -130,7 +130,7 @@ export KTP_CONFIG='servers = ["server1", "server2"]'
 export KTP_CONFIG='baseUrl = ${BASE_URL}, apiUrl = ${baseUrl}"/api"'
 ```
 
-Invalid syntax is logged and ignored.
+Invalid syntax fails startup with a `ConfigException`.
 
 ### CONFIG_FORCE_ - Override Any Config Value
 
