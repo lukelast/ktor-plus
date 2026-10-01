@@ -6,7 +6,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
-/** Gradle property selecting the project plugin to auto-apply to every project. */
+/** Gradle property selecting the plugin to auto-apply to every project. */
 private const val AUTO_APPLY_KEY = "ktp.plugin"
 
 /** Gradle property naming the root project, since a plugin cannot write the settings script. */
@@ -27,7 +27,7 @@ private const val ROOT_NAME_KEY = "rootProject.name"
  *   in the IDE unconditionally, unlike version catalogs, which need a committed TOML file.
  * - Toolchains: the Foojay resolver is applied, so a missing JDK is downloaded on demand
  *   instead of failing toolchain resolution.
- * - Project plugin auto-apply: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
+ * - Plugin auto-apply: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
  *   plugin to every project, removing the per-project `plugins {}` boilerplate.
  */
 class SettingsPlugin : Plugin<Settings> {
@@ -46,10 +46,10 @@ class SettingsPlugin : Plugin<Settings> {
 
         settings.pluginManager.apply(FoojayToolchainsConventionPlugin::class.java)
 
-        applyProjectPlugin(settings)
+        autoApplyPlugin(settings)
     }
 
-    private fun applyProjectPlugin(settings: Settings) {
+    private fun autoApplyPlugin(settings: Settings) {
         when (val pluginName = settings.providers.gradleProperty(AUTO_APPLY_KEY).orNull) {
             null -> {}
             "ktp" ->

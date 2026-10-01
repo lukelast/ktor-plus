@@ -12,7 +12,7 @@ fun Project.applyKotlin() {
     // https://github.com/JetBrains/kotlin/blob/ce97a8357f385448c313bd563109bd09b525986a/libraries/tools/kotlin-gradle-plugin/build.gradle.kts#L236-L241
     pluginManager.apply(KotlinPluginWrapper::class.java)
     applySerialization()
-    applyKotlinCompileOptions()
+    configureKotlinCompileOptions()
 }
 
 fun Project.applyKotlinMultiplatform() {
@@ -20,7 +20,7 @@ fun Project.applyKotlinMultiplatform() {
     pluginManager.apply(KotlinMultiplatformPluginWrapper::class.java)
 
     applySerialization()
-    applyKotlinCompileOptions()
+    configureKotlinCompileOptions()
 }
 
 fun Project.applySerialization() {
@@ -28,7 +28,7 @@ fun Project.applySerialization() {
     pluginManager.apply(SerializationGradleSubplugin::class.java)
 }
 
-fun Project.applyKotlinCompileOptions() {
+fun Project.configureKotlinCompileOptions() {
     project.tasks.withType<KotlinCompile>().configureEach {
         // the "-Xjsr305=strict" option enables strict nullability checks for java types.
         compilerOptions { freeCompilerArgs.set(listOf("-Xjsr305=strict")) }

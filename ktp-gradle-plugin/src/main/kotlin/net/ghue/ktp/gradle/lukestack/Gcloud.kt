@@ -106,7 +106,7 @@ private abstract class GcloudInfraSetup : DefaultTask() {
     @TaskAction
     fun run() {
         val account = serviceAccountEmail.get()
-        require(
+        runGcloudOrThrow(
             "services",
             "enable",
             "config.googleapis.com",
@@ -114,7 +114,7 @@ private abstract class GcloudInfraSetup : DefaultTask() {
         )
         // `create` fails on an existing account, so probe first to make the task repeatable.
         if (gcloud(listOf("iam", "service-accounts", "describe", account), quiet = true) != 0) {
-            require("iam", "service-accounts", "create", SERVICE_ACCOUNT_NAME)
+            runGcloudOrThrow("iam", "service-accounts", "create", SERVICE_ACCOUNT_NAME)
         }
         // A new account takes a few seconds to become bindable; IAM calls it missing until then.
         val bind =
@@ -132,7 +132,7 @@ private abstract class GcloudInfraSetup : DefaultTask() {
         throw GradleException("gcloud could not bind $account after $BIND_ATTEMPTS attempts.")
     }
 
-    private fun require(vararg args: String) {
+    private fun runGcloudOrThrow(vararg args: String) {
         val exit = gcloud(args.toList(), quiet = false)
         if (exit != 0) {
             throw GradleException("gcloud ${args.joinToString(" ")} failed with exit code $exit.")

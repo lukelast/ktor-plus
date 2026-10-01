@@ -16,7 +16,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 private const val EXPORT_TEST = "*OpenApiExportTest"
 
-internal fun Project.configureKtpOpenApi() {
+internal fun Project.configureOpenApiExport() {
     if (!openApiEnabled()) {
         return
     }

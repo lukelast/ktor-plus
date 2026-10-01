@@ -21,7 +21,7 @@ pluginManagement {
 plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
-Pick the project plugin in `gradle.properties`:
+Pick the plugin to auto-apply in `gradle.properties`:
 
 ```properties
 rootProject.name=my-app
@@ -86,7 +86,7 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
 - **Settings plugin** (`com.github.lukelast.ktor-plus`): the one versioned entry point (JitPack
   only serves markers whose group equals the repo group). Reads `rootProject.name` from
   `gradle.properties`, includes every subdirectory holding a `build.gradle.kts` or `package.json`,
-  ships `KtpLibs`, applies the Foojay toolchain resolver, and auto-applies the project plugin named
+  ships `KtpLibs`, applies the Foojay toolchain resolver, and auto-applies the plugin named
   by `ktp.plugin`.
 - **Project plugin** (`com.github.lukelast.ktor-plus.project`): KTP conventions per project. Mode
   is auto-detected or set with `ktp.mode`: `ktor` (default; adds ktp-ktor/ktp-test, formatting,
