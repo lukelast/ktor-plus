@@ -43,15 +43,15 @@ class KtpAppBuilder {
         installSlf4jBridge()
     }
 
-    internal val modules = mutableListOf<Module>()
-    internal val koinConfigs = mutableListOf<KoinConfiguration>()
-    internal val overrideModules = mutableListOf<Module>()
-    internal val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
+    private val modules = mutableListOf<Module>()
+    private val koinConfigs = mutableListOf<KoinConfiguration>()
+    private val overrideModules = mutableListOf<Module>()
+    private val appInits: MutableList<suspend Application.(KtpConfig) -> Unit> = mutableListOf()
 
     var createKtpConfig: () -> KtpConfig = { KtpConfig.create() }
 
-    fun addModule(module: Module) {
-        modules.add(module)
+    fun addModule(koinModule: Module) {
+        modules.add(koinModule)
     }
 
     /** Adds a compiler-plugin-generated Koin config, e.g. `koinConfiguration<MyApp>()`. */
@@ -59,21 +59,21 @@ class KtpAppBuilder {
         koinConfigs.add(koinConfig)
     }
 
-    fun addModule(configModule: Module.() -> Unit) {
-        addModule(module { configModule() })
+    fun addModule(koinModuleBuilder: Module.() -> Unit) {
+        addModule(module { koinModuleBuilder() })
     }
 
     /**
      * Adds a module loaded after every [addModule] module and [addKoinConfig] config, so its
      * definitions replace same-type definitions from both. For tests: `addOverrideModule {
-     * single<FirestoreService> { mockk() } }`.
+     * single<Service> { mockk() } }`.
      */
-    fun addOverrideModule(module: Module) {
-        overrideModules.add(module)
+    fun addOverrideModule(koinModule: Module) {
+        overrideModules.add(koinModule)
     }
 
-    fun addOverrideModule(configModule: Module.() -> Unit) {
-        addOverrideModule(module { configModule() })
+    fun addOverrideModule(koinModuleBuilder: Module.() -> Unit) {
+        addOverrideModule(module { koinModuleBuilder() })
     }
 
     fun addAppInit(appInit: suspend Application.(KtpConfig) -> Unit) {
@@ -86,11 +86,11 @@ class KtpAppBuilder {
 
     // Must not mutate this builder: [update] factories reuse one instance across builds.
     fun build(): KtpApp {
-        val config = createKtpConfig()
+        val ktpConfig = createKtpConfig()
         val allModules = buildList {
             add(
                 module {
-                    single { config }
+                    single { ktpConfig }
                     // Injected into services so tests can fix time; an app definition replaces it.
                     single<Clock> { Clock.systemUTC() }
                 }
@@ -98,7 +98,7 @@ class KtpAppBuilder {
             addAll(modules)
         }
         return KtpApp(
-            config = config,
+            config = ktpConfig,
             modules = allModules,
             koinConfigs = koinConfigs.toList(),
             appInits = appInits.toList(),
@@ -108,15 +108,22 @@ class KtpAppBuilder {
 }
 
 data class KtpApp(
-    val config: KtpConfig,
-    val modules: List<Module>,
-    val koinConfigs: List<KoinConfiguration>,
-    val appInits: List<suspend Application.(KtpConfig) -> Unit>,
-    val overrideModules: List<Module> = emptyList(),
+    internal val config: KtpConfig,
+    internal val modules: List<Module>,
+    private val koinConfigs: List<KoinConfiguration>,
+    internal val appInits: List<suspend Application.(KtpConfig) -> Unit>,
+    private val overrideModules: List<Module> = emptyList(),
 ) {
 
+    /** The one boot path, shared by [start] and ktp-test so tests run what deploys run. */
+    suspend fun install(app: Application) {
+        app.install(RequestVirtualThreadPlugin)
+        installKoin(app)
+        runAppInits(app)
+    }
+
     /** Loads Koin in the order [KtpAppBuilder] documents: modules, then configs, then overrides. */
-    fun installKoin(app: Application) {
+    private fun installKoin(app: Application) {
         app.install(KoinIsolated) {
             slf4jLogger()
             modules(module { single { app } })
@@ -127,7 +134,7 @@ data class KtpApp(
         app.getKoin().autoCloseInstances()
     }
 
-    suspend fun runAppInits(app: Application) {
+    private suspend fun runAppInits(app: Application) {
         for (appInit in appInits) {
             app.appInit(config)
         }
@@ -140,18 +147,14 @@ fun ktpAppCreate(buildBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory = {
     ktpAppBuilder
 }
 
-fun KtpAppBuilderFactory.start() {
-    ktpAppStart(this)
-}
-
 fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBuilderFactory {
     val ktpAppBuilder = this()
     ktpAppBuilder.updateBlock()
     return { ktpAppBuilder }
 }
 
-fun ktpAppStart(appFactory: KtpAppBuilderFactory) {
-    val ktpApp = appFactory().build()
+fun KtpAppBuilderFactory.start() {
+    val ktpApp = this().build()
     if (ktpApp.config.env.isLocalDev) {
         configureLocalDevConsoleLogFormat()
     }
@@ -160,11 +163,7 @@ fun ktpAppStart(appFactory: KtpAppBuilderFactory) {
     val serverConfig =
         serverConfig(ktorEnv) {
             developmentMode = ktpApp.config.env.isLocalDev
-            module {
-                install(RequestVirtualThreadPlugin)
-                ktpApp.installKoin(this)
-                ktpApp.runAppInits(this)
-            }
+            module { ktpApp.install(this) }
         }
     val server =
         embeddedServer(
@@ -213,7 +212,7 @@ fun ktpAppStart(appFactory: KtpAppBuilderFactory) {
  * Two apps, or two worktrees of one app, cannot share a port, and whoever hits that (often an agent
  * in a fresh worktree) needs the exact fix rather than a bare BindException.
  */
-internal fun localDevPortTakenMessage(port: Int): String {
+private fun localDevPortTakenMessage(port: Int): String {
     val free =
         (port + 1..port + 100).firstOrNull { runCatching { ServerSocket(it).close() }.isSuccess }
     return "Port $port (config 'app.server.port') is already in use, probably by another app or " +

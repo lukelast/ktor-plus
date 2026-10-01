@@ -26,13 +26,13 @@ class KtpStartTest :
                 addAppInit { _ -> }
             }
 
-            val originalBuilder = originalFactory()
-            val updatedBuilder = updatedFactory()
+            val originalApp = originalFactory().build()
+            val updatedApp = updatedFactory().build()
 
-            originalBuilder.modules.size shouldBe 1
-            originalBuilder.appInits.size shouldBe 0
-            updatedBuilder.modules.size shouldBe 2
-            updatedBuilder.appInits.size shouldBe 1
+            originalApp.modules.size shouldBe 1 + BUILT_IN_MODULES
+            originalApp.appInits.size shouldBe 0
+            updatedApp.modules.size shouldBe 2 + BUILT_IN_MODULES
+            updatedApp.appInits.size shouldBe 1
             updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
@@ -50,11 +50,10 @@ class KtpStartTest :
 
             val updatedFactory = originalFactory.update { addModule(module {}) }
 
-            val updatedBuilder = updatedFactory()
-            updatedBuilder.createKtpConfig()
+            val updatedApp = updatedFactory().build()
 
             customConfigCalled.shouldBeTrue()
-            updatedBuilder.modules.size shouldBe 2
+            updatedApp.modules.size shouldBe 2 + BUILT_IN_MODULES
         }
 
         "update supports chaining additional changes" {
@@ -69,10 +68,10 @@ class KtpStartTest :
                 addAppInit { _ -> }
             }
 
-            val finalBuilder = secondUpdateFactory()
+            val finalApp = secondUpdateFactory().build()
 
-            finalBuilder.modules.size shouldBe 2
-            finalBuilder.appInits.size shouldBe 1
+            finalApp.modules.size shouldBe 2 + BUILT_IN_MODULES
+            finalApp.appInits.size shouldBe 1
         }
 
         "update with empty block still produces new builder" {
@@ -81,13 +80,11 @@ class KtpStartTest :
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }
 
-            val originalModulesCount = originalFactory().modules.size
+            val originalModulesCount = originalFactory().build().modules.size
 
             val updatedFactory = originalFactory.update {}
 
-            val updatedBuilder = updatedFactory()
-
-            updatedBuilder.modules.size shouldBe originalModulesCount
+            updatedFactory().build().modules.size shouldBe originalModulesCount
             updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
@@ -101,13 +98,13 @@ class KtpStartTest :
                 addAppInit { _ -> }
             }
 
-            val firstBuilder = updatedFactory()
-            val secondBuilder = updatedFactory()
+            val firstApp = updatedFactory().build()
+            val secondApp = updatedFactory().build()
 
-            firstBuilder.modules.size shouldBe secondBuilder.modules.size
-            firstBuilder.appInits.size shouldBe secondBuilder.appInits.size
-            firstBuilder.modules.size shouldBe 1
-            firstBuilder.appInits.size shouldBe 1
+            firstApp.modules.size shouldBe secondApp.modules.size
+            firstApp.appInits.size shouldBe secondApp.appInits.size
+            firstApp.modules.size shouldBe 1 + BUILT_IN_MODULES
+            firstApp.appInits.size shouldBe 1
         }
 
         "build does not accumulate the built-in module across repeated invocations" {
@@ -120,8 +117,8 @@ class KtpStartTest :
             val firstBuild = updatedFactory().build()
             val secondBuild = updatedFactory().build()
 
-            firstBuild.modules.size shouldBe 3
-            secondBuild.modules.size shouldBe 3
+            firstBuild.modules.size shouldBe 2 + BUILT_IN_MODULES
+            secondBuild.modules.size shouldBe 2 + BUILT_IN_MODULES
         }
 
         "a Koin config definition replaces an addModule one of the same type" {
@@ -139,7 +136,7 @@ class KtpStartTest :
 
             testApplication {
                 application {
-                    app.installKoin(this)
+                    app.install(this)
                     getKoin().get<CharSequence>() shouldBe "config"
                 }
                 startApplication()
@@ -162,7 +159,7 @@ class KtpStartTest :
 
             testApplication {
                 application {
-                    app.installKoin(this)
+                    app.install(this)
                     getKoin().get<CharSequence>() shouldBe "override"
                 }
                 startApplication()
@@ -176,7 +173,7 @@ class KtpStartTest :
 
             testApplication {
                 application {
-                    app.installKoin(this)
+                    app.install(this)
                     getKoin().get<Clock>() shouldBe Clock.systemUTC()
                 }
                 startApplication()
@@ -194,7 +191,7 @@ class KtpStartTest :
 
             testApplication {
                 application {
-                    app.installKoin(this)
+                    app.install(this)
                     getKoin().get<Clock>() shouldBe fixed
                 }
                 startApplication()
@@ -210,10 +207,13 @@ class KtpStartTest :
 
             testApplication {
                 application {
-                    app.installKoin(this)
+                    app.install(this)
                     getKoin().get<Clock>() shouldBe fixed
                 }
                 startApplication()
             }
         }
     })
+
+// build() prepends one module holding the KtpConfig and Clock singles.
+private const val BUILT_IN_MODULES = 1

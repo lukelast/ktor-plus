@@ -30,6 +30,18 @@ class KtpTestAppTest :
             }
         }
 
+        "ktpTestApp runs each request on a virtual thread like a deployed app" {
+            ktpTestApp(start = false) {
+                application {
+                    routing {
+                        get("/thread") { call.respond("${Thread.currentThread().isVirtual}") }
+                    }
+                }
+
+                client.get("/thread").bodyAsText() shouldBe "true"
+            }
+        }
+
         "ktpTestApp injects KtpConfig" {
             ktpTestApp(start = false) {
                 application {

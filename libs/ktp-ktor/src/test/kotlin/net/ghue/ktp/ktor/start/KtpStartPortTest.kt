@@ -21,7 +21,7 @@ class KtpStartPortTest :
                     }
                 }
 
-                val ex = shouldThrow<IllegalStateException> { ktpAppStart(appFactory) }
+                val ex = shouldThrow<IllegalStateException> { appFactory.start() }
 
                 ex.message shouldContain "Port ${taken.localPort}"
                 ex.message shouldContain "0.local.localdev.conf"

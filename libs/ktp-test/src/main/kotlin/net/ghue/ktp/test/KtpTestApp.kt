@@ -24,10 +24,7 @@ fun ktpTestApp(
             }
         }
         val app = appBuilder.build()
-        application {
-            app.installKoin(this)
-            app.runAppInits(this)
-        }
+        application { app.install(this) }
         client = createClient {
             install(Resources)
             install(ContentNegotiation) { json() }

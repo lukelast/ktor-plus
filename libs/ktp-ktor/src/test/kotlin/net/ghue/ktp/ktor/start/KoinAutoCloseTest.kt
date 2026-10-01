@@ -76,7 +76,7 @@ class KoinAutoCloseTest :
             b.closed shouldBe true
         }
 
-        "installKoin closes AutoCloseable singles when the application stops" {
+        "install closes AutoCloseable singles when the application stops" {
             lateinit var resource: Resource
             testApplication {
                 application {
@@ -86,7 +86,7 @@ class KoinAutoCloseTest :
                             koinConfigs = emptyList(),
                             appInits = emptyList(),
                         )
-                        .installKoin(this)
+                        .install(this)
                     resource = getKoin().get()
                 }
                 startApplication()
