@@ -18,7 +18,7 @@ internal const val DEV_LOGIN_PARAM_REDIRECT = "redirect"
 /** The user id of the unnamed dev user; named ones are `dev-<name>`. */
 internal const val DEV_USER_ID = "dev"
 internal const val DEV_EMAIL_DOMAIN = "dev.test"
-private val DEV_USER_SLUG = Regex("[a-z0-9][a-z0-9-]{0,31}")
+private val DEV_USER_SLUG_PATTERN = Regex("[a-z0-9][a-z0-9-]{0,31}")
 
 /**
  * Passwordless login for local instances, so a browser without the developer's Firebase state (an
@@ -33,9 +33,9 @@ internal class DevLoginService(private val lifecycle: AuthLifecycleHandler) {
 
         // Absent or blank selects the unnamed dev user.
         val slug = params[DEV_LOGIN_PARAM_USER]?.takeIf(String::isNotBlank)
-        if (slug != null && !DEV_USER_SLUG.matches(slug)) {
+        if (slug != null && !DEV_USER_SLUG_PATTERN.matches(slug)) {
             call.respondText(
-                "${DEV_LOGIN_PARAM_USER} must match ${DEV_USER_SLUG.pattern}",
+                "${DEV_LOGIN_PARAM_USER} must match ${DEV_USER_SLUG_PATTERN.pattern}",
                 status = HttpStatusCode.BadRequest,
             )
             return

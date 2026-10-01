@@ -65,14 +65,14 @@ class TransactionTest :
             val collection = mockk<CollectionReference>()
             val docRef = mockk<DocumentReference>()
             val doc = mockk<DocumentSnapshot>()
-            val emptyDoc = mockk<DocumentSnapshot>()
+            val missingDoc = mockk<DocumentSnapshot>()
 
             every { collection.document("user-1") } returns docRef
             every { txn.get(docRef) } returnsMany
-                listOf(completedFuture(doc), completedFuture(doc), completedFuture(emptyDoc))
+                listOf(completedFuture(doc), completedFuture(doc), completedFuture(missingDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
-            every { emptyDoc.data } returns null
+            every { missingDoc.data } returns null
 
             txn.getOrNull<User>(collection, "user-1") shouldBe User(id = "user-1", name = "Ada")
             txn.getOrThrow<User>(collection, "user-1") shouldBe User(id = "user-1", name = "Ada")

@@ -50,7 +50,7 @@ class FirestoreUserStoreTest :
                 )
         }
 
-        "first login creates the record with a fresh tenant and stamps the login" {
+        "first login creates the record with a fresh tenant id and stamps the login" {
             val db = MockDb()
             db.snapshotIsMissing()
             val created = db.acceptCreate()
@@ -77,7 +77,7 @@ class FirestoreUserStoreTest :
             verify(exactly = 0) { db.docRef.set(any<Map<String, Any>>(), any<SetOptions>()) }
         }
 
-        "repeat login merges only the login fields and keeps the stored tenant, roles and times" {
+        "repeat login merges only the login fields and keeps the stored tenant id, roles and times" {
             val db = MockDb()
             db.snapshotHolds(storedAlice(name = "Old Name", roles = listOf("admin")))
             val merged = db.acceptMerge()
@@ -104,7 +104,7 @@ class FirestoreUserStoreTest :
             verify(exactly = 0) { db.docRef.create(any<Map<String, Any>>()) }
         }
 
-        "losing the first-login race adopts the winner's tenant instead of minting one" {
+        "losing the first-login race adopts the winner's tenant id instead of minting one" {
             val db = MockDb()
             db.snapshotIsMissingThenHolds(storedAlice(name = "Alice", roles = emptyList()))
             db.rejectCreateAsExisting()

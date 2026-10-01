@@ -34,7 +34,7 @@ class PathTest :
             result shouldBe path
         }
 
-        "removeFirstFolder handles path with zero name count" {
+        "removeFirstFolder leaves an empty path unchanged" {
             val path = Path("")
             val result = path.removeFirstFolder("static")
 
@@ -76,7 +76,7 @@ class PathTest :
             result shouldBe Path("file with spaces.txt")
         }
 
-        "removeFirstFolder with empty string prefix doesn't match" {
+        "removeFirstFolder with an empty folder doesn't match" {
             val path = Path("static", "app.css")
             val result = path.removeFirstFolder("")
 
@@ -90,7 +90,7 @@ class PathTest :
             result shouldBe Path("yo.txt")
         }
 
-        "removeFirstFolder with multi-component prefix only checks first component" {
+        "removeFirstFolder with a multi-component folder only checks the first component" {
             val path = Path("static", "assets", "app.css")
             val result = path.removeFirstFolder("static/assets")
 
@@ -120,14 +120,14 @@ class PathTest :
             result shouldBe Path("assets", "app.css")
         }
 
-        "removeFirstFolder with Unicode mismatch" {
+        "removeFirstFolder leaves the path unchanged for a non-matching Unicode folder" {
             val path = Path("static", "assets", "app.css")
             val result = path.removeFirstFolder("静的")
 
             result shouldBe path
         }
 
-        "removeFirstFolder works with absolute path that doesn't match prefix" {
+        "removeFirstFolder works with an absolute path that doesn't match the folder" {
             val path = Path("/", "public", "assets", "app.css")
             val result = path.removeFirstFolder("static")
 

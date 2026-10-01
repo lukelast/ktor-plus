@@ -21,10 +21,10 @@ import org.koin.dsl.module
 const val USER_COLLECTION = "user"
 
 /**
- * The stored user record; one document per user id, minting a tenant on first login. [createTime]
- * is when the user first logged in and [updateTime] the last write by anyone, both from Firestore's
- * document metadata, so they are only set on records read back. [lastLogin] is a stored field
- * because a write from another tool (say, granting a role) is not a login.
+ * The stored user record; one document per user id, minting a tenant id on first login.
+ * [createTime] is when the user first logged in and [updateTime] the last write by anyone, both
+ * from Firestore's document metadata, so they are only set on records read back. [lastLogin] is a
+ * stored field because a write from another tool (say, granting a role) is not a login.
  */
 data class KtpUser(
     val id: UserId,
@@ -66,11 +66,11 @@ class FirestoreUserStore(
     override suspend fun onLogin(identity: LoginIdentity): UserSession = login(identity).toSession()
 
     /**
-     * Records a login and returns the stored user, creating it and its tenant on first sight. First
-     * sight is a create-only write, and losing the create race means adopting the winner's row, so
-     * concurrent first logins can never each mint their own tenant: the returned [KtpUser.tenantId]
-     * is always the persisted one. The returned [DocTimes] are those of the record as read, so a
-     * first login has none; call [get] for fresh ones.
+     * Records a login and returns the stored user, creating it and minting its tenant id on first
+     * sight. First sight is a create-only write, and losing the create race means adopting the
+     * winner's row, so concurrent first logins can never each mint their own tenant id: the
+     * returned [KtpUser.tenantId] is always the persisted one. The returned [DocTimes] are those of
+     * the record as read, so a first login has none; call [get] for fresh ones.
      */
     fun login(identity: LoginIdentity): KtpUser {
         val now = clock.instant()

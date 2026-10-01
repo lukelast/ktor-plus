@@ -101,16 +101,16 @@ class KtpStartTest :
                 addAppInit { _ -> }
             }
 
-            val firstCall = updatedFactory()
-            val secondCall = updatedFactory()
+            val firstBuilder = updatedFactory()
+            val secondBuilder = updatedFactory()
 
-            firstCall.modules.size shouldBe secondCall.modules.size
-            firstCall.appInits.size shouldBe secondCall.appInits.size
-            firstCall.modules.size shouldBe 1
-            firstCall.appInits.size shouldBe 1
+            firstBuilder.modules.size shouldBe secondBuilder.modules.size
+            firstBuilder.appInits.size shouldBe secondBuilder.appInits.size
+            firstBuilder.modules.size shouldBe 1
+            firstBuilder.appInits.size shouldBe 1
         }
 
-        "build does not accumulate config modules across repeated invocations" {
+        "build does not accumulate the built-in module across repeated invocations" {
             val updatedFactory = ktpAppCreate {
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
                 addModule(module {})

@@ -28,12 +28,12 @@ fun generateThreadDump(): String {
     sb.appendLine("Processors: ${runtime.availableProcessors()}")
     sb.appendLine()
 
-    val allThreads = dumpAllThreads()
-    sb.append(allThreads)
+    val rawDump = dumpAllThreads()
+    sb.append(rawDump)
 
     sb.appendLine()
     sb.appendLine("Thread Summary:")
-    sb.appendLine("  Total threads (including virtual): ${countThreadEntries(allThreads)}")
+    sb.appendLine("  Total threads (including virtual): ${countThreadEntries(rawDump)}")
     sb.appendLine("  Platform threads: ${ManagementFactory.getThreadMXBean().threadCount}")
 
     collectCoroutineInfo()?.let {

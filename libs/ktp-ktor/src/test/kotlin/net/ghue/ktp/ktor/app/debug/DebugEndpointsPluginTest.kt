@@ -15,7 +15,7 @@ import net.ghue.ktp.ktor.plugin.installDefaultPlugins
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
-class DebugEndpointsTest :
+class DebugEndpointsPluginTest :
     StringSpec({
         "/debug/version returns the configured version" {
             testApplication {

@@ -16,14 +16,14 @@ import net.ghue.ktp.ktor.error.KtpRspEx
 
 class SerializeTest :
     StringSpec({
-        "primitive and null serialization" {
+        "primitives and null serialize unchanged" {
             FirestoreSerializer.serialize("hello") shouldBe "hello"
             FirestoreSerializer.serialize(123) shouldBe 123
             FirestoreSerializer.serialize(true) shouldBe true
             FirestoreSerializer.serialize(null) shouldBe null
         }
 
-        "firestore natives serialization" {
+        "Firestore native values serialize unchanged" {
             val geo = GeoPoint(1.0, 2.0)
             val ts = Timestamp.now()
             val blob = Blob.fromBytes(byteArrayOf(1, 2, 3))
@@ -35,7 +35,7 @@ class SerializeTest :
             FirestoreSerializer.serialize(docRef) shouldBe docRef
         }
 
-        "collections serialization" {
+        "lists and maps serialize unchanged" {
             val list = listOf(1, "two", true)
             val map = mapOf("a" to 1, "b" to listOf(2))
 
@@ -51,7 +51,7 @@ class SerializeTest :
             FirestoreSerializer.serialize(map) shouldBe mapOf("null" to 3, "4" to null)
         }
 
-        "enum serialization" { FirestoreSerializer.serialize(TestEnum.A) shouldBe "A" }
+        "enums serialize to their name" { FirestoreSerializer.serialize(TestEnum.A) shouldBe "A" }
 
         "custom serializer serialization (Instant) truncates to microseconds" {
             val instant = Instant.ofEpochSecond(1234567890L, 123456789)
@@ -61,7 +61,7 @@ class SerializeTest :
             FirestoreSerializer.serialize(instant) shouldBe expected
         }
 
-        "custom serializer serialization (Date)" {
+        "a Date serializes to a Timestamp" {
             val date = Date(1234567890000L)
             val expected = Timestamp.of(date)
 
@@ -84,7 +84,7 @@ class SerializeTest :
             FirestoreSerializer.serialize(SerializedChild("two")) shouldBe "base:two"
         }
 
-        "object serialization via reflection" {
+        "objects serialize to a map of their public properties" {
             val obj = TestData("test", 42, TestEnum.B)
 
             val result = obj.serialize()
@@ -98,7 +98,7 @@ class SerializeTest :
                 mapOf("visible" to "yes")
         }
 
-        "nested object serialization" {
+        "nested objects serialize to nested maps" {
             val nested = NestedData(TestData("inner", 1, TestEnum.A))
 
             val result = nested.serialize()
@@ -140,7 +140,7 @@ class SerializeTest :
                 mapOf("createTime" to at.toTimestamp(), "updateTime" to at.toTimestamp())
         }
 
-        "value class serialization" {
+        "value classes serialize to their unwrapped value" {
             val email = Email("test@example.com")
             val count = Count(42)
 

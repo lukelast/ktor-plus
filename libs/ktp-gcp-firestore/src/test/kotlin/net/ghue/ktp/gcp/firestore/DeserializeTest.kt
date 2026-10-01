@@ -20,7 +20,7 @@ import net.ghue.ktp.ktor.error.KtpRspEx
 
 class DeserializeTest :
     StringSpec({
-        "primitives deserialization" {
+        "stored primitives deserialize to their target types" {
             FirestoreDeserializer.deserialize(123L, Int::class.createType()) shouldBe 123
             FirestoreDeserializer.deserialize("hello", String::class.createType()) shouldBe "hello"
             FirestoreDeserializer.deserialize(true, Boolean::class.createType()) shouldBe true
@@ -47,7 +47,7 @@ class DeserializeTest :
             error.detail shouldContain "non-nullable type"
         }
 
-        "timestamp to instant" {
+        "a Timestamp deserializes to an Instant" {
             val now = Instant.now()
             val ts = Timestamp.ofTimeSecondsAndNanos(now.epochSecond, now.nano)
 
@@ -55,7 +55,7 @@ class DeserializeTest :
             result shouldBe now
         }
 
-        "timestamp to date" {
+        "a Timestamp deserializes to a Date" {
             val date = Date()
             val ts = Timestamp.of(date)
             val result = FirestoreDeserializer.deserialize(ts, Date::class.createType())
@@ -64,7 +64,7 @@ class DeserializeTest :
             result shouldBe date
         }
 
-        "ISO text to LocalDate" {
+        "ISO text deserializes to a LocalDate" {
             val result =
                 FirestoreDeserializer.deserialize("2024-01-31", LocalDate::class.createType())
 
@@ -82,7 +82,7 @@ class DeserializeTest :
             error.message shouldContain "stored value is a Timestamp"
         }
 
-        "value class deserialization" {
+        "value classes are rebuilt from their unwrapped value" {
             // Value classes are stored unwrapped, so DCount(42) is read back from the bare number.
             val result = FirestoreDeserializer.deserialize(42L, DCount::class.createType())
             result shouldBe DCount(42)
@@ -132,7 +132,7 @@ class DeserializeTest :
                 DCustom("value")
         }
 
-        "data class deserialization" {
+        "a map deserializes into a data class" {
             val data =
                 mapOf(
                     "name" to "Foo",
@@ -144,7 +144,7 @@ class DeserializeTest :
             result shouldBe DData("Foo", 42, DEnum.A)
         }
 
-        "nested data class" {
+        "nested maps deserialize into nested data classes" {
             val data = mapOf("data" to mapOf("name" to "Inner", "count" to 1L, "type" to "B"))
             val result = FirestoreDeserializer.deserialize(data, DNested::class.createType())
             result shouldBe DNested(DData("Inner", 1, DEnum.B))

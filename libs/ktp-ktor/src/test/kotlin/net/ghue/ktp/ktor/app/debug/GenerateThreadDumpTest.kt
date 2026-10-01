@@ -6,7 +6,7 @@ import io.kotest.matchers.string.shouldContain
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 
-class ThreadDumpGeneratorTest :
+class GenerateThreadDumpTest :
     StringSpec({
         "generateThreadDump returns non-empty string" {
             val dump = generateThreadDump()

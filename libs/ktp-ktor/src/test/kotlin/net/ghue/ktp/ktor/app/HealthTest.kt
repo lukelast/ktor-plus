@@ -9,7 +9,7 @@ import io.ktor.server.testing.*
 
 class HealthTest :
     StringSpec({
-        "health endpoint returns Alive when healthy" {
+        "liveness endpoint returns Alive when live" {
             testApplication {
                 application { installK8sHealthCheck() }
                 with(client.get(K8S_LIVENESS_PATH)) {
@@ -28,7 +28,7 @@ class HealthTest :
             }
         }
 
-        "health endpoint returns ServiceUnavailable when unhealthy" {
+        "liveness endpoint returns ServiceUnavailable when not live" {
             testApplication {
                 application { installK8sHealthCheck(livenessCheck = { false }) }
                 val response = client.get(K8S_LIVENESS_PATH)

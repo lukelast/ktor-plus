@@ -10,27 +10,27 @@ import io.kotest.matchers.string.shouldContain
 class EnvTest :
     StringSpec({
         "findEnvironment picks up KTP_ENV system property" {
-            val envVar = "KTP_ENV"
+            val propertyName = "KTP_ENV"
             val value = "frank"
-            System.setProperty(envVar, value)
+            System.setProperty(propertyName, value)
 
             try {
                 val env = findEnvironment()
                 env.name shouldBe value
             } finally {
-                System.clearProperty(envVar)
+                System.clearProperty(propertyName)
             }
         }
 
-        "findEnvironment trims whitespace from env var value" {
-            val envVar = "KTP_ENV"
-            System.setProperty(envVar, " prod\n")
+        "findEnvironment trims whitespace from KTP_ENV system property" {
+            val propertyName = "KTP_ENV"
+            System.setProperty(propertyName, " prod\n")
 
             try {
                 val env = findEnvironment()
                 env.name shouldBe "prod"
             } finally {
-                System.clearProperty(envVar)
+                System.clearProperty(propertyName)
             }
         }
 

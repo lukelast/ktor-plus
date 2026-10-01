@@ -38,14 +38,14 @@ class KtpCollectionTest :
             val ref = mockk<CollectionReference>()
             val docRef = mockk<DocumentReference>()
             val doc = mockk<DocumentSnapshot>()
-            val emptyDoc = mockk<DocumentSnapshot>()
+            val missingDoc = mockk<DocumentSnapshot>()
 
             every { ref.document("user-1") } returns docRef
             every { docRef.get() } returnsMany
-                listOf(completedFuture(doc), completedFuture(emptyDoc))
+                listOf(completedFuture(doc), completedFuture(missingDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
-            every { emptyDoc.data } returns null
+            every { missingDoc.data } returns null
 
             val users = KtpCollection(ref, User::class)
 

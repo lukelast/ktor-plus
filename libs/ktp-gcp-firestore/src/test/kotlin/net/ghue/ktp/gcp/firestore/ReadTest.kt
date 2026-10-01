@@ -72,15 +72,15 @@ class ReadTest :
             val collection = mockk<CollectionReference>()
             val docRef = mockk<DocumentReference>()
             val doc = mockk<DocumentSnapshot>()
-            val emptyDoc = mockk<DocumentSnapshot>()
+            val missingDoc = mockk<DocumentSnapshot>()
 
             every { collection.document("user-1") } returns docRef
             every { docRef.get() } returnsMany
-                listOf(completedFuture(doc), completedFuture(doc), completedFuture(emptyDoc))
+                listOf(completedFuture(doc), completedFuture(doc), completedFuture(missingDoc))
 
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
-            every { emptyDoc.data } returns null
+            every { missingDoc.data } returns null
 
             collection.getOrNull<User>("user-1") shouldBe User(id = "user-1", name = "Ada")
             collection.getOrThrow<User>("user-1") shouldBe User(id = "user-1", name = "Ada")
@@ -94,14 +94,14 @@ class ReadTest :
 
             val docRef = mockk<DocumentReference>()
             val doc = mockk<DocumentSnapshot>()
-            val emptyDoc = mockk<DocumentSnapshot>()
+            val missingDoc = mockk<DocumentSnapshot>()
 
             every { docRef.id } returns "user-1"
             every { docRef.get() } returnsMany
-                listOf(completedFuture(doc), completedFuture(doc), completedFuture(emptyDoc))
+                listOf(completedFuture(doc), completedFuture(doc), completedFuture(missingDoc))
             every { doc.data } returns mapOf("name" to "Ada")
             every { doc.id } returns "user-1"
-            every { emptyDoc.data } returns null
+            every { missingDoc.data } returns null
 
             docRef.getOrNull<User>() shouldBe User(id = "user-1", name = "Ada")
             docRef.getOrThrow<User>() shouldBe User(id = "user-1", name = "Ada")
