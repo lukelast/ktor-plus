@@ -36,15 +36,15 @@ class KtpStartTest :
             updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
-        "update preserves custom configuration manager" {
+        "update preserves a custom createKtpConfig" {
             var customConfigCalled = false
-            val customConfigManager = {
+            val createCustomConfig = {
                 customConfigCalled = true
                 KtpConfig.create { setUnitTestEnv() }
             }
 
             val originalFactory = ktpAppCreate {
-                createKtpConfig = customConfigManager
+                createKtpConfig = createCustomConfig
                 addModule(module {})
             }
 
@@ -91,7 +91,7 @@ class KtpStartTest :
             updatedFactory shouldNotBeSameInstanceAs originalFactory
         }
 
-        "update returns idempotent builder with preserved changes" {
+        "updated factory preserves changes across repeated invocations" {
             val originalFactory = ktpAppCreate {
                 createKtpConfig = { KtpConfig.create { setUnitTestEnv() } }
             }

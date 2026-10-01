@@ -73,15 +73,15 @@ class KtpRspExBuilder {
     fun buildExtraFields(): Map<String, Any> = extraFields.toMap()
 }
 
-inline fun ktpRspError(builder: KtpRspExBuilder.() -> Unit): Nothing {
-    val builderInstance = KtpRspExBuilder().apply(builder)
+inline fun ktpRspError(configure: KtpRspExBuilder.() -> Unit): Nothing {
+    val builder = KtpRspExBuilder().apply(configure)
     throw KtpRspEx(
-        internalMessage = builderInstance.internalMessage,
-        status = builderInstance.status,
-        type = builderInstance.type,
-        title = builderInstance.title,
-        detail = builderInstance.detail,
-        extraFields = builderInstance.buildExtraFields(),
-        cause = builderInstance.cause,
+        internalMessage = builder.internalMessage,
+        status = builder.status,
+        type = builder.type,
+        title = builder.title,
+        detail = builder.detail,
+        extraFields = builder.buildExtraFields(),
+        cause = builder.cause,
     )
 }

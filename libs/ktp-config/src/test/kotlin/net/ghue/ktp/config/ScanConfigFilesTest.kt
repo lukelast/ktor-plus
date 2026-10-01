@@ -5,7 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 
 class ScanConfigFilesTest :
     StringSpec({
-        val configFiles =
+        val expectedFileNames =
             listOf(
                     "0.a.dev",
                     "0.a.test",
@@ -22,7 +22,7 @@ class ScanConfigFilesTest :
 
         "scanConfigFiles sorts files" {
             val files = scanConfigFiles()
-            files.map { it.fileName }.shouldContainExactly(configFiles)
+            files.map { it.fileName }.shouldContainExactly(expectedFileNames)
         }
 
         "appliesTo filters by environment name" {

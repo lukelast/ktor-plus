@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 
 class StripeActionTest :
     StringSpec({
-        "maps all documented invoice actions" {
+        "fromString parses overdue, overpaid, payment_attempt_required, and will_be_due" {
             mapOf(
                     "overdue" to StripeAction.OVERDUE,
                     "overpaid" to StripeAction.OVERPAID,

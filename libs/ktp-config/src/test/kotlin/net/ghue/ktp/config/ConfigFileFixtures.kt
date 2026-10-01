@@ -3,7 +3,7 @@ package net.ghue.ktp.config
 fun fakeConfigFile(
     priority: Int,
     configName: String = "",
-    env: String = "",
+    envName: String = "",
     text: String = "",
 ): ConfigFile =
     ConfigFile(
@@ -14,6 +14,6 @@ fun fakeConfigFile(
                 .joinToString("."),
         priority = priority,
         configName = configName,
-        envName = env,
+        envName = envName,
         text = text,
     )

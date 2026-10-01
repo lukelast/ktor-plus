@@ -21,7 +21,7 @@ import net.ghue.ktp.config.KtpConfig
 import org.koin.dsl.module
 import org.koin.ktor.plugin.KoinIsolated
 
-class ApiCronTest :
+class InstallApiRoutesCronTest :
     StringSpec({
         "localdev request bypasses auth and runs cron handler" {
             val cronHandler = mockk<CronHandler>()

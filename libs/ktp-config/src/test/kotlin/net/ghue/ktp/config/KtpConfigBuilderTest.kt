@@ -7,11 +7,11 @@ import io.kotest.matchers.string.shouldContain
 
 class KtpConfigBuilderTest :
     StringSpec({
-        "create with setUnitTestEnv defaults to Env.TEST_UNIT" {
+        "create with setUnitTestEnv uses Env.TEST_UNIT" {
             KtpConfig.create { setUnitTestEnv() }.env shouldBe Env.TEST_UNIT
         }
 
-        "create with setIntegrationTestEnv defaults to Env.TEST_INTEGRATION" {
+        "create with setIntegrationTestEnv uses Env.TEST_INTEGRATION" {
             KtpConfig.create { setIntegrationTestEnv() }.env shouldBe Env.TEST_INTEGRATION
         }
 

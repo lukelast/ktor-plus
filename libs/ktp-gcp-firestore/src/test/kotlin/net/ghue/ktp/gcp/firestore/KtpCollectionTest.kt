@@ -143,7 +143,7 @@ class KtpCollectionTest :
             verify(exactly = 2) { docRef.delete() }
         }
 
-        "sub creates a typed handle for a subcollection" {
+        "subCollection creates a typed handle for a subcollection" {
             data class User(val id: String, val name: String)
             data class Item(val id: String, val label: String)
 

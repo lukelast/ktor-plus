@@ -55,8 +55,8 @@ class KtpAppBuilder {
     }
 
     /** Adds a compiler-plugin-generated Koin config, e.g. `koinConfiguration<MyApp>()`. */
-    fun addKoinConfig(config: KoinConfiguration) {
-        koinConfigs.add(config)
+    fun addKoinConfig(koinConfig: KoinConfiguration) {
+        koinConfigs.add(koinConfig)
     }
 
     fun addModule(configModule: Module.() -> Unit) {
@@ -121,7 +121,7 @@ data class KtpApp(
             slf4jLogger()
             modules(module { single { app } })
             modules(modules)
-            koinConfigs.forEach { config -> config.appDeclaration(this) }
+            koinConfigs.forEach { koinConfig -> koinConfig.appDeclaration(this) }
             modules(overrideModules)
         }
         app.getKoin().autoCloseInstances()
@@ -150,8 +150,8 @@ fun KtpAppBuilderFactory.update(updateBlock: KtpAppBuilder.() -> Unit): KtpAppBu
     return { ktpAppBuilder }
 }
 
-fun ktpAppStart(ktpAppBuilder: () -> KtpAppBuilder) {
-    val ktpApp = ktpAppBuilder().build()
+fun ktpAppStart(appFactory: KtpAppBuilderFactory) {
+    val ktpApp = appFactory().build()
     if (ktpApp.config.env.isLocalDev) {
         configureLocalDevConsoleLogFormat()
     }

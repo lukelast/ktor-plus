@@ -110,13 +110,13 @@ class KtpConfig(rawConfig: Config, val env: Env) {
 @PublishedApi
 internal fun getLeafPaths(kClass: KClass<*>, prefix: String = ""): List<String> = buildList {
     for (property in kClass.memberProperties) {
-        val propertyName = if (prefix.isNotEmpty()) "$prefix.${property.name}" else property.name
+        val propertyPath = if (prefix.isNotEmpty()) "$prefix.${property.name}" else property.name
         val propertyType = property.returnType.jvmErasure
         if (propertyType.qualifiedName?.startsWith("kotlin") == true) {
             // Kotlin stdlib types are treated as primitive leaves.
-            add(propertyName)
+            add(propertyPath)
         } else {
-            addAll(getLeafPaths(propertyType, propertyName))
+            addAll(getLeafPaths(propertyType, propertyPath))
         }
     }
 }

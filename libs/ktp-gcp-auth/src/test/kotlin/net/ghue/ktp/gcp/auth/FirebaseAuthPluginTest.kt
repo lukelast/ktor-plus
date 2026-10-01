@@ -314,7 +314,7 @@ class FirebaseAuthPluginTest :
 
         "creates session cookie with correct attributes" {
             testApplication {
-                // A deployed env: the test envs, like local dev, never get Secure cookies.
+                // A deployed env: test-unit and test-int, like local dev, never get Secure cookies.
                 val config = KtpConfig.create { env = Env("prod") }
 
                 val mockFirebaseAuth = mockk<FirebaseAuth>()
@@ -353,7 +353,7 @@ class FirebaseAuthPluginTest :
                 cookies?.any { it.contains("HttpOnly") } shouldBe true
                 cookies?.any { it.contains("SameSite=Lax") || it.contains("SameSite=lax") } shouldBe
                     true
-                // Outside local dev and the test envs the default is auth.secureCookies = true.
+                // Outside local dev, test-unit and test-int, auth.secureCookies defaults to true.
                 cookies?.any { it.contains("Secure") } shouldBe true
             }
         }

@@ -189,14 +189,14 @@ fun Route.installDebugErrorRoutes(accessControl: (suspend ApplicationCall.() -> 
 suspend fun RoutingCall.respondDebugErrors() {
     val rows =
         debugErrorCases.joinToString("\n") { case ->
-            val request = "${case.method.value} ${case.id}"
+            val requestLabel = "${case.method.value} ${case.id}"
             """
             <tr>
                 <td class="case-cell">
                     <button type="button" data-id="${case.id}" data-method="${case.method.value}"
                         data-expected="${case.expectedStatus.value}"
                         data-content-type="${case.requestContentType?.toString().orEmpty()}"
-                        data-body="${case.requestBody.orEmpty().escapeHtml()}">$request</button>
+                        data-body="${case.requestBody.orEmpty().escapeHtml()}">$requestLabel</button>
                 </td>
                 <td class="description-cell">${case.description.escapeHtml()}</td>
                 <td class="expected-cell">${case.expectedStatus.value}</td>

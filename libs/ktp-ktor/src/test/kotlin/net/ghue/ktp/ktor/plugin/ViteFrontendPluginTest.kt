@@ -24,9 +24,9 @@ import net.ghue.ktp.config.LOCAL_DEV_ENV_NAME
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 
-class ViteFrontendTest :
+class ViteFrontendPluginTest :
     StringSpec({
-        "production mode serves index for missing specific resource" {
+        "production mode returns 404 when the index file is missing" {
             testApplication {
                 val config = KtpConfig.create { setUnitTestEnv() }
 
@@ -174,7 +174,7 @@ class ViteFrontendTest :
             }
         }
 
-        "custom static URI routes are configured correctly" {
+        "custom staticPathSegment routes are configured correctly" {
             testApplication {
                 val config = KtpConfig.create { setUnitTestEnv() }
 
@@ -187,7 +187,7 @@ class ViteFrontendTest :
             }
         }
 
-        "custom browser URI path prefix routes are configured correctly" {
+        "a custom frontendPathSegment serves the SPA under it" {
             testApplication {
                 val config = KtpConfig.create { setUnitTestEnv() }
 

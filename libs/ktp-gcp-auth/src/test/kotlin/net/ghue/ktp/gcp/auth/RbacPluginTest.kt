@@ -144,7 +144,7 @@ class RbacPluginTest :
             }
         }
 
-        "allows access when user has one of multiple roles" {
+        "allows access when user has the required role among several roles" {
             testApplication {
                 application {
                     install(Authentication) {
@@ -176,7 +176,7 @@ class RbacPluginTest :
             }
         }
 
-        "denies access when user has none of the required roles" {
+        "denies access when user has several roles but lacks the required role" {
             testApplication {
                 application {
                     install(Authentication) {

@@ -150,7 +150,7 @@ class DeserializeTest :
             result shouldBe DNested(DData("Inner", 1, DEnum.B))
         }
 
-        "id injection" {
+        "an id entry in the map fills the id parameter" {
             val data = mapOf("id" to "doc-123", "value" to "content")
             val result = FirestoreDeserializer.deserialize(data, DWithId::class.createType())
             result shouldBe DWithId("doc-123", "content")
@@ -184,9 +184,8 @@ class DeserializeTest :
 
         "missing optional parameter uses default" {
             val data = mapOf<String, Any>()
-            val result =
-                FirestoreDeserializer.deserialize(data, DataWithDefault::class.createType())
-            result shouldBe DataWithDefault("default")
+            val result = FirestoreDeserializer.deserialize(data, DWithDefault::class.createType())
+            result shouldBe DWithDefault("default")
         }
 
         "missing nullable parameter becomes null" {
@@ -283,9 +282,9 @@ class DeserializeTest :
         }
     })
 
-data class DataWithDefault(val value: String = "default")
-
 // D-prefixed to avoid clashing with SerializeTest's top-level fixtures in this package.
+
+data class DWithDefault(val value: String = "default")
 
 @JvmInline value class DCount(val value: Int)
 
