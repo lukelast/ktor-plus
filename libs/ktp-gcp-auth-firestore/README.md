@@ -53,6 +53,6 @@ The caller must authorize the tenant ID; user deletion does not remove tenant da
 
 ## Testing
 
-Replace `FirebaseAuth` and `Firestore` with mocks and stub the operations exercised.
-Use `addOverrideModule` to replace app-owned services.
-See [auth testing](../ktp-gcp-auth/README.md#testing-an-app) for session tests.
+[ktp-gcp-auth-firestore-test](../ktp-gcp-auth-firestore-test/README.md) replaces `FirebaseAuth`
+and `Firestore` with mocks, swaps app-owned services, and runs the app signed in; stub the
+Firestore operations a test exercises.

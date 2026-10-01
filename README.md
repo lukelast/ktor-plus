@@ -63,7 +63,8 @@ Koin definitions load in this order, later ones replacing earlier ones of the sa
 `addOverrideModule` modules. Tests build on the real app with `appFactory.update { ... }` and swap
 a compiler-plugin `@Singleton` for a mock through `addOverrideModule`; an `addModule` definition
 would lose to it. `ktpTestApp(appFactory) { client.get(...) }` from ktp-test runs the result in
-Ktor's test host with the unit-test config env.
+Ktor's test host with the unit-test config env; for an app with Firebase auth,
+`ktpAuthTestApp(appFactory.withGcpStubs())` from ktp-gcp-auth-firestore-test runs it signed in.
 
 ## Libraries
 
@@ -76,6 +77,7 @@ Ktor's test host with the unit-test config env.
 | [ktp-gcp-auth](libs/ktp-gcp-auth/README.md) | `gcpAuth`          | Firebase login, encrypted cookies with periodic account/role checks, RBAC, local-dev login                                                                  |
 | ktp-gcp-auth-firestore                      | `gcpAuthFirestore` | Shared user records and typed tenant storage on Firestore ([details](libs/ktp-gcp-auth-firestore/README.md))                                         |
 | ktp-gcp-firestore                           | `gcpFirestore`     | Firestore client plus typed collection, read/write, query, batch, and transaction helpers                                                                   |
+| ktp-gcp-auth-firestore-test                 | `gcpAuthFirestoreTest` | Test harness for apps on ktp-gcp-auth-firestore: stubbed GCP clients, test sessions, a signed-in test app ([details](libs/ktp-gcp-auth-firestore-test/README.md)) |
 | ktp-stripe                                  | `stripe`           | Stripe API and webhook helpers                                                                                                                              |
 | ktp-test                                    | `test` (automatic) | Test app builder, config helpers, Kotest integration                                                                                                        |
 

@@ -74,15 +74,7 @@ This route and dev sessions are accepted only in local dev.
 
 ## Testing an app
 
-Use `addOverrideModule` in the test's app builder; it loads after library and app bindings:
-
-```kotlin
-addOverrideModule {
-    single<FirebaseAuth> { mockk() }
-    single<AuthLifecycleHandler> { mockk() }
-}
-```
-
-Stub the operations exercised, including the login hook.
-Set `UserSession.lastValidatedAt = 0` to exercise revalidation.
+[ktp-gcp-auth-firestore-test](../ktp-gcp-auth-firestore-test/README.md) runs the real app signed
+in, with the GCP clients stubbed.
+Tests that exercise login or a passing recheck replace `AuthLifecycleHandler` as well.
 Route-only tests can use `authentication { dummy(principal = session) }` without the auth plugin.
