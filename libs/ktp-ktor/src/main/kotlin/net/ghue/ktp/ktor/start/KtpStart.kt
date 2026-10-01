@@ -1,6 +1,8 @@
 package net.ghue.ktp.ktor.start
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.application.serverConfig
 import io.ktor.server.engine.applicationEnvironment
@@ -10,7 +12,6 @@ import io.ktor.server.netty.Netty
 import java.net.BindException
 import java.net.ServerSocket
 import java.time.Clock
-import kotlin.time.Duration.Companion.seconds
 import net.ghue.ktp.config.KtpConfig
 import net.ghue.ktp.ktor.plugin.RequestVirtualThreadPlugin
 import net.ghue.ktp.log.configureLocalDevConsoleLogFormat
@@ -163,7 +164,12 @@ fun KtpAppBuilderFactory.start() {
     val serverConfig =
         serverConfig(ktorEnv) {
             developmentMode = ktpApp.config.env.isLocalDev
-            module { ktpApp.install(this) }
+            module {
+                // Ktor's own shutdown hook stops the server but logs nothing about it.
+                monitor.subscribe(ApplicationStopping) { log {}.info { "Shutting down" } }
+                monitor.subscribe(ApplicationStopped) { log {}.info { "Server is shut down" } }
+                ktpApp.install(this)
+            }
         }
     val server =
         embeddedServer(
@@ -186,15 +192,6 @@ fun KtpAppBuilderFactory.start() {
                 enableHttp2 = false
                 enableH2c = false
             },
-        )
-    Runtime.getRuntime()
-        .addShutdownHook(
-            Thread {
-                log {}.info { "Received shutdown signal. Shutting down" }
-                // Grace period: how long Ktor waits for in-flight requests to finish.
-                server.stop(4.seconds.inWholeMilliseconds, 8.seconds.inWholeMilliseconds)
-                log {}.info { "Server is shut down" }
-            }
         )
     try {
         server.start(true)
