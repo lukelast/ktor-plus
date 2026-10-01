@@ -13,10 +13,10 @@ import org.koin.core.annotation.Module
 import org.koin.plugin.module.dsl.koinConfiguration
 
 fun main() {
-    ktpApp.start()
+    appFactory.start()
 }
 
-val ktpApp = ktpAppCreate {
+val appFactory = ktpAppCreate {
     addKoinConfig(koinConfiguration<MyApp>())
     addAppInit { config ->
         installDefaultPlugins(config)

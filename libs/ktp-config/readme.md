@@ -94,13 +94,13 @@ val name = config.data.app.name
 val version = config.data.app.version
 
 // Custom data classes
-// DatabaseConfig maps to the "databaseConfig" config object.
-data class DatabaseConfig(val host: String, val port: Int)
-val dbConfig = config.extractChild<DatabaseConfig>()
+// Database maps to the "database" config object.
+data class Database(val host: String, val port: Int)
+val database = config.extractChild<Database>()
 
 // Configuration classes
 class MyServiceConfig(config: KtpConfig) {
-    val db = config.extractChild<DatabaseConfig>()
+    val db = config.extractChild<Database>()
 }
 val serviceConfig = config.get<MyServiceConfig>()
 

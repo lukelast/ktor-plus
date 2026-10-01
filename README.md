@@ -44,9 +44,9 @@ replaced it.
 ## Wiring an app
 
 ```kotlin
-fun main() = app.start()
+fun main() = appFactory.start()
 
-val app = ktpAppCreate {
+val appFactory = ktpAppCreate {
     addKoinConfig(koinConfiguration<MyApp>()) // the app's @Single/@Factory definitions
     addModule(firebaseAuthModule())           // library modules
     addAppInit { config ->
@@ -60,17 +60,17 @@ val app = ktpAppCreate {
 
 Koin definitions load in this order, later ones replacing earlier ones of the same type:
 `addModule` modules, then `addKoinConfig` configs (so an app definition beats a library one), then
-`addOverrideModule` modules. Tests build on the real app with `app.update { ... }` and swap a
-compiler-plugin `@Singleton` for a mock through `addOverrideModule`; an `addModule` definition
-would lose to it. `ktpTestApp(app) { client.get(...) }` from ktp-test runs the result in Ktor's
-test host with the unit-test config env.
+`addOverrideModule` modules. Tests build on the real app with `appFactory.update { ... }` and swap
+a compiler-plugin `@Singleton` for a mock through `addOverrideModule`; an `addModule` definition
+would lose to it. `ktpTestApp(appFactory) { client.get(...) }` from ktp-test runs the result in
+Ktor's test host with the unit-test config env.
 
 ## Libraries
 
 | Library                                     | `KtpLibs`          | What it gives you                                                                                                                                           |
 |---------------------------------------------|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ktp-core                                    | `core`             | Structured logging, hashing, path/resource/string helpers, lazy properties                                                                                  |
-| [ktp-config](libs/ktp-config/README.md)     | `config`           | HOCON config layered as `<priority>.<name>.<env>.conf`; env from `KTP_ENV`/`ENV`; `CONFIG_FORCE_*` and `KTP_CONFIG` overrides; secret masking; test helpers |
+| [ktp-config](libs/ktp-config/README.md)     | `config`           | HOCON config layered as `<priority>.<configName>.<env>.conf`; env from `KTP_ENV`/`ENV`; `CONFIG_FORCE_*` and `KTP_CONFIG` overrides; secret masking; test helpers |
 | ktp-ktor                                    | `ktor` (automatic) | App startup, default plugins, health endpoint, debug endpoints (config, GC log, threads, version), Vite frontend serving (dev proxy, cache headers, root favicon.ico and robots.txt) |
 | ktp-gcp                                     | `gcp`              | GCP BOM, project id and region detection, Cloud Run metadata                                                                                                |
 | [ktp-gcp-auth](libs/ktp-gcp-auth/README.md) | `gcpAuth`          | Firebase login, encrypted cookies with periodic account/role checks, RBAC, local-dev login                                                                  |

@@ -26,7 +26,7 @@ import net.ghue.ktp.log.log
 /** Maximum age of account and role validation; renewing the cookie does not restart this clock. */
 private val SESSION_RECHECK_INTERVAL: Duration = 2.days
 
-private val sessionCheckUnavailable = AttributeKey<Unit>("ktp.sessionCheckUnavailable")
+private val sessionCheckUnavailable = AttributeKey<Unit>("KtpSessionCheckUnavailable")
 
 class FirebaseAuthService(
     private val firebaseAuth: FirebaseAuth,

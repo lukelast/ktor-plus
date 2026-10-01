@@ -7,7 +7,7 @@ Firebase authentication, encrypted session cookies, route authorization, and loc
 Depend on `KtpLibs.gcpAuth`. Firebase requires a GCP project and Application Default Credentials.
 
 ```kotlin
-val app = ktpAppCreate {
+val appFactory = ktpAppCreate {
     addKoinConfig(koinConfiguration<MyApp>()) // Provides AuthLifecycleHandler.
     addModule(firebaseAuthModule())
     addAppInit { config ->

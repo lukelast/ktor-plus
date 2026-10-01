@@ -52,7 +52,7 @@ fun buildConfig(
     /** Highest precedence. */
     overrideMap: Map<String, Any> = emptyMap(),
     /** `CONFIG_FORCE_` env-var overrides; injectable so their trimming is testable. */
-    envOverrides: Config = ConfigFactory.systemEnvironmentOverrides(),
+    envVarOverrides: Config = ConfigFactory.systemEnvironmentOverrides(),
 ): Config {
     val envConfig =
         ConfigFactory.parseMap(mapOf(ENV_CONFIG_PATH to env.name), "current environment")
@@ -60,7 +60,7 @@ fun buildConfig(
         // Env-var override values arrive verbatim; trim before the merge so padding cannot be
         // baked into ${} concatenations during resolve. Parsed files and KTP_CONFIG may hold
         // unresolved substitutions, so their values can only be trimmed post-resolve.
-        add(envOverrides.withTrimmedStrings())
+        add(envVarOverrides.withTrimmedStrings())
         buildConfigFromEnvVar()?.let { add(it) }
         configFiles.sorted().forEach { file ->
             add(

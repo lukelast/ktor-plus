@@ -19,7 +19,7 @@ class HealthTest :
             }
         }
 
-        "readiness endpoint returns Ready when healthy" {
+        "readiness endpoint returns Ready when ready" {
             testApplication {
                 application { installK8sHealthCheck() }
                 val response = client.get(K8S_READINESS_PATH)

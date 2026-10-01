@@ -46,7 +46,6 @@ import io.mockk.every
 import io.mockk.mockk
 import java.io.IOException
 import java.util.Date
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import net.ghue.ktp.config.Env
 import net.ghue.ktp.config.KtpConfig
@@ -585,8 +584,6 @@ class FirebaseAuthPluginTest :
             }
         }
     })
-
-@Serializable private data class LoginRequest(val idToken: String)
 
 private fun createMockFirebaseToken(): FirebaseToken {
     val mockToken = mockk<FirebaseToken>()

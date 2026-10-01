@@ -1,6 +1,5 @@
 package net.ghue.ktp.ktor.plugin
 
-import com.typesafe.config.ConfigMemorySize
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -12,15 +11,6 @@ import io.ktor.server.routing.RoutingPipelineCall
 import io.ktor.server.routing.routing
 import io.ktor.util.AttributeKey
 import net.ghue.ktp.config.KtpConfig
-
-val KtpConfig.bodyLimit: BodyLimit
-    get() = this.extractChild()
-
-/** The `bodyLimit` config block; see `9.bodyLimit.conf`. */
-data class BodyLimit(
-    /** Cap for routes without their own [Route.bodyLimit]. */
-    val default: ConfigMemorySize
-)
 
 private val routeBodyLimitKey = AttributeKey<Long>("KtpRouteBodyLimit")
 

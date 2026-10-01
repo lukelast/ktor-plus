@@ -66,7 +66,7 @@ class SessionRevalidationTest :
                 fixture.clock.advance(1.days)
                 browser.get(AuthUrls.SESSION).status shouldBe HttpStatusCode.OK
                 browser.get("/private").session().lastValidatedAt shouldBe first.lastValidatedAt
-                verify(exactly = 1) { fixture.firebase.getUser("alice") }
+                verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
 
                 fixture.roles = setOf("user")
                 fixture.name = "Updated Alice"
@@ -77,9 +77,9 @@ class SessionRevalidationTest :
                 refreshed.name shouldBe "Updated Alice"
                 refreshed.lastValidatedAt shouldBe fixture.clock.instant().epochSecond
                 fixture.loginCalls shouldBe 2
-                verify(exactly = 2) { fixture.firebase.getUser("alice") }
+                verify(exactly = 2) { fixture.firebaseAuth.getUser("alice") }
                 browser.get(AuthUrls.SESSION).status shouldBe HttpStatusCode.OK
-                verify(exactly = 2) { fixture.firebase.getUser("alice") }
+                verify(exactly = 2) { fixture.firebaseAuth.getUser("alice") }
             }
         }
 
@@ -93,7 +93,7 @@ class SessionRevalidationTest :
                 fixture.protectedCalls shouldBe 0
                 (response.headers[HttpHeaders.SetCookie] != null) shouldBe true
                 browser.get("/private").session().roles shouldBe setOf("user")
-                verify(exactly = 1) { fixture.firebase.getUser("alice") }
+                verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
             }
         }
 
@@ -119,7 +119,7 @@ class SessionRevalidationTest :
                         response.clearsCookie() shouldBe true
                         fixture.protectedCalls shouldBe 0
                         browser.get("/private").status shouldBe HttpStatusCode.Unauthorized
-                        verify(exactly = 1) { fixture.firebase.getUser("alice") }
+                        verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
                     }
                 }
             }
@@ -147,7 +147,7 @@ class SessionRevalidationTest :
                         fixture.lookupFailure = null
                         fixture.loginFailure = null
                         browser.get(path).status shouldBe HttpStatusCode.OK
-                        verify(exactly = 2) { fixture.firebase.getUser("alice") }
+                        verify(exactly = 2) { fixture.firebaseAuth.getUser("alice") }
                     }
                 }
             }
@@ -167,7 +167,7 @@ class SessionRevalidationTest :
 
         "a revoked token is rejected at login" {
             val fixture = RecheckFixture()
-            every { fixture.firebase.verifyIdToken("valid-token", true) } throws
+            every { fixture.firebaseAuth.verifyIdToken("valid-token", true) } throws
                 firebaseFailure(AuthErrorCode.REVOKED_ID_TOKEN)
             fixture.app { browser -> browser.login().status shouldBe HttpStatusCode.Unauthorized }
         }
@@ -183,8 +183,8 @@ class SessionRevalidationTest :
                 val refreshed = browser.get("/private").session()
                 refreshed.lastValidatedAt shouldBe NOW.epochSecond
                 refreshed.roles shouldBe setOf("user")
-                verify(exactly = 1) { fixture.firebase.getUser("alice") }
-                verify(exactly = 0) { fixture.firebase.verifyIdToken(any(), any()) }
+                verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
+                verify(exactly = 0) { fixture.firebaseAuth.verifyIdToken(any(), any()) }
             }
         }
 
@@ -195,7 +195,7 @@ class SessionRevalidationTest :
                 fixture.app { browser ->
                     browser.get("/seed")
                     browser.get("/private").session().lastValidatedAt shouldBe NOW.epochSecond
-                    verify(exactly = 1) { fixture.firebase.getUser("alice") }
+                    verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
                 }
             }
         }
@@ -222,7 +222,7 @@ class SessionRevalidationTest :
                 browser.get("${AuthUrls.DEV_LOGIN}?roles=ops").status shouldBe HttpStatusCode.Found
                 fixture.clock.advance(3.days)
                 browser.get("/private").session().roles shouldBe setOf("admin", "ops")
-                verify(exactly = 0) { fixture.firebase.getUser(any()) }
+                verify(exactly = 0) { fixture.firebaseAuth.getUser(any()) }
             }
         }
 
@@ -246,7 +246,7 @@ class SessionRevalidationTest :
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldBe "anonymous"
                 fixture.protectedCalls shouldBe 1
-                verify(exactly = 0) { fixture.firebase.getUser(any()) }
+                verify(exactly = 0) { fixture.firebaseAuth.getUser(any()) }
             }
         }
 
@@ -261,14 +261,14 @@ class SessionRevalidationTest :
                 fixture.clock.advance(1.days)
                 browser.get("/optional").session().lastValidatedAt shouldBe NOW.epochSecond
                 fixture.protectedCalls shouldBe 2
-                verify(exactly = 1) { fixture.firebase.getUser("alice") }
+                verify(exactly = 1) { fixture.firebaseAuth.getUser("alice") }
             }
         }
     })
 
 private class RecheckFixture {
     val clock = RecheckClock()
-    val firebase = mockk<FirebaseAuth>()
+    val firebaseAuth = mockk<FirebaseAuth>()
     var disabled = false
     var verified = true
     var name = "Alice"
@@ -322,12 +322,12 @@ private class RecheckFixture {
         }
 
     init {
-        every { firebase.verifyIdToken("valid-token", true) } answers
+        every { firebaseAuth.verifyIdToken("valid-token", true) } answers
             {
                 Thread.currentThread().isVirtual shouldBe true
                 token
             }
-        every { firebase.getUser("alice") } answers
+        every { firebaseAuth.getUser("alice") } answers
             {
                 Thread.currentThread().isVirtual shouldBe true
                 lookupFailure?.let { throw it }
@@ -350,7 +350,7 @@ private class RecheckFixture {
                     firebaseAuthModule(),
                     module {
                         single { config }
-                        single { firebase }
+                        single { firebaseAuth }
                         single<AuthLifecycleHandler> { lifecycle }
                         single<Clock> { clock }
                     },

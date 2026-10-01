@@ -55,7 +55,7 @@ private suspend fun ApplicationTestBuilder.postBytes(path: String, size: Int): H
 
 class BodyLimitTest :
     StringSpec({
-        "the configured default bounds every route" {
+        "the configured default bounds routes without an override" {
             testApplication {
                 application { limitedApp() }
                 postBytes("/plain", DEFAULT_LIMIT) shouldBe HttpStatusCode.OK

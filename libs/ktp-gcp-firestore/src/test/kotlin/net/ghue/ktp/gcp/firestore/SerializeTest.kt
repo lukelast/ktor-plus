@@ -53,7 +53,7 @@ class SerializeTest :
 
         "enums serialize to their name" { FirestoreSerializer.serialize(TestEnum.A) shouldBe "A" }
 
-        "custom serializer serialization (Instant) truncates to microseconds" {
+        "an Instant serializes to a Timestamp truncated to microseconds" {
             val instant = Instant.ofEpochSecond(1234567890L, 123456789)
             // Firestore stores microsecond precision, so the serializer drops the trailing nanos.
             val expected = Timestamp.ofTimeSecondsAndNanos(1234567890L, 123456000)

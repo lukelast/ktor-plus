@@ -5,13 +5,13 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
-import ktp.example.ktpApp
+import ktp.example.appFactory
 import net.ghue.ktp.test.ktpTestApp
 
 class ApiHelloTest :
     StringSpec({
         "hello endpoint works" {
-            ktpTestApp(ktpApp) {
+            ktpTestApp(appFactory) {
                 val rsp = client.get("/")
                 rsp.shouldBeOK()
                 rsp.bodyAsText() shouldContain "KTP"

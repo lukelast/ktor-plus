@@ -12,7 +12,7 @@ class KtpStartPortTest :
     StringSpec({
         "a taken port in local dev fails with the fix, not a bare BindException" {
             ServerSocket(0).use { taken ->
-                val app = ktpAppCreate {
+                val appFactory = ktpAppCreate {
                     createKtpConfig = {
                         KtpConfig.create {
                             env = Env(LOCAL_DEV_ENV_NAME)
@@ -21,7 +21,7 @@ class KtpStartPortTest :
                     }
                 }
 
-                val ex = shouldThrow<IllegalStateException> { ktpAppStart(app) }
+                val ex = shouldThrow<IllegalStateException> { ktpAppStart(appFactory) }
 
                 ex.message shouldContain "Port ${taken.localPort}"
                 ex.message shouldContain "0.local.localdev.conf"

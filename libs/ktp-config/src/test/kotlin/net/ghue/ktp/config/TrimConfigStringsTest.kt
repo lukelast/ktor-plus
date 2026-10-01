@@ -158,9 +158,9 @@ class TrimConfigStringsTest :
                                 .trimIndent(),
                     )
                 )
-            val envOverrides = ConfigFactory.parseMap(mapOf("name" to " env\n"), "env variables")
+            val envVarOverrides = ConfigFactory.parseMap(mapOf("name" to " env\n"), "env variables")
 
-            val config = buildConfig(Env.TEST_UNIT, files, envOverrides = envOverrides)
+            val config = buildConfig(Env.TEST_UNIT, files, envVarOverrides = envVarOverrides)
 
             config.getString("name") shouldBe "env"
             config.getString("derived") shouldBe "env-suffix"

@@ -85,7 +85,7 @@ class ViteFrontendPluginTest :
             config.indexFilePath shouldBe Path("public").resolve(Path("custom.html"))
         }
 
-        "dev mode proxies to Vite when localDev is true" {
+        "dev mode proxies to Vite in the localdev env" {
             val fakeVite = HttpServer.create(InetSocketAddress("localhost", 0), 0)
             fakeVite.createContext("/") { exchange ->
                 val body = "<html>Fake Vite Response</html>".toByteArray()
