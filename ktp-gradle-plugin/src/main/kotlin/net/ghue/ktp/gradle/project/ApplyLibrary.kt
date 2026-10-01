@@ -16,7 +16,7 @@ import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-fun Project.applyLibrary() {
+internal fun Project.applyLibrary() {
     applyDetekt()
     applyKotlin()
     pluginManager.apply(JavaLibraryPlugin::class.java)
@@ -49,7 +49,7 @@ fun Project.applyLibrary() {
     registerVerifyTask()
 }
 
-fun Project.configureJavaPublishing() {
+private fun Project.configureJavaPublishing() {
     extensions.configure<PublishingExtension> {
         publications {
             publications.create<MavenPublication>("mavenJava") {

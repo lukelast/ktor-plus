@@ -16,7 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 /** The JDK floor for apps; the virtual-thread-per-request model needs JEP 491 (24+). */
 private const val MIN_JAVA_VERSION = 25
 
-fun Project.applyKtor() {
+internal fun Project.applyKtor() {
     applyDetekt()
     applyKotlin()
 

@@ -16,7 +16,7 @@ private const val ENABLED_KEY = "ktp.vite"
 private const val FRONTEND_DIR = "frontend"
 
 /** Read by ktp-ktor's `ViteFrontendConfig.vitePort`, the dev proxy target. */
-internal const val VITE_PORT_ENV = "KTP_VITE_PORT"
+private const val VITE_PORT_ENV = "KTP_VITE_PORT"
 
 /**
  * Starts the frontend dev server (`bun run dev`, typically Vite) alongside the Ktor `run` task,
@@ -68,7 +68,7 @@ internal fun Project.configureViteDev() {
  * daemon runs [close] even on Ctrl+C / IDE stop, and killing the full process tree is required on
  * Windows where terminating the `.cmd` shim alone would orphan the node process under it.
  */
-abstract class ViteDevService : BuildService<ViteDevService.Params>, AutoCloseable {
+internal abstract class ViteDevService : BuildService<ViteDevService.Params>, AutoCloseable {
     interface Params : BuildServiceParameters {
         val frontendDir: DirectoryProperty
         val command: ListProperty<String>

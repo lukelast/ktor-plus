@@ -12,7 +12,7 @@ import org.gradle.process.CommandLineArgumentProvider
 
 private const val TEST_JAVA_AGENT_CONFIGURATION = "ktpTestJavaAgent"
 
-fun Project.configureKotest() {
+internal fun Project.configureKotest() {
     val testJavaAgent =
         configurations.maybeCreate(TEST_JAVA_AGENT_CONFIGURATION).apply {
             description = "Java agents loaded at startup for KTP-managed test JVMs."

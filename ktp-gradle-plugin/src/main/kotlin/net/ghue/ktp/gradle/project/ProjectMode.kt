@@ -2,7 +2,7 @@ package net.ghue.ktp.gradle.project
 
 import org.gradle.api.Project
 
-enum class ProjectMode {
+internal enum class ProjectMode {
     LIBRARY,
     KTOR,
     FRONTEND,
@@ -12,7 +12,7 @@ enum class ProjectMode {
 private val DEFAULT_MODE = ProjectMode.KTOR
 private const val MODE_KEY = "ktp.mode"
 
-fun Project.resolveProjectMode(): ProjectMode {
+internal fun Project.resolveProjectMode(): ProjectMode {
     val prop = findProperty(MODE_KEY)?.toString()
         ?: // Auto-detect: the root of a multi-project build is the aggregation/deployment root,
         // and a project with a package.json is a frontend. Everywhere else the default applies.

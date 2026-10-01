@@ -10,7 +10,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
  * validation, detekt, tests). CI runs plain `check`, which never formats and fails on
  * unformatted code; `verify` is the local command that fixes instead of failing.
  */
-fun Project.registerVerifyTask() {
+internal fun Project.registerVerifyTask() {
     tasks.register("verify") {
         group = LifecycleBasePlugin.VERIFICATION_GROUP
         description = "Formats the code, then runs all checks."

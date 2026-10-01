@@ -12,7 +12,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 
-fun Project.applyKtfmt() {
+internal fun Project.applyKtfmt() {
     // https://github.com/cortinico/ktfmt-gradle
     pluginManager.apply(KtfmtPlugin::class.java)
 

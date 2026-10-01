@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlinx.serialization.gradle.SerializationGradleSubplugin
 
-fun Project.applyKotlin() {
+internal fun Project.applyKotlin() {
     // The main kotlin JVM gradle plugin: org.jetbrains.kotlin.jvm
     // https://github.com/JetBrains/kotlin/blob/ce97a8357f385448c313bd563109bd09b525986a/libraries/tools/kotlin-gradle-plugin/build.gradle.kts#L236-L241
     pluginManager.apply(KotlinPluginWrapper::class.java)
@@ -15,7 +15,7 @@ fun Project.applyKotlin() {
     configureKotlinCompileOptions()
 }
 
-fun Project.applyKotlinMultiplatform() {
+internal fun Project.applyKotlinMultiplatform() {
     // https://github.com/JetBrains/kotlin/blob/ce97a8357f385448c313bd563109bd09b525986a/libraries/tools/kotlin-gradle-plugin/build.gradle.kts#L248-L253
     pluginManager.apply(KotlinMultiplatformPluginWrapper::class.java)
 
@@ -23,12 +23,12 @@ fun Project.applyKotlinMultiplatform() {
     configureKotlinCompileOptions()
 }
 
-fun Project.applySerialization() {
+private fun Project.applySerialization() {
     // https://github.com/JetBrains/kotlin/blob/master/libraries/tools/kotlin-serialization/build.gradle.kts
     pluginManager.apply(SerializationGradleSubplugin::class.java)
 }
 
-fun Project.configureKotlinCompileOptions() {
+private fun Project.configureKotlinCompileOptions() {
     project.tasks.withType<KotlinCompile>().configureEach {
         // Strict nullability for Java types; add, not set, so -Xjdk-release and app flags survive.
         compilerOptions { freeCompilerArgs.add("-Xjsr305=strict") }
