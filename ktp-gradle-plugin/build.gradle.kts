@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.gradleKtfmt)
     implementation(libs.gradleDetekt)
     implementation(libs.gradleKoinCompiler)
+    implementation(libs.gradleCompose)
+    implementation(libs.gradleComposeCompiler)
     implementation(libs.gradleFoojay)
     // Must be on the runtime classpath (not compileOnly) to win over the older Shadow the
     // Ktor plugin pulls in: 9.1.0 has service-file merge regressions (GradleUp/shadow#1348).
@@ -62,12 +64,11 @@ val versionGenTask =
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
         val projectGroup = project.group.toString()
         val projectVersion = project.version.toString()
-        val kotlinVersion = libs.versions.kotlin.get()
-        val ktorVersion = libs.versions.ktor.get()
         val koinVersion = libs.versions.koin.get()
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
         val ktfmtVersion = libs.versions.ktfmt.get()
+        val composeRulesVersion = libs.versions.composeRules.get()
 
         // Only real library projects; generated directories like libs/build must not leak in.
         val libraryNames =
@@ -81,12 +82,11 @@ val versionGenTask =
 
         inputs.property("group", projectGroup)
         inputs.property("version", projectVersion)
-        inputs.property("kotlinVersion", kotlinVersion)
-        inputs.property("ktorVersion", ktorVersion)
         inputs.property("koinVersion", koinVersion)
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
         inputs.property("ktfmtVersion", ktfmtVersion)
+        inputs.property("composeRulesVersion", composeRulesVersion)
         inputs.property("libraryNames", libraryNames)
         outputs.file(outputFile)
 
@@ -116,15 +116,6 @@ val versionGenTask =
                 /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
 
-                /**
-                 * Kotlin version the plugin puts on the build classpath, for plugins that must
-                 * match it exactly (the Compose compiler plugin of a Multiplatform module).
-                 */
-                const val KOTLIN = "$kotlinVersion"
-
-                /** Ktor version the KTP libraries are built against. */
-                const val KTOR = "$ktorVersion"
-
                 /** kotest BOM version this plugin injects into consumer builds. */
                 const val KOTEST = "$kotestVersion"
 
@@ -133,6 +124,9 @@ val versionGenTask =
 
                 /** ktfmt engine version used by the formatting tasks. */
                 const val KTFMT = "$ktfmtVersion"
+
+                /** Compose detekt rule set (io.nlopez.compose.rules) `compose` mode adds. */
+                const val COMPOSE_RULES = "$composeRulesVersion"
             }
 
             /**

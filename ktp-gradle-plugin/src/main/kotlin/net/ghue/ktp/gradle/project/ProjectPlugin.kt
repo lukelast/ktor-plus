@@ -24,6 +24,8 @@ class ProjectPlugin : Plugin<Project> {
             ProjectMode.LIBRARY -> project.applyLibrary()
             ProjectMode.KTOR -> project.applyKtor()
             ProjectMode.FRONTEND -> project.applyFrontend()
+            ProjectMode.KMP -> project.applyKmp()
+            ProjectMode.COMPOSE -> project.applyCompose()
             ProjectMode.ROOT -> project.applyRoot()
         }
     }

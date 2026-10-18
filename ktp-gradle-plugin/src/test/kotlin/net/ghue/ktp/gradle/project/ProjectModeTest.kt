@@ -22,6 +22,23 @@ class ProjectModeTest {
     }
 
     @Test
+    fun `a common source set means KMP`() {
+        val project = ProjectBuilder.builder().build()
+        project.projectDir.resolve("src/commonMain").mkdirs()
+        assertEquals(ProjectMode.KMP, project.resolveProjectMode())
+    }
+
+    @Test
+    fun `a web index page in a multiplatform module means COMPOSE`() {
+        val project = ProjectBuilder.builder().build()
+        project.projectDir.resolve("src/commonMain").mkdirs()
+        val resources = project.projectDir.resolve("src/wasmJsMain/resources")
+        resources.mkdirs()
+        resources.resolve("index.html").writeText("<!doctype html>")
+        assertEquals(ProjectMode.COMPOSE, project.resolveProjectMode())
+    }
+
+    @Test
     fun `the root of a multi-project build means ROOT`() {
         val root = ProjectBuilder.builder().build()
         ProjectBuilder.builder().withParent(root).build()
@@ -41,6 +58,15 @@ class ProjectModeTest {
         project.projectDir.resolve("package.json").writeText("{}")
         project.extensions.extraProperties["ktp.mode"] = "library"
         assertEquals(ProjectMode.LIBRARY, project.resolveProjectMode())
+    }
+
+    @Test
+    fun `the property names the new modes too`() {
+        val project = ProjectBuilder.builder().build()
+        project.extensions.extraProperties["ktp.mode"] = "compose"
+        assertEquals(ProjectMode.COMPOSE, project.resolveProjectMode())
+        project.extensions.extraProperties["ktp.mode"] = "kmp"
+        assertEquals(ProjectMode.KMP, project.resolveProjectMode())
     }
 
     @Test

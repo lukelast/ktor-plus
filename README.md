@@ -21,12 +21,11 @@ pluginManagement {
 plugins { id("com.github.lukelast.ktor-plus") version "VERSION" }
 ```
 
-Pick the plugin to auto-apply in `gradle.properties`:
+Name the build in `gradle.properties`; the lukestack plugin is applied to every project unless
+`ktp.plugin=ktp` asks for the generic project plugin alone:
 
 ```properties
 rootProject.name=my-app
-# Auto-applied to every project: 'ktp', or 'lukestack' for the full stack.
-ktp.plugin=ktp
 ```
 
 Optional libraries come from the generated `KtpLibs` object, pinned to the plugin's own version
@@ -88,16 +87,20 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
 - **Settings plugin** (`com.github.lukelast.ktor-plus`): the one versioned entry point (JitPack
   only serves markers whose group equals the repo group). Reads `rootProject.name` from
   `gradle.properties`, includes every subdirectory holding a `build.gradle.kts` or `package.json`,
-  ships `KtpLibs`, applies the Foojay toolchain resolver, and auto-applies the plugin named
-  by `ktp.plugin`.
+  ships `KtpLibs`, applies the Foojay toolchain resolver, and auto-applies the lukestack plugin
+  (`ktp.plugin=ktp` for the project plugin alone).
 - **Project plugin** (`com.github.lukelast.ktor-plus.project`): KTP conventions per project. Mode
   is auto-detected or set with `ktp.mode`: `ktor` (default; adds ktp-ktor/ktp-test, formatting,
   detekt, tests, fat jar; compiles for and runs on JDK 25, which the Foojay resolver downloads
   when missing), `library` (published Java 21 library), `frontend` (a `package.json`; lifecycle
-  tasks only), `root`. Every mode gets `check` (strict, what CI runs) and `verify` (format, then
-  `check`); the root `verify` aggregates the subprojects that have one. Modules the plugin does not
-  manage (Kotlin Multiplatform, say) need `ktp.plugin` left unset and the plugin applied per
-  project. `ktor` mode applies the Ktor Gradle plugin, so its extension is available as is: for
+  tasks only), `kmp` (a `src/commonMain`: Kotlin Multiplatform library with serialization,
+  formatting, detekt over `src/`, JVM targets at Java 21 bytecode; the build script declares the
+  targets), `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
+  Compose Multiplatform and Compose compiler plugins, pinned to the plugin's Kotlin, and the
+  Compose detekt rules), `root`. A `detekt.yml` beside a project's build script is layered over
+  KTP's rules. Every mode gets `check` (strict, what CI runs) and `verify` (format, then
+  `check`); the root `verify` aggregates the subprojects that have one.
+  `ktor` mode applies the Ktor Gradle plugin, so its extension is available as is: for
   example `ktor { openApi { enabled = true } }` turns on route metadata inference (Kotlin 2.4+),
   though KTP serves no spec endpoint yet.
 - **Lukestack plugin** (`com.github.lukelast.ktor-plus.lukestack`): a personal stack on top: GCP

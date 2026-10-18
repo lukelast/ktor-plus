@@ -4,8 +4,8 @@ import org.gradle.api.Project
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /**
- * Configures the root project of a multi-project build with the standard lifecycle tasks
- * (`clean`, `build`, `check`). Stack plugins layer deployment tasks on top of this.
+ * Configures the root project of a multi-project build with the standard lifecycle tasks (`clean`,
+ * `build`, `check`). Stack plugins layer deployment tasks on top of this.
  */
 internal fun Project.applyRoot() {
     pluginManager.apply(LifecycleBasePlugin::class.java)
@@ -15,8 +15,8 @@ internal fun Project.applyRoot() {
         group = LifecycleBasePlugin.VERIFICATION_GROUP
         description = "Runs verify in every subproject that has one."
         // Resolved when the task graph is built, after every subproject is configured. A module
-        // KTP does not manage (a Kotlin Multiplatform module, say) registers no verify task and
-        // must not break the aggregate; nor must it be forced to define a stub.
+        // KTP does not manage registers no verify task and must not break the aggregate; nor
+        // must it be forced to define a stub.
         dependsOn(provider { subprojects.mapNotNull { it.tasks.findByName("verify") } })
     }
 }

@@ -8,6 +8,9 @@ import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
 private const val AUTO_APPLY_KEY = "ktp.plugin"
 
+// Every real consumer is a lukestack app; the generic plugin is the opt-in.
+private const val DEFAULT_AUTO_APPLY = "lukestack"
+
 private const val ROOT_NAME_KEY = "rootProject.name"
 
 class SettingsPlugin : Plugin<Settings> {
@@ -34,21 +37,17 @@ class SettingsPlugin : Plugin<Settings> {
 
     private fun autoApplyPlugin(settings: Settings) {
         // Avoid per-project plugin declarations.
-        when (val pluginName = settings.providers.gradleProperty(AUTO_APPLY_KEY).orNull) {
-            null -> {}
-            "ktp" ->
-                settings.gradle.lifecycle.beforeProject {
-                    pluginManager.apply(ProjectPlugin::class.java)
-                }
-            "lukestack" ->
-                settings.gradle.lifecycle.beforeProject {
-                    pluginManager.apply(LukestackPlugin::class.java)
-                }
-            else ->
-                error(
-                    "File 'gradle.properties', field '$AUTO_APPLY_KEY', has invalid value " +
-                        "'$pluginName'. Valid values are: ktp, lukestack."
-                )
-        }
+        val pluginName = settings.providers.gradleProperty(AUTO_APPLY_KEY).getOrElse(DEFAULT_AUTO_APPLY)
+        val plugin =
+            when (pluginName) {
+                "ktp" -> ProjectPlugin::class.java
+                "lukestack" -> LukestackPlugin::class.java
+                else ->
+                    error(
+                        "File 'gradle.properties', field '$AUTO_APPLY_KEY', has invalid value " +
+                            "'$pluginName'. Valid values are: ktp, lukestack (the default)."
+                    )
+            }
+        settings.gradle.lifecycle.beforeProject { pluginManager.apply(plugin) }
     }
 }

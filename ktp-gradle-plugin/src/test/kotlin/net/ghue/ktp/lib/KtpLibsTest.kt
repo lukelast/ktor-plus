@@ -7,9 +7,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Locks the generated [KtpLibs] contract. The accessor names are public API that consumers
- * write in build scripts, so a change to the generator's alias rule, coordinates, or module
- * coverage must fail here instead of silently renaming accessors in a release.
+ * Locks the generated [KtpLibs] contract. The accessor names are public API that consumers write in
+ * build scripts, so a change to the generator's alias rule, coordinates, or module coverage must
+ * fail here instead of silently renaming accessors in a release.
  */
 class KtpLibsTest {
 
@@ -34,7 +34,9 @@ class KtpLibsTest {
 
     /** Every String constant on the generated object, by name. */
     private val accessors: Map<String, String> =
-        KtpLibs::class.java.declaredFields
+        KtpLibs::class
+            .java
+            .declaredFields
             .filter { Modifier.isStatic(it.modifiers) && it.type == String::class.java }
             .associate { it.name to it.get(null) as String }
 
@@ -62,12 +64,11 @@ class KtpLibsTest {
     }
 
     @Test
-    fun `KtpVersion carries the kotlin and ktor versions from the version catalog`() {
+    fun `KtpVersion carries the compose rules version from the version catalog`() {
         val catalog = File("../gradle/libs.versions.toml").readText()
         fun version(key: String) =
             Regex("""(?m)^$key\s*=\s*"([^"]+)"""").find(catalog)?.groupValues?.get(1)
-        assertEquals(version("kotlin"), KtpVersion.KOTLIN)
-        assertEquals(version("ktor"), KtpVersion.KTOR)
+        assertEquals(version("composeRules"), KtpVersion.COMPOSE_RULES)
     }
 
     @Test

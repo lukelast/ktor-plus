@@ -1,7 +1,6 @@
 package net.ghue.ktp.gradle.project
 
 import net.ghue.ktp.gradle.project.features.*
-import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPluginExtension
@@ -23,23 +22,17 @@ internal fun Project.applyLibrary() {
     pluginManager.apply(MavenPublishPlugin::class.java)
     applyKtfmt()
 
-    // Bytecode target. Apps should RUN on JDK 24+ (JEP 491) because KTP executes each request on
-    // a virtual thread; 21 remains the compile target so published jars stay broadly consumable.
-    // Release semantics (not -source/-target): the compile is checked against the JDK 21 API
-    // model, so a newer daemon JDK cannot leak post-21 APIs into a jar that claims 21.
-    val outputJavaVersion = JavaVersion.VERSION_21
-
     // Configure Java to include source JAR
     extensions.configure<JavaPluginExtension> { withSourcesJar() }
 
-    tasks.withType<JavaCompile>().configureEach {
-        options.release.set(outputJavaVersion.majorVersion.toInt())
-    }
+    // Release semantics (not -source/-target): the compile is checked against the JDK 21 API
+    // model, so a newer daemon JDK cannot leak post-21 APIs into a jar that claims 21.
+    tasks.withType<JavaCompile>().configureEach { options.release.set(LIBRARY_JDK) }
 
     project.tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
-            jvmTarget.set(JvmTarget.fromTarget(outputJavaVersion.majorVersion))
-            freeCompilerArgs.add("-Xjdk-release=${outputJavaVersion.majorVersion}")
+            jvmTarget.set(JvmTarget.fromTarget(LIBRARY_JDK.toString()))
+            freeCompilerArgs.add("-Xjdk-release=$LIBRARY_JDK")
         }
     }
 

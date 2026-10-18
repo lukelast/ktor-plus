@@ -1,0 +1,9 @@
+# Layered over detekt.yml for Compose modules: the rules a Compose UI honestly breaks.
+naming:
+  FunctionNaming:
+    # Composables are nouns in PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+  MatchingDeclarationName:
+    # A Compose file is named after its composable, which is a function; the rule only sees the
+    # one state or model class declared beside it and asks for the file to be named after that.
+    active: false

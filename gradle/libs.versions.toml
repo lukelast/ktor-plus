@@ -16,6 +16,9 @@ kotest = "6.2.4"
 gcpBom = "26.88.0"
 detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
+compose = "1.12.2"
+# The Compose detekt rule set is built against one detekt release; keep it matched to `detekt`.
+composeRules = "0.6.8"
 
 [plugins]
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -30,6 +33,9 @@ gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.27.0" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.6.1" }
 gradleDetekt = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 gradleKoinCompiler = { module = "io.insert-koin.compiler.plugin:io.insert-koin.compiler.plugin.gradle.plugin", version.ref = "koinPlugin" }
+gradleCompose = { module = "org.jetbrains.compose:compose-gradle-plugin", version.ref = "compose" }
+# The Compose compiler plugin must exactly match the Kotlin version, so it rides on `kotlin`.
+gradleComposeCompiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 # Toolchain resolver so consumers can auto-download a missing JDK.
 gradleFoojay = { module = "org.gradle.toolchains:foojay-resolver", version = "1.0.0" }
 
