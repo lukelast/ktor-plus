@@ -6,37 +6,19 @@ import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
-/** Gradle property selecting the plugin to auto-apply to every project. */
 private const val AUTO_APPLY_KEY = "ktp.plugin"
 
-/** Gradle property naming the root project, since a plugin cannot write the settings script. */
 private const val ROOT_NAME_KEY = "rootProject.name"
 
-/**
- * Applies the KTP conventions that live at the settings level, so a consumer's
- * `settings.gradle.kts` shrinks to the plugin repositories plus this plugin. Features:
- * - Root project name: read from the [ROOT_NAME_KEY] entry in `gradle.properties`, so the name
- *   survives checkouts into differently named directories (e.g. Docker build stages).
- * - Project auto-include: every direct subdirectory holding a `build.gradle.kts` or a
- *   `package.json` becomes a project. A conventional frontend needs no Gradle file at all.
- * - KTP coordinates: the plugin jar ships a generated [net.ghue.ktp.lib.KtpLibs] object with
- *   the coordinates of every KTP library, pinned to this plugin's own version, so a single
- *   version declaration rules everything KTP and the libraries can never drift from the
- *   plugin. Settings plugins are visible to every project build script, so consumers just
- *   write `implementation(KtpLibs.stripe)`. Compiled Kotlin on the script classpath resolves
- *   in the IDE unconditionally, unlike version catalogs, which need a committed TOML file.
- * - Toolchains: the Foojay resolver is applied, so a missing JDK is downloaded on demand
- *   instead of failing toolchain resolution.
- * - Plugin auto-apply: `ktp.plugin=ktp|lukestack` in `gradle.properties` applies that
- *   plugin to every project, removing the per-project `plugins {}` boilerplate.
- */
 class SettingsPlugin : Plugin<Settings> {
 
     override fun apply(settings: Settings) {
+        // Keep the project name stable across checkout directories.
         settings.providers.gradleProperty(ROOT_NAME_KEY).orNull?.let {
             settings.rootProject.name = it
         }
 
+        // Include conventional frontends without requiring a Gradle build file.
         settings.rootDir
             .listFiles()
             .orEmpty()
@@ -44,12 +26,14 @@ class SettingsPlugin : Plugin<Settings> {
             .filter { it.resolve("build.gradle.kts").exists() || it.resolve("package.json").exists() }
             .forEach { settings.include(":${it.name}") }
 
+        // Download missing JDKs on demand.
         settings.pluginManager.apply(FoojayToolchainsConventionPlugin::class.java)
 
         autoApplyPlugin(settings)
     }
 
     private fun autoApplyPlugin(settings: Settings) {
+        // Avoid per-project plugin declarations.
         when (val pluginName = settings.providers.gradleProperty(AUTO_APPLY_KEY).orNull) {
             null -> {}
             "ktp" ->
