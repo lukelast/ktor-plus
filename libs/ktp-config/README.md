@@ -24,7 +24,7 @@ Place `.conf` files in `src/main/resources/ktp/` using [HOCON format](https://gi
 
 - **Priority** (required): Number 0-9. Lower = higher priority (0 overrides 9)
 - **Config name** (optional): Descriptive identifier (e.g., `database`, `kafka`)
-- **Environment** (optional): Applies only to specific env (e.g., `prod`, `test`)
+- **Environment** (optional): Applies only to specific env (e.g., `prod`, `stage`)
 
 **Examples:**
 - `0.local.conf` - Highest priority local overrides
