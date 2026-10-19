@@ -11,11 +11,11 @@ Ktor Plus is a multi-project Gradle build. Core libraries live under `libs/` (fo
 - `./gradlew publish` – trigger the release pipeline used for JitPack builds.
 
 ## Naming & Comments
-Formatting is ktfmt's job (`./gradlew ktfmtFormat`); nothing here is about layout. Keep packages under the `net.ghue.ktp` namespace and align filenames with public types. Test names are scenario sentences in kotest `StringSpec`.
+Formatting is ktfmt's job (`./gradlew ktfmtFormat`); nothing here is about layout. Keep packages under the `net.ghue.ktp` namespace and align filenames with public types. Test names are scenario sentences: kotest `StringSpec` strings in the libraries, backticked kotlin.test functions in the Gradle plugin.
 Comments are one line: say why, next to the code it explains; never restate what the code or a referenced constant already shows.
 
 ## Testing Guidelines
-Tests are kotest `StringSpec` specs using Ktor's `testApplication` utilities. Name test files with the `*Test.kt` suffix and ensure each new feature has at least one covering test. Execute `./gradlew test` for module-level runs or `./gradlew check` for the full suite; investigate reports under `build/reports/tests/`. Aim to keep fast-running tests, mocking external services where needed.
+Library tests are kotest `StringSpec` specs using Ktor's `testApplication` utilities; the Gradle plugin's are kotlin.test with `ProjectBuilder`. Name test files with the `*Test.kt` suffix and ensure each new feature has at least one covering test. Execute `./gradlew test` for module-level runs or `./gradlew check` for the full suite; investigate reports under `build/reports/tests/`. Aim to keep fast-running tests, mocking external services where needed.
 
 ## Commit & Pull Request Guidelines
 Do nothing in git (stage, commit, push, reset) without asking Luke first.

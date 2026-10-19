@@ -1,7 +1,12 @@
 package net.ghue.ktp.gradle.settings
 
+import java.io.File
+import net.ghue.ktp.gradle.lukestack.DEV_SERVER_ENABLED_KEY
+import net.ghue.ktp.gradle.lukestack.FRONTEND_DIR
 import net.ghue.ktp.gradle.lukestack.LukestackPlugin
+import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.ProjectPlugin
+import net.ghue.ktp.gradle.project.layoutMode
 import org.gradle.api.Plugin
 import org.gradle.api.initialization.Settings
 import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
@@ -22,22 +27,40 @@ class SettingsPlugin : Plugin<Settings> {
         }
 
         // Include conventional frontends without requiring a Gradle build file.
-        settings.rootDir
-            .listFiles()
-            .orEmpty()
-            .filter { it.isDirectory && !it.name.startsWith(".") && it.name != "buildSrc" }
-            .filter { it.resolve("build.gradle.kts").exists() || it.resolve("package.json").exists() }
-            .forEach { settings.include(":${it.name}") }
+        val projectDirs =
+            settings.rootDir
+                .listFiles()
+                .orEmpty()
+                .filter { it.isDirectory && !it.name.startsWith(".") && it.name != "buildSrc" }
+                .filter {
+                    it.resolve("build.gradle.kts").exists() || it.resolve("package.json").exists()
+                }
+        projectDirs.forEach { settings.include(":${it.name}") }
+
+        val pluginName =
+            settings.providers.gradleProperty(AUTO_APPLY_KEY).getOrElse(DEFAULT_AUTO_APPLY)
+        val excluded =
+            desktopRunExclusions(
+                taskNames = settings.startParameter.taskNames,
+                projectDirs = projectDirs,
+                devServerStartsWithRun =
+                    pluginName == "lukestack" &&
+                        settings.providers.gradleProperty(DEV_SERVER_ENABLED_KEY).orNull != "false",
+            )
+        if (excluded.isNotEmpty()) {
+            settings.startParameter.setExcludedTaskNames(
+                settings.startParameter.excludedTaskNames + excluded
+            )
+        }
 
         // Download missing JDKs on demand.
         settings.pluginManager.apply(FoojayToolchainsConventionPlugin::class.java)
 
-        autoApplyPlugin(settings)
+        autoApplyPlugin(settings, pluginName)
     }
 
-    private fun autoApplyPlugin(settings: Settings) {
+    private fun autoApplyPlugin(settings: Settings, pluginName: String) {
         // Avoid per-project plugin declarations.
-        val pluginName = settings.providers.gradleProperty(AUTO_APPLY_KEY).getOrElse(DEFAULT_AUTO_APPLY)
         val plugin =
             when (pluginName) {
                 "ktp" -> ProjectPlugin::class.java
@@ -50,4 +73,24 @@ class SettingsPlugin : Plugin<Settings> {
             }
         settings.gradle.lifecycle.beforeProject { pluginManager.apply(plugin) }
     }
+}
+
+/**
+ * The Compose desktop `run` tasks a bare `gradlew run` must leave out, as `-x` would. That `run`
+ * means the backend, whose lukestack `run` starts the Compose module's web dev server; by task-name
+ * matching it would also launch the desktop window and compile the module while the dev-server
+ * build does. Nothing is excluded when no dev server starts with `run` (the generic plugin, or
+ * `ktp.vite=false`) or when a `frontend/` takes it instead, and `gradlew :composeApp:run` still
+ * runs the desktop app. Detection is by layout only, as everything at settings time is.
+ */
+internal fun desktopRunExclusions(
+    taskNames: List<String>,
+    projectDirs: List<File>,
+    devServerStartsWithRun: Boolean,
+): List<String> {
+    if (!devServerStartsWithRun || taskNames.none { it == "run" }) return emptyList()
+    if (projectDirs.any { it.name == FRONTEND_DIR && layoutMode(it) == ProjectMode.FRONTEND }) {
+        return emptyList()
+    }
+    return projectDirs.filter { layoutMode(it) == ProjectMode.COMPOSE }.map { ":${it.name}:run" }
 }

@@ -24,11 +24,11 @@ class LukestackPlugin : Plugin<Project> {
                 project.configureGcpEnvironment()
                 project.configureTesting()
                 project.configureOpenApiExport()
-                project.configureViteDev()
+                project.configureDevServer()
             }
             ProjectMode.FRONTEND -> project.registerBunTasks()
-            // The Compose web bundle reaches the image through the app's own Dockerfile, and its
-            // dev server is started by hand, so the stack adds nothing to these yet.
+            // Libraries need nothing; the Compose web bundle ships through the app's Dockerfile and
+            // the backend's `run` starts its dev server.
             ProjectMode.LIBRARY,
             ProjectMode.KMP,
             ProjectMode.COMPOSE -> {}

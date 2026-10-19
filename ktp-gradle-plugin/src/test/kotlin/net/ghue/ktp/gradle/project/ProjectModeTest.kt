@@ -39,6 +39,13 @@ class ProjectModeTest {
     }
 
     @Test
+    fun `a plain JVM layout implies no mode`() {
+        val project = ProjectBuilder.builder().build()
+        project.projectDir.resolve("src/main/kotlin").mkdirs()
+        assertEquals(null, layoutMode(project.projectDir))
+    }
+
+    @Test
     fun `the root of a multi-project build means ROOT`() {
         val root = ProjectBuilder.builder().build()
         ProjectBuilder.builder().withParent(root).build()

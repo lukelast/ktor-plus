@@ -1,5 +1,6 @@
 package net.ghue.ktp.gradle.project
 
+import java.io.File
 import org.gradle.api.Project
 
 internal enum class ProjectMode {
@@ -20,19 +21,28 @@ private const val MODE_KEY = "ktp.mode"
 private val WEB_INDEX_PAGES =
     listOf("src/wasmJsMain/resources/index.html", "src/jsMain/resources/index.html")
 
+/**
+ * The mode a project directory's layout implies, which is all a plugin applied before the build
+ * script can see: a package.json is a frontend, a web index page in a multiplatform module is the
+ * Compose UI, any other common source set is a shared multiplatform library. Null when the layout
+ * says nothing (a plain JVM module).
+ */
+internal fun layoutMode(projectDir: File): ProjectMode? =
+    when {
+        projectDir.resolve("package.json").exists() -> ProjectMode.FRONTEND
+        WEB_INDEX_PAGES.any { projectDir.resolve(it).exists() } -> ProjectMode.COMPOSE
+        projectDir.resolve("src/commonMain").exists() -> ProjectMode.KMP
+        else -> null
+    }
+
 internal fun Project.resolveProjectMode(): ProjectMode {
-    // Without the property, detect from the directory layout, which is all a plugin applied before
-    // the build script can see: the root of a multi-project build is the aggregation/deployment
-    // root, a package.json is a frontend, a web index page in a multiplatform module is the
-    // Compose UI, and any other common source set is a shared multiplatform library.
+    // Without the property, the root of a multi-project build is the aggregation/deployment root
+    // and everything else goes by its layout.
     val prop =
         findProperty(MODE_KEY)?.toString()
             ?: return when {
                 this == rootProject && subprojects.isNotEmpty() -> ProjectMode.ROOT
-                projectDir.resolve("package.json").exists() -> ProjectMode.FRONTEND
-                WEB_INDEX_PAGES.any { projectDir.resolve(it).exists() } -> ProjectMode.COMPOSE
-                projectDir.resolve("src/commonMain").exists() -> ProjectMode.KMP
-                else -> DEFAULT_MODE
+                else -> layoutMode(projectDir) ?: DEFAULT_MODE
             }
     val mode =
         try {
