@@ -97,7 +97,8 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
   formatting, detekt over `src/`, JVM targets at Java 21 bytecode; the build script declares the
   targets), `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
   Compose Multiplatform and Compose compiler plugins, pinned to the plugin's Kotlin, and the
-  Compose detekt rules), `root`. A `detekt.yml` beside a project's build script is layered over
+  Compose detekt rules; `org.jetbrains.compose.*` dependencies written without a version get the
+  plugin's Compose version), `root`. A `detekt.yml` beside a project's build script is layered over
   KTP's rules. Every mode gets `check` (strict, what CI runs) and `verify` (format, then
   `check`); the root `verify` aggregates the subprojects that have one.
   `ktor` mode applies the Ktor Gradle plugin, so its extension is available as is: for

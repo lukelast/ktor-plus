@@ -64,10 +64,11 @@ class KtpLibsTest {
     }
 
     @Test
-    fun `KtpVersion carries the compose rules version from the version catalog`() {
+    fun `KtpVersion carries the compose versions from the version catalog`() {
         val catalog = File("../gradle/libs.versions.toml").readText()
         fun version(key: String) =
             Regex("""(?m)^$key\s*=\s*"([^"]+)"""").find(catalog)?.groupValues?.get(1)
+        assertEquals(version("compose"), KtpVersion.COMPOSE)
         assertEquals(version("composeRules"), KtpVersion.COMPOSE_RULES)
     }
 

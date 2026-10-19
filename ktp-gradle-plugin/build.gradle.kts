@@ -68,6 +68,7 @@ val versionGenTask =
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
         val ktfmtVersion = libs.versions.ktfmt.get()
+        val composeVersion = libs.versions.compose.get()
         val composeRulesVersion = libs.versions.composeRules.get()
 
         // Only real library projects; generated directories like libs/build must not leak in.
@@ -86,6 +87,7 @@ val versionGenTask =
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
         inputs.property("ktfmtVersion", ktfmtVersion)
+        inputs.property("composeVersion", composeVersion)
         inputs.property("composeRulesVersion", composeRulesVersion)
         inputs.property("libraryNames", libraryNames)
         outputs.file(outputFile)
@@ -124,6 +126,9 @@ val versionGenTask =
 
                 /** ktfmt engine version used by the formatting tasks. */
                 const val KTFMT = "$ktfmtVersion"
+
+                /** Compose Multiplatform version `compose` mode gives versionless coordinates. */
+                const val COMPOSE = "$composeVersion"
 
                 /** Compose detekt rule set (io.nlopez.compose.rules) `compose` mode adds. */
                 const val COMPOSE_RULES = "$composeRulesVersion"
