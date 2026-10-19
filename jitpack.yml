@@ -1,4 +1,4 @@
 jdk:
-  - openjdk25
+  - openjdk21
 install:
   - ./gradlew clean publishToMavenLocal --no-configuration-cache
