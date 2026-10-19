@@ -20,6 +20,9 @@ private const val DEFAULT_AUTO_APPLY = "lukestack"
 
 private const val ROOT_NAME_KEY = "rootProject.name"
 
+/** Where a desktop target keeps its `main`: `jvm()` or the usual `jvm("desktop")`. */
+private val DESKTOP_SOURCE_SETS = listOf("src/jvmMain", "src/desktopMain")
+
 class SettingsPlugin : Plugin<Settings> {
 
     override fun apply(settings: Settings) {
@@ -83,7 +86,8 @@ class SettingsPlugin : Plugin<Settings> {
  * matching it would also launch the desktop window and compile the module while the dev-server
  * build does. Nothing is excluded when no dev server starts with `run` (the generic plugin, or
  * `ktp.vite=false`) or when a `frontend/` takes it instead, and `gradlew :composeApp:run` still
- * runs the desktop app. Detection is by layout only, as everything at settings time is.
+ * runs the desktop app. A web-only module has no `run` to exclude, and Gradle fails on an exclusion
+ * that matches nothing. Detection is by layout only, as everything at settings time is.
  */
 internal fun desktopRunExclusions(
     taskNames: List<String>,
@@ -98,5 +102,6 @@ internal fun desktopRunExclusions(
     }
     return projectDirs
         .filter { layoutMode(it) == ProjectMode.COMPOSE }
+        .filter { dir -> DESKTOP_SOURCE_SETS.any { dir.resolve(it).isDirectory } }
         .map { ":${it.name}:${ApplicationPlugin.TASK_RUN_NAME}" }
 }

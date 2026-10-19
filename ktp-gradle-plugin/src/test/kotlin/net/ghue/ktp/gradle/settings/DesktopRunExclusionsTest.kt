@@ -17,13 +17,42 @@ class DesktopRunExclusionsTest {
 
     private val backend = module("backend", "build.gradle.kts")
     private val compose =
-        module("composeApp", "build.gradle.kts", "src/wasmJsMain/resources/index.html")
+        module(
+            "composeApp",
+            "build.gradle.kts",
+            "src/wasmJsMain/resources/index.html",
+            "src/desktopMain/kotlin/main.kt",
+        )
 
     @Test
     fun `a bare run excludes the Compose desktop run`() {
         assertEquals(
             listOf(":composeApp:run"),
             desktopRunExclusions(listOf("run"), listOf(backend, compose), true),
+        )
+    }
+
+    @Test
+    fun `a jvmMain source set is a desktop target too`() {
+        val jvmCompose =
+            module(
+                "webApp",
+                "build.gradle.kts",
+                "src/wasmJsMain/resources/index.html",
+                "src/jvmMain/kotlin/main.kt",
+            )
+        assertEquals(
+            listOf(":webApp:run"),
+            desktopRunExclusions(listOf("run"), listOf(backend, jvmCompose), true),
+        )
+    }
+
+    @Test
+    fun `a web-only Compose module has no desktop run to exclude`() {
+        val webOnly = module("webApp", "build.gradle.kts", "src/wasmJsMain/resources/index.html")
+        assertEquals(
+            emptyList(),
+            desktopRunExclusions(listOf("run"), listOf(backend, webOnly), true),
         )
     }
 
