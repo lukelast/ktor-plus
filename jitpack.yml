@@ -1,7 +1,6 @@
-jdk:
-  - openjdk21
 before_install:
-  - sdk install java 21.0.1-open
-  - sdk use java 21.0.1-open
+  - sdk install java 21.0.12.1-tem
+  - sdk use java 21.0.12.1-tem
+  - java -version
 install:
   - ./gradlew clean publishToMavenLocal --no-configuration-cache
