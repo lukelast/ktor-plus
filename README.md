@@ -29,12 +29,16 @@ rootProject.name=my-app
 ```
 
 Optional libraries come from the generated `KtpLibs` object, pinned to the plugin's own version
-(`ktp-ktor` and `ktp-test` are added automatically):
+(`ktp-ktor` and `ktp-test` are added automatically). Every Kotlin project also gets `ktp-bom`, so
+Ktor, kotlinx, Koin, kotest and Google Cloud dependencies are written without a version:
 
 ```kotlin
 import net.ghue.ktp.lib.KtpLibs
 
-dependencies { implementation(KtpLibs.stripe) }
+dependencies {
+    implementation(KtpLibs.stripe)
+    implementation("io.ktor:ktor-client-logging")
+}
 ```
 
 Upgrading from an older release? Delete the committed `gradle/ktp.versions.toml`; `KtpLibs`
@@ -72,7 +76,8 @@ Ktor's test host with the unit-test config env; for an app with Firebase auth,
 | ktp-core                                    | `core`             | Structured logging, hashing, path/resource/string helpers, lazy properties                                                                                  |
 | [ktp-config](libs/ktp-config/README.md)     | `config`           | HOCON config layered as `<priority>.<configName>.<env>.conf`; env from `KTP_ENV`/`ENV`; `CONFIG_FORCE_*` and `KTP_CONFIG` overrides; secret masking; test helpers |
 | ktp-ktor                                    | `ktor` (automatic) | App startup, default plugins, health endpoint, debug endpoints (config, GC log, threads, version), Vite frontend serving (dev proxy, cache headers, root favicon.ico and robots.txt) |
-| ktp-gcp                                     | `gcp`              | GCP BOM, project id and region detection, Cloud Run metadata                                                                                                |
+| ktp-bom                                     | `bom` (automatic)  | The platform: Ktor, kotlinx.serialization, kotlinx.coroutines, Koin, kotest and Google Cloud BOMs, and every KTP library at this release                   |
+| ktp-gcp                                     | `gcp`              | Project id and region detection, Cloud Run metadata                                                                                                         |
 | [ktp-gcp-auth](libs/ktp-gcp-auth/README.md) | `gcpAuth`          | Firebase login, encrypted cookies with periodic account/role checks, RBAC, local-dev login                                                                  |
 | ktp-gcp-auth-firestore                      | `gcpAuthFirestore` | Shared user records and typed tenant storage on Firestore ([details](libs/ktp-gcp-auth-firestore/README.md))                                         |
 | ktp-gcp-firestore                           | `gcpFirestore`     | Firestore client plus typed collection, read/write, query, batch, and transaction helpers                                                                   |
@@ -94,12 +99,13 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
   detekt, tests, fat jar; compiles for and runs on JDK 25, which the Foojay resolver downloads
   when missing), `library` (published Java 21 library), `frontend` (a `package.json`; lifecycle
   tasks only), `kmp` (a `src/commonMain`: Kotlin Multiplatform library with serialization,
-  formatting, detekt over `src/`, JVM targets at Java 21 bytecode, and the Ktor, kotlinx.serialization
-  and kotlinx.coroutines BOMs on `commonMain` so those dependencies need no version and match the
-  server; the build script declares the targets), `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
+  formatting, detekt over `src/`, JVM targets at Java 21 bytecode, and `ktp-bom` on `commonMain`
+  as `api`, so its consumers resolve the same versions; the build script declares the targets),
+  `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
   Compose Multiplatform and Compose compiler plugins, pinned to the plugin's Kotlin, and the
   Compose detekt rules; `org.jetbrains.compose.*` dependencies written without a version get the
-  plugin's Compose version), `root`. A `detekt.yml` beside a project's build script is layered over
+  plugin's Compose version), `root`. Every Kotlin project gets `ktp-bom`: on `implementation`
+  (`api` for a published library), or on `commonMain` for multiplatform. A `detekt.yml` beside a project's build script is layered over
   KTP's rules. Every mode gets `check` (strict, what CI runs) and `verify` (format, then
   `check`); the root `verify` aggregates the subprojects that have one.
   `ktor` mode applies the Ktor Gradle plugin, so its extension is available as is: for

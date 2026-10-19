@@ -15,7 +15,10 @@ internal enum class ProjectMode {
 }
 
 private val DEFAULT_MODE = ProjectMode.KTOR
-private const val MODE_KEY = "ktp.mode"
+internal const val MODE_KEY = "ktp.mode"
+
+/** What marks a directory as a frontend project. */
+internal const val PACKAGE_JSON = "package.json"
 
 /** The page a Compose web target boots from; a shared library never has one. */
 private val WEB_INDEX_PAGES =
@@ -29,7 +32,7 @@ private val WEB_INDEX_PAGES =
  */
 internal fun layoutMode(projectDir: File): ProjectMode? =
     when {
-        projectDir.resolve("package.json").exists() -> ProjectMode.FRONTEND
+        projectDir.resolve(PACKAGE_JSON).exists() -> ProjectMode.FRONTEND
         WEB_INDEX_PAGES.any { projectDir.resolve(it).exists() } -> ProjectMode.COMPOSE
         projectDir.resolve("src/commonMain").exists() -> ProjectMode.KMP
         else -> null

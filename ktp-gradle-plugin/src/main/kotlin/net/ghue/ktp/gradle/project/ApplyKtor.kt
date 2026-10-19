@@ -4,6 +4,7 @@ import io.ktor.plugin.*
 import net.ghue.ktp.gradle.project.features.*
 import net.ghue.ktp.lib.KtpLibs
 import org.gradle.api.Project
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.configure
@@ -48,7 +49,7 @@ internal fun Project.applyKtor() {
     // coordinates: the ktor-plus repo itself rewires these to its local subprojects with a
     // dependency substitution in its root build script.
     dependencies {
-        add("implementation", KtpLibs.ktor)
-        add("testImplementation", KtpLibs.test)
+        add(JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME, KtpLibs.ktor)
+        add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, KtpLibs.test)
     }
 }

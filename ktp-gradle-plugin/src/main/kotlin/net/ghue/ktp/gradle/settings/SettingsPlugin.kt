@@ -4,10 +4,12 @@ import java.io.File
 import net.ghue.ktp.gradle.lukestack.DEV_SERVER_ENABLED_KEY
 import net.ghue.ktp.gradle.lukestack.FRONTEND_DIR
 import net.ghue.ktp.gradle.lukestack.LukestackPlugin
+import net.ghue.ktp.gradle.project.PACKAGE_JSON
 import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.ProjectPlugin
 import net.ghue.ktp.gradle.project.layoutMode
 import org.gradle.api.Plugin
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.initialization.Settings
 import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
@@ -33,7 +35,7 @@ class SettingsPlugin : Plugin<Settings> {
                 .orEmpty()
                 .filter { it.isDirectory && !it.name.startsWith(".") && it.name != "buildSrc" }
                 .filter {
-                    it.resolve("build.gradle.kts").exists() || it.resolve("package.json").exists()
+                    it.resolve("build.gradle.kts").exists() || it.resolve(PACKAGE_JSON).exists()
                 }
         projectDirs.forEach { settings.include(":${it.name}") }
 
@@ -88,9 +90,13 @@ internal fun desktopRunExclusions(
     projectDirs: List<File>,
     devServerStartsWithRun: Boolean,
 ): List<String> {
-    if (!devServerStartsWithRun || taskNames.none { it == "run" }) return emptyList()
+    if (!devServerStartsWithRun || taskNames.none { it == ApplicationPlugin.TASK_RUN_NAME }) {
+        return emptyList()
+    }
     if (projectDirs.any { it.name == FRONTEND_DIR && layoutMode(it) == ProjectMode.FRONTEND }) {
         return emptyList()
     }
-    return projectDirs.filter { layoutMode(it) == ProjectMode.COMPOSE }.map { ":${it.name}:run" }
+    return projectDirs
+        .filter { layoutMode(it) == ProjectMode.COMPOSE }
+        .map { ":${it.name}:${ApplicationPlugin.TASK_RUN_NAME}" }
 }

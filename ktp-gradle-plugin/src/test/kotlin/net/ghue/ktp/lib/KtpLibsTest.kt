@@ -56,32 +56,19 @@ class KtpLibsTest {
     }
 
     @Test
-    fun `no accessors beyond koinBom and the library modules`() {
+    fun `no accessors beyond the library modules`() {
         assertEquals(
-            (libraryModules.map { aliasFor(it) } + "koinBom").sorted(),
+            libraryModules.map { aliasFor(it) }.sorted(),
             accessors.keys.sorted(),
         )
     }
 
     @Test
-    fun `KtpVersion carries the BOM and compose versions from the version catalog`() {
+    fun `KtpVersion carries the compose versions from the version catalog`() {
         val catalog = File("../gradle/libs.versions.toml").readText()
         fun version(key: String) =
             Regex("""(?m)^$key\s*=\s*"([^"]+)"""").find(catalog)?.groupValues?.get(1)
-        assertEquals(version("ktor"), KtpVersion.KTOR)
-        assertEquals(version("kotlinxSerialization"), KtpVersion.KOTLINX_SERIALIZATION)
-        assertEquals(version("kotlinxCoroutines"), KtpVersion.KOTLINX_COROUTINES)
         assertEquals(version("compose"), KtpVersion.COMPOSE)
         assertEquals(version("composeRules"), KtpVersion.COMPOSE_RULES)
-    }
-
-    @Test
-    fun `koinBom carries the koin version from the version catalog`() {
-        val koinVersion =
-            Regex("""(?m)^koin\s*=\s*"([^"]+)"""")
-                .find(File("../gradle/libs.versions.toml").readText())
-                ?.groupValues
-                ?.get(1)
-        assertEquals("io.insert-koin:koin-bom:$koinVersion", accessors["koinBom"])
     }
 }

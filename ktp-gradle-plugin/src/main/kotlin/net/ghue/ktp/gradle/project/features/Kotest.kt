@@ -3,11 +3,13 @@ package net.ghue.ktp.gradle.project.features
 import net.ghue.ktp.lib.KtpVersion
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.process.CommandLineArgumentProvider
 
 private const val TEST_JAVA_AGENT_CONFIGURATION = "ktpTestJavaAgent"
@@ -22,11 +24,10 @@ internal fun Project.configureKotest() {
 
     project.dependencies {
         add(TEST_JAVA_AGENT_CONFIGURATION, "net.bytebuddy:byte-buddy-agent:${KtpVersion.BYTE_BUDDY}")
-        add("testImplementation", platform("io.kotest:kotest-bom:${KtpVersion.KOTEST}"))
-        add("testImplementation", "io.kotest:kotest-runner-junit5")
-        add("testImplementation", "io.kotest:kotest-assertions-core")
-        add("testImplementation", "io.kotest:kotest-extensions-koin")
-        add("testImplementation", "io.kotest:kotest-assertions-ktor")
+        add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-runner-junit5")
+        add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-assertions-core")
+        add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-extensions-koin")
+        add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-assertions-ktor")
     }
     project.tasks.withType<Test>().configureEach {
         // Avoid dynamic Java agent loading warnings from MockK's Byte Buddy agent.
@@ -48,7 +49,7 @@ internal fun Project.configureKotest() {
     }
 
     project.tasks.register<Test>("integrationTest") {
-        group = "verification"
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
         description = "Runs integration tests."
 
         useJUnitPlatform {

@@ -42,8 +42,8 @@ internal fun Project.registerOpenApiTypesTasks() {
             inputs.files(openApiExport, schema)
             outputs.upToDateWhen { true }
         }
-    tasks.named("check") { dependsOn(apiCheck) }
-    listOf("format", "lint", "test", "bundle").forEach { name ->
+    tasks.named(LifecycleBasePlugin.CHECK_TASK_NAME) { dependsOn(apiCheck) }
+    BUN_SOURCE_TASKS.forEach { name ->
         tasks.named(name) { mustRunAfter(apiGenerate) }
     }
 }

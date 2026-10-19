@@ -6,10 +6,5 @@ dependencies {
     api(project(":libs:ktp-gcp-auth"))
     api(project(":libs:ktp-gcp-firestore"))
 
-    // Not inherited transitively because JitPack builds could not resolve them that way.
-    api(platform(libs.gcp.bom))
-    api(platform(libs.ktor.bom))
-    api(platform(libs.koin.bom))
-
     testImplementation(project(":libs:ktp-test"))
 }

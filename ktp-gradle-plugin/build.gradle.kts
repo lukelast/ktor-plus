@@ -64,13 +64,8 @@ val versionGenTask =
         val outputFile = layout.buildDirectory.file("$sourceGenDir/net/ghue/ktp/lib/Version.kt")
         val projectGroup = project.group.toString()
         val projectVersion = project.version.toString()
-        val koinVersion = libs.versions.koin.get()
-        val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
         val ktfmtVersion = libs.versions.ktfmt.get()
-        val ktorVersion = libs.versions.ktor.get()
-        val serializationVersion = libs.versions.kotlinxSerialization.get()
-        val coroutinesVersion = libs.versions.kotlinxCoroutines.get()
         val composeVersion = libs.versions.compose.get()
         val composeRulesVersion = libs.versions.composeRules.get()
 
@@ -86,13 +81,8 @@ val versionGenTask =
 
         inputs.property("group", projectGroup)
         inputs.property("version", projectVersion)
-        inputs.property("koinVersion", koinVersion)
-        inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
         inputs.property("ktfmtVersion", ktfmtVersion)
-        inputs.property("ktorVersion", ktorVersion)
-        inputs.property("serializationVersion", serializationVersion)
-        inputs.property("coroutinesVersion", coroutinesVersion)
         inputs.property("composeVersion", composeVersion)
         inputs.property("composeRulesVersion", composeRulesVersion)
         inputs.property("libraryNames", libraryNames)
@@ -120,27 +110,15 @@ val versionGenTask =
             package net.ghue.ktp.lib
 
             /** Generated from `gradle/libs.versions.toml`; do not edit by hand. */
-            object KtpVersion {
+            internal object KtpVersion {
                 /** ktor-plus's own published version. */
                 const val VERSION = "$projectVersion"
-
-                /** kotest BOM version this plugin injects into consumer builds. */
-                const val KOTEST = "$kotestVersion"
 
                 /** Byte Buddy agent version this plugin preloads for MockK-friendly tests. */
                 const val BYTE_BUDDY = "$byteBuddyVersion"
 
                 /** ktfmt engine version used by the formatting tasks. */
                 const val KTFMT = "$ktfmtVersion"
-
-                /** Ktor BOM version `kmp` mode gives multiplatform modules. */
-                const val KTOR = "$ktorVersion"
-
-                /** kotlinx.serialization BOM version `kmp` mode gives multiplatform modules. */
-                const val KOTLINX_SERIALIZATION = "$serializationVersion"
-
-                /** kotlinx.coroutines BOM version `kmp` mode gives multiplatform modules. */
-                const val KOTLINX_COROUTINES = "$coroutinesVersion"
 
                 /** Compose Multiplatform version `compose` mode gives versionless coordinates. */
                 const val COMPOSE = "$composeVersion"
@@ -156,9 +134,6 @@ val versionGenTask =
              * `implementation(KtpLibs.stripe)`.
              */
             object KtpLibs {
-                /** koin BOM, matching the koin version the KTP libraries are built against. */
-                const val koinBom = "io.insert-koin:koin-bom:$koinVersion"
-
             %LIBS%
             }
         """
@@ -210,4 +185,4 @@ val checkComposeRulesDetekt =
         }
     }
 
-tasks.named("check") { dependsOn(checkComposeRulesDetekt) }
+tasks.check { dependsOn(checkComposeRulesDetekt) }

@@ -3,6 +3,7 @@ package net.ghue.ktp.gradle.project
 import net.ghue.ktp.gradle.project.features.*
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
+import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -17,8 +18,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 internal fun Project.applyLibrary() {
     applyDetekt()
-    applyKotlin()
     pluginManager.apply(JavaLibraryPlugin::class.java)
+    // `api` so the published apiElements carry ktp-bom for the lib's versionless deps.
+    applyKotlin(bomConfiguration = JavaPlugin.API_CONFIGURATION_NAME)
     pluginManager.apply(MavenPublishPlugin::class.java)
     applyKtfmt()
 

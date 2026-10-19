@@ -9,6 +9,7 @@ import java.net.Socket
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import net.ghue.ktp.gradle.project.DEV_SERVER_PORT_KEY
+import net.ghue.ktp.gradle.project.PACKAGE_JSON
 import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.booleanProperty
 import net.ghue.ktp.gradle.project.resolveProjectMode
@@ -16,6 +17,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
@@ -88,7 +90,7 @@ internal fun Project.configureDevServer() {
             parameters.preferredPort.set(preferredPort(rootDir))
         }
 
-    tasks.named<JavaExec>("run") {
+    tasks.named<JavaExec>(ApplicationPlugin.TASK_RUN_NAME) {
         usesService(service)
         launch.installTask?.let { dependsOn(it) }
         doFirst { environment(VITE_PORT_ENV, service.get().start()) }
@@ -109,7 +111,7 @@ internal class DevServerLaunch(
 
 private fun Project.viteLaunch(): DevServerLaunch? {
     val frontendDir = rootProject.layout.projectDirectory.dir(FRONTEND_DIR)
-    if (!frontendDir.file("package.json").asFile.exists()) return null
+    if (!frontendDir.file(PACKAGE_JSON).asFile.exists()) return null
     return DevServerLaunch(
         label = "vite",
         source = frontendDir.asFile.path,

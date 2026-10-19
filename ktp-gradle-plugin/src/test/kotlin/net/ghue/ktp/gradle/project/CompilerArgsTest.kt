@@ -6,6 +6,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
+import org.jetbrains.compose.ComposePlugin
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradleSubplugin
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
@@ -55,30 +57,11 @@ class CompilerArgsTest {
     }
 
     @Test
-    fun `a multiplatform module exports the Ktor and kotlinx BOMs from commonMain`() {
-        val project = ProjectBuilder.builder().build()
-        project.applyKmp()
-        project.extensions.getByType(KotlinMultiplatformExtension::class.java).jvm()
-        val boms =
-            project.configurations.getByName("commonMainApi").dependencies.map {
-                "${it.group}:${it.name}"
-            }
-        assertEquals(
-            listOf(
-                "io.ktor:ktor-bom",
-                "org.jetbrains.kotlinx:kotlinx-serialization-bom",
-                "org.jetbrains.kotlinx:kotlinx-coroutines-bom",
-            ),
-            boms,
-        )
-    }
-
-    @Test
     fun `compose mode applies both Compose plugins and the Compose detekt rules`() {
         val project = ProjectBuilder.builder().build()
         project.applyCompose()
-        assertTrue(project.plugins.hasPlugin("org.jetbrains.compose"))
-        assertTrue(project.plugins.hasPlugin("org.jetbrains.kotlin.plugin.compose"))
+        assertTrue(project.plugins.hasPlugin(ComposePlugin::class.java))
+        assertTrue(project.plugins.hasPlugin(ComposeCompilerGradleSubplugin::class.java))
         val rules = project.configurations.getByName("detektPlugins").dependencies.map { it.name }
         assertContains(rules, "detekt")
     }

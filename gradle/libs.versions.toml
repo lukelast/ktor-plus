@@ -3,7 +3,6 @@ kotlin = "2.4.21"
 koin = "4.2.2"
 koinPlugin = "1.2.1"
 ktor = "3.6.0"
-ktorPlugin = "3.6.0"
 kotlinxSerialization = "1.11.0"
 kotlinxCoroutines = "1.11.0"
 versionCheck = "0.66.0"
@@ -28,7 +27,7 @@ versionCheck = { id = "io.github.ben-manes.versions", version.ref = "versionChec
 [libraries]
 # Gradle Plugins
 gradleKotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktorPlugin" }
+gradleKtor = { module = "io.ktor.plugin:plugin", version.ref = "ktor" }
 gradleKotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradleKtfmt = { module = "com.ncorti.ktfmt.gradle:plugin", version = "0.27.0" }
 gradleShadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.6.1" }
@@ -51,7 +50,9 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.3.1
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json" }
+kotlinx-serialization-bom = { module = "org.jetbrains.kotlinx:kotlinx-serialization-bom", version.ref = "kotlinxSerialization" }
+kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "kotlinxCoroutines" }
 
 # Ktor
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }

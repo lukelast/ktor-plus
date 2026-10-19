@@ -5,7 +5,6 @@ dependencies {
     api(project(":libs:ktp-config"))
 
     // Ktor
-    api(platform(libs.ktor.bom))
     api(libs.ktor.core)
     api(libs.ktor.netty)
     api(libs.ktor.serializationJson)
@@ -26,7 +25,6 @@ dependencies {
     api(libs.ktor.client.java)
 
     // Koin
-    api(platform(libs.koin.bom))
     api(libs.koin.annotations)
     api(libs.koin.core)
     api(libs.koin.ktor)

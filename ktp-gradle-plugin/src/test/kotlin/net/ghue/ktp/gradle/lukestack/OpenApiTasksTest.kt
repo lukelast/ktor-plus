@@ -6,6 +6,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.testfixtures.ProjectBuilder
 
 class OpenApiTasksTest {
@@ -40,7 +41,7 @@ class OpenApiTasksTest {
 
     private fun frontend(root: Project): Project =
         ProjectBuilder.builder().withName("frontend").withParent(root).build().also { project ->
-            listOf("format", "lint", "test", "bundle", "check").forEach {
+            (BUN_SOURCE_TASKS + LifecycleBasePlugin.CHECK_TASK_NAME).forEach {
                 project.tasks.register(it)
             }
         }

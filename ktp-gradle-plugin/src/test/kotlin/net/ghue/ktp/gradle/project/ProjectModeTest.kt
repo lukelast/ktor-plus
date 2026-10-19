@@ -17,7 +17,7 @@ class ProjectModeTest {
     @Test
     fun `a package json means FRONTEND`() {
         val project = ProjectBuilder.builder().build()
-        project.projectDir.resolve("package.json").writeText("{}")
+        project.projectDir.resolve(PACKAGE_JSON).writeText("{}")
         assertEquals(ProjectMode.FRONTEND, project.resolveProjectMode())
     }
 
@@ -62,24 +62,24 @@ class ProjectModeTest {
     @Test
     fun `an explicit property beats auto-detection`() {
         val project = ProjectBuilder.builder().build()
-        project.projectDir.resolve("package.json").writeText("{}")
-        project.extensions.extraProperties["ktp.mode"] = "library"
+        project.projectDir.resolve(PACKAGE_JSON).writeText("{}")
+        project.extensions.extraProperties[MODE_KEY] = "library"
         assertEquals(ProjectMode.LIBRARY, project.resolveProjectMode())
     }
 
     @Test
     fun `the property names the new modes too`() {
         val project = ProjectBuilder.builder().build()
-        project.extensions.extraProperties["ktp.mode"] = "compose"
+        project.extensions.extraProperties[MODE_KEY] = "compose"
         assertEquals(ProjectMode.COMPOSE, project.resolveProjectMode())
-        project.extensions.extraProperties["ktp.mode"] = "kmp"
+        project.extensions.extraProperties[MODE_KEY] = "kmp"
         assertEquals(ProjectMode.KMP, project.resolveProjectMode())
     }
 
     @Test
     fun `an invalid property value fails naming the bad value`() {
         val project = ProjectBuilder.builder().build()
-        project.extensions.extraProperties["ktp.mode"] = "banana"
+        project.extensions.extraProperties[MODE_KEY] = "banana"
         val error = assertFailsWith<IllegalStateException> { project.resolveProjectMode() }
         assertContains(error.message.orEmpty(), "banana")
     }
@@ -88,7 +88,7 @@ class ProjectModeTest {
     fun `explicit root mode on a subproject fails`() {
         val root = ProjectBuilder.builder().build()
         val child = ProjectBuilder.builder().withParent(root).build()
-        child.extensions.extraProperties["ktp.mode"] = "root"
+        child.extensions.extraProperties[MODE_KEY] = "root"
         val error = assertFailsWith<IllegalStateException> { child.resolveProjectMode() }
         assertContains(error.message.orEmpty(), "detected automatically")
     }
