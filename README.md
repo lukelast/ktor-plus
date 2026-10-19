@@ -94,8 +94,9 @@ The `ktp-gradle-plugin` composite build ships three plugins in one jar:
   detekt, tests, fat jar; compiles for and runs on JDK 25, which the Foojay resolver downloads
   when missing), `library` (published Java 21 library), `frontend` (a `package.json`; lifecycle
   tasks only), `kmp` (a `src/commonMain`: Kotlin Multiplatform library with serialization,
-  formatting, detekt over `src/`, JVM targets at Java 21 bytecode; the build script declares the
-  targets), `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
+  formatting, detekt over `src/`, JVM targets at Java 21 bytecode, and the Ktor, kotlinx.serialization
+  and kotlinx.coroutines BOMs on `commonMain` so those dependencies need no version and match the
+  server; the build script declares the targets), `compose` (a `kmp` module with a `src/wasmJsMain/resources/index.html`: adds the
   Compose Multiplatform and Compose compiler plugins, pinned to the plugin's Kotlin, and the
   Compose detekt rules; `org.jetbrains.compose.*` dependencies written without a version get the
   plugin's Compose version), `root`. A `detekt.yml` beside a project's build script is layered over

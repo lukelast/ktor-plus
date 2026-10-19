@@ -64,10 +64,13 @@ class KtpLibsTest {
     }
 
     @Test
-    fun `KtpVersion carries the compose versions from the version catalog`() {
+    fun `KtpVersion carries the BOM and compose versions from the version catalog`() {
         val catalog = File("../gradle/libs.versions.toml").readText()
         fun version(key: String) =
             Regex("""(?m)^$key\s*=\s*"([^"]+)"""").find(catalog)?.groupValues?.get(1)
+        assertEquals(version("ktor"), KtpVersion.KTOR)
+        assertEquals(version("kotlinxSerialization"), KtpVersion.KOTLINX_SERIALIZATION)
+        assertEquals(version("kotlinxCoroutines"), KtpVersion.KOTLINX_COROUTINES)
         assertEquals(version("compose"), KtpVersion.COMPOSE)
         assertEquals(version("composeRules"), KtpVersion.COMPOSE_RULES)
     }

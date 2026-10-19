@@ -68,6 +68,9 @@ val versionGenTask =
         val kotestVersion = libs.versions.kotest.get()
         val byteBuddyVersion = libs.versions.byteBuddy.get()
         val ktfmtVersion = libs.versions.ktfmt.get()
+        val ktorVersion = libs.versions.ktor.get()
+        val serializationVersion = libs.versions.kotlinxSerialization.get()
+        val coroutinesVersion = libs.versions.kotlinxCoroutines.get()
         val composeVersion = libs.versions.compose.get()
         val composeRulesVersion = libs.versions.composeRules.get()
 
@@ -87,6 +90,9 @@ val versionGenTask =
         inputs.property("kotestVersion", kotestVersion)
         inputs.property("byteBuddyVersion", byteBuddyVersion)
         inputs.property("ktfmtVersion", ktfmtVersion)
+        inputs.property("ktorVersion", ktorVersion)
+        inputs.property("serializationVersion", serializationVersion)
+        inputs.property("coroutinesVersion", coroutinesVersion)
         inputs.property("composeVersion", composeVersion)
         inputs.property("composeRulesVersion", composeRulesVersion)
         inputs.property("libraryNames", libraryNames)
@@ -127,6 +133,15 @@ val versionGenTask =
                 /** ktfmt engine version used by the formatting tasks. */
                 const val KTFMT = "$ktfmtVersion"
 
+                /** Ktor BOM version `kmp` mode gives multiplatform modules. */
+                const val KTOR = "$ktorVersion"
+
+                /** kotlinx.serialization BOM version `kmp` mode gives multiplatform modules. */
+                const val KOTLINX_SERIALIZATION = "$serializationVersion"
+
+                /** kotlinx.coroutines BOM version `kmp` mode gives multiplatform modules. */
+                const val KOTLINX_COROUTINES = "$coroutinesVersion"
+
                 /** Compose Multiplatform version `compose` mode gives versionless coordinates. */
                 const val COMPOSE = "$composeVersion"
 
@@ -160,3 +175,39 @@ sourceSets["main"].java { srcDir(layout.buildDirectory.dir(sourceGenDir)) }
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> { dependsOn(versionGenTask) }
 
 tasks.named("sourcesJar") { dependsOn(versionGenTask) }
+
+// The Compose detekt rule set is compiled against one detekt release; fail when the catalog pairs
+// it with another, instead of at lint time in an app.
+val checkComposeRulesDetekt =
+    tasks.register("checkComposeRulesDetekt") {
+        group = LifecycleBasePlugin.VERIFICATION_GROUP
+        description = "Checks that the Compose detekt rules are built against KTP's detekt."
+        val detektVersion = libs.versions.detekt.get()
+        val rulesVersion = libs.versions.composeRules.get()
+        val rules =
+            configurations.detachedConfiguration(
+                dependencies.create("io.nlopez.compose.rules:detekt:$rulesVersion")
+            )
+        val resolved = rules.incoming.resolutionResult.rootComponent
+        doLast {
+            val wanted =
+                resolved
+                    .get()
+                    .dependencies
+                    .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+                    .flatMap { it.selected.dependencies }
+                    .map { it.requested }
+                    .filterIsInstance<org.gradle.api.artifacts.component.ModuleComponentSelector>()
+                    .firstOrNull {
+                        it.group == "dev.detekt" && it.module in setOf("detekt-core", "detekt-api")
+                    }
+                    ?.version
+                    ?: error("Compose rules $rulesVersion no longer declare a detekt dependency")
+            check(wanted == detektVersion) {
+                "Compose rules $rulesVersion are built against detekt $wanted, but the catalog " +
+                    "has detekt $detektVersion: pick the composeRules release built for it."
+            }
+        }
+    }
+
+tasks.named("check") { dependsOn(checkComposeRulesDetekt) }

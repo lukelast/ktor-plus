@@ -55,6 +55,25 @@ class CompilerArgsTest {
     }
 
     @Test
+    fun `a multiplatform module exports the Ktor and kotlinx BOMs from commonMain`() {
+        val project = ProjectBuilder.builder().build()
+        project.applyKmp()
+        project.extensions.getByType(KotlinMultiplatformExtension::class.java).jvm()
+        val boms =
+            project.configurations.getByName("commonMainApi").dependencies.map {
+                "${it.group}:${it.name}"
+            }
+        assertEquals(
+            listOf(
+                "io.ktor:ktor-bom",
+                "org.jetbrains.kotlinx:kotlinx-serialization-bom",
+                "org.jetbrains.kotlinx:kotlinx-coroutines-bom",
+            ),
+            boms,
+        )
+    }
+
+    @Test
     fun `compose mode applies both Compose plugins and the Compose detekt rules`() {
         val project = ProjectBuilder.builder().build()
         project.applyCompose()

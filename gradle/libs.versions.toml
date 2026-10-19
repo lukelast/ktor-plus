@@ -4,6 +4,8 @@ koin = "4.2.2"
 koinPlugin = "1.2.1"
 ktor = "3.6.0"
 ktorPlugin = "3.6.0"
+kotlinxSerialization = "1.11.0"
+kotlinxCoroutines = "1.11.0"
 versionCheck = "0.66.0"
 typesafeConfig = "1.4.9"
 config4k = "0.7.0"
@@ -17,7 +19,6 @@ gcpBom = "26.90.0"
 detekt = "2.0.0-alpha.6"
 ktfmt = "0.64"
 compose = "1.12.2"
-# The Compose detekt rule set is built against one detekt release; keep it matched to `detekt`.
 composeRules = "0.6.8"
 
 [plugins]
@@ -50,7 +51,7 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.3.1
 
 # Kotlin
 kotlinReflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
-kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.11.0" }
+kotlinJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # Ktor
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
