@@ -12,7 +12,7 @@ import net.ghue.ktp.gradle.project.DEV_SERVER_PORT_KEY
 import net.ghue.ktp.gradle.project.PACKAGE_JSON
 import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.booleanProperty
-import net.ghue.ktp.gradle.project.resolveProjectMode
+import net.ghue.ktp.gradle.project.layoutMode
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -126,8 +126,9 @@ private fun Project.viteLaunch(): DevServerLaunch? {
 }
 
 private fun Project.composeLaunch(): DevServerLaunch? {
+    // By layout: reading a sibling's properties would apply its plugins early and cycle on :backend.
     val compose =
-        rootProject.subprojects.firstOrNull { it.resolveProjectMode() == ProjectMode.COMPOSE }
+        rootProject.subprojects.firstOrNull { layoutMode(it.projectDir) == ProjectMode.COMPOSE }
     return compose?.let {
         DevServerLaunch(
             label = "webpack",
