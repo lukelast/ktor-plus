@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
+import org.jetbrains.kotlin.gradle.tasks.CompileUsingKotlinDaemon
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlinx.serialization.gradle.SerializationGradleSubplugin
 
@@ -45,9 +46,19 @@ private fun Project.applySerialization() {
     pluginManager.apply(SerializationGradleSubplugin::class.java)
 }
 
+/**
+ * Heap for the Kotlin compile daemon, which every build on a machine shares. Its 512m default
+ * runs out after a few full app compiles in a row, and a Compose/Wasm production compile needs
+ * more than that on its own. One value everywhere, so all KTP builds reuse a single daemon.
+ */
+private const val KOTLIN_DAEMON_HEAP = "-Xmx2g"
+
 private fun Project.configureKotlinCompileOptions() {
     project.tasks.withType<KotlinCompile>().configureEach {
         // Strict nullability for Java types; add, not set, so -Xjdk-release and app flags survive.
         compilerOptions { freeCompilerArgs.add("-Xjsr305=strict") }
+    }
+    project.tasks.withType<CompileUsingKotlinDaemon>().configureEach {
+        kotlinDaemonJvmArguments.add(KOTLIN_DAEMON_HEAP)
     }
 }

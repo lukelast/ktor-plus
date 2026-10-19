@@ -66,6 +66,14 @@ class CompilerArgsTest {
         assertContains(rules, "detekt")
     }
 
+    @Test
+    fun `every compile task sizes the shared Kotlin daemon heap`() {
+        val project = ProjectBuilder.builder().build()
+        project.applyKtor()
+        val compile = project.tasks.getByName("compileKotlin") as KotlinCompile
+        assertContains(compile.kotlinDaemonJvmArguments.get(), "-Xmx2g")
+    }
+
     private fun Project.compileKotlinArgs(): List<String> =
         (tasks.getByName("compileKotlin") as KotlinCompile).compilerOptions.freeCompilerArgs.get()
 }
