@@ -37,12 +37,9 @@ class KtpPlatformTest {
             .map { "${it.group}:${it.name}" }
 
     /** Every dependency on ktp-bom in any configuration, platform or not. */
-    private fun Project.ktpBomDependencies(): List<String> =
-        configurations.flatMap { conf ->
-            conf.dependencies
-                .filter { "${it.group}:${it.name}" == bom }
-                .map { conf.name }
-        }
+    private fun Project.ktpBomDependencies(): List<String> = configurations.flatMap { conf ->
+        conf.dependencies.filter { "${it.group}:${it.name}" == bom }.map { conf.name }
+    }
 
     @Test
     fun `an app module gets ktp-bom on implementation`() {

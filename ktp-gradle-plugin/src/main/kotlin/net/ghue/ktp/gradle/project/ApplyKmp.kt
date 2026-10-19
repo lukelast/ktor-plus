@@ -38,7 +38,9 @@ internal fun Project.applyKmp(composeRules: Boolean = false) {
         // (DOM, storage, fetch), so the opt-in is a module convention, not a per-file annotation.
         targets.withType<KotlinJsIrTarget>().configureEach {
             if (wasmTargetType == KotlinWasmTargetType.JS) {
-                compilerOptions { freeCompilerArgs.add("-opt-in=kotlin.js.ExperimentalWasmJsInterop") }
+                compilerOptions {
+                    freeCompilerArgs.add("-opt-in=kotlin.js.ExperimentalWasmJsInterop")
+                }
             }
         }
     }

@@ -126,7 +126,8 @@ private fun Project.viteLaunch(): DevServerLaunch? {
 }
 
 private fun Project.composeLaunch(): DevServerLaunch? {
-    // By layout: reading a sibling's properties would apply its plugins early and cycle on :backend.
+    // By layout: reading a sibling's properties would apply its plugins early and cycle on
+    // :backend.
     val compose =
         rootProject.subprojects.firstOrNull { layoutMode(it.projectDir) == ProjectMode.COMPOSE }
     return compose?.let {
@@ -207,8 +208,8 @@ internal abstract class DevServerService : BuildService<DevServerService.Params>
                 .start()
         process = proc
         Thread {
-                proc.inputStream.bufferedReader().forEachLine { logger.lifecycle("[$label] $it") }
-            }
+            proc.inputStream.bufferedReader().forEachLine { logger.lifecycle("[$label] $it") }
+        }
             .apply {
                 isDaemon = true
                 start()

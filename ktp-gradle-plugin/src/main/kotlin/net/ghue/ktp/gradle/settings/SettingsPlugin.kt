@@ -9,8 +9,8 @@ import net.ghue.ktp.gradle.project.ProjectMode
 import net.ghue.ktp.gradle.project.ProjectPlugin
 import net.ghue.ktp.gradle.project.layoutMode
 import org.gradle.api.Plugin
-import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.initialization.Settings
+import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.toolchains.foojay.FoojayToolchainsConventionPlugin
 
 private const val AUTO_APPLY_KEY = "ktp.plugin"

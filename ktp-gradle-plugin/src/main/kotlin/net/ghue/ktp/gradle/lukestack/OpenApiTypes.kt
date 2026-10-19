@@ -43,7 +43,5 @@ internal fun Project.registerOpenApiTypesTasks() {
             outputs.upToDateWhen { true }
         }
     tasks.named(LifecycleBasePlugin.CHECK_TASK_NAME) { dependsOn(apiCheck) }
-    BUN_SOURCE_TASKS.forEach { name ->
-        tasks.named(name) { mustRunAfter(apiGenerate) }
-    }
+    BUN_SOURCE_TASKS.forEach { name -> tasks.named(name) { mustRunAfter(apiGenerate) } }
 }

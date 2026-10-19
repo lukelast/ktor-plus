@@ -47,9 +47,9 @@ private fun Project.applySerialization() {
 }
 
 /**
- * Heap for the Kotlin compile daemon, which every build on a machine shares. Its 512m default
- * runs out after a few full app compiles in a row, and a Compose/Wasm production compile needs
- * more than that on its own. One value everywhere, so all KTP builds reuse a single daemon.
+ * Heap for the Kotlin compile daemon, which every build on a machine shares. Its 512m default runs
+ * out after a few full app compiles in a row, and a Compose/Wasm production compile needs more than
+ * that on its own. One value everywhere, so all KTP builds reuse a single daemon.
  */
 private const val KOTLIN_DAEMON_HEAP = "-Xmx2g"
 

@@ -113,6 +113,12 @@ tasks.register("check") {
     dependsOn(checkPublishedPlatform)
 }
 
+// Task-name matching stops at the included build, so the plugin is formatted from here.
+tasks.register("ktfmtFormat") {
+    description = "Formats the Gradle plugin; the library projects format themselves by name."
+    dependsOn(gradle.includedBuild("ktp-gradle-plugin").task(":ktfmtFormat"))
+}
+
 tasks.register("publishToMavenLocal") {
     dependsOn(gradle.includedBuild("ktp-gradle-plugin").task(":publishToMavenLocal"))
     subprojects.forEach { subproject ->

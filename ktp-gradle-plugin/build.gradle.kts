@@ -1,7 +1,24 @@
 // https://stackoverflow.com/questions/75673923/build-config-for-developing-a-gradle-plugin-written-in-kotlin
+import com.ncorti.ktfmt.gradle.tasks.KtfmtBaseTask
+
 plugins {
     `kotlin-dsl`
     `maven-publish`
+    alias(libs.plugins.ktfmt)
+}
+
+// The same formatting the plugin gives consumers (features/Ktfmt.kt); this build is not a consumer.
+ktfmt { kotlinLangStyle() }
+
+configurations.named("ktfmt") {
+    resolutionStrategy.force("com.facebook:ktfmt:${libs.versions.ktfmt.get()}")
+}
+
+// ktfmt's forked JVM is the daemon's; JDK 23+ warns about its compiler's Unsafe use unless told so.
+if (JavaVersion.current().majorVersion.toInt() >= 23) {
+    tasks.withType<KtfmtBaseTask>().configureEach {
+        processIsolationJvmArgs.add("--sun-misc-unsafe-memory-access=allow")
+    }
 }
 
 tasks.validatePlugins { enableStricterValidation.set(true) }
@@ -93,7 +110,8 @@ val versionGenTask =
             val libAccessors =
                 libraryNames.joinToString("\n\n") { name ->
                     val alias =
-                        name.removePrefix("ktp-")
+                        name
+                            .removePrefix("ktp-")
                             .split('-')
                             .mapIndexed { i, part ->
                                 if (i == 0) part else part.replaceFirstChar { it.uppercaseChar() }

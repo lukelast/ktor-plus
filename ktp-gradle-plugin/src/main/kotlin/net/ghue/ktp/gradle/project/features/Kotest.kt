@@ -23,7 +23,10 @@ internal fun Project.configureKotest() {
         }
 
     project.dependencies {
-        add(TEST_JAVA_AGENT_CONFIGURATION, "net.bytebuddy:byte-buddy-agent:${KtpVersion.BYTE_BUDDY}")
+        add(
+            TEST_JAVA_AGENT_CONFIGURATION,
+            "net.bytebuddy:byte-buddy-agent:${KtpVersion.BYTE_BUDDY}",
+        )
         add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-runner-junit5")
         add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-assertions-core")
         add(JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME, "io.kotest:kotest-extensions-koin")
@@ -43,9 +46,7 @@ internal fun Project.configureKotest() {
         // Runs test classes in separate JVM processes
         maxParallelForks = 1
         systemProperties =
-            mapOf(
-                "kotest.framework.config.fqn" to "net.ghue.ktp.test.config.ProjectConfigUnit",
-            )
+            mapOf("kotest.framework.config.fqn" to "net.ghue.ktp.test.config.ProjectConfigUnit")
     }
 
     project.tasks.register<Test>("integrationTest") {
@@ -59,15 +60,13 @@ internal fun Project.configureKotest() {
         maxParallelForks = 1
         systemProperties =
             mapOf(
-                "kotest.framework.config.fqn" to
-                    "net.ghue.ktp.test.config.ProjectConfigIntegration",
+                "kotest.framework.config.fqn" to "net.ghue.ktp.test.config.ProjectConfigIntegration"
             )
     }
 }
 
-private class JavaAgentArgumentProvider(
-    @get:Classpath val agentClasspath: FileCollection
-) : CommandLineArgumentProvider {
+private class JavaAgentArgumentProvider(@get:Classpath val agentClasspath: FileCollection) :
+    CommandLineArgumentProvider {
     override fun asArguments(): Iterable<String> =
         agentClasspath.files.map { "-javaagent:${it.absolutePath}" }
 }

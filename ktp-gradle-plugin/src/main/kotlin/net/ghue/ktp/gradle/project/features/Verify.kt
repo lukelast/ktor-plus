@@ -9,8 +9,8 @@ internal const val VERIFY_TASK = "verify"
 
 /**
  * Registers `verify`, the local dev loop: format the code, then run the full `check` (ktfmt
- * validation, detekt, tests). CI runs plain `check`, which never formats and fails on
- * unformatted code; `verify` is the local command that fixes instead of failing.
+ * validation, detekt, tests). CI runs plain `check`, which never formats and fails on unformatted
+ * code; `verify` is the local command that fixes instead of failing.
  */
 internal fun Project.registerVerifyTask() {
     tasks.register(VERIFY_TASK) {
