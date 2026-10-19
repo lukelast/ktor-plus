@@ -140,8 +140,8 @@ val ViteFrontendPlugin =
             application.routing {
                 fun StaticContentConfig<*>.configStatic() {
                     // A `<file>.br` or `<file>.gz` the build left next to a file is served in its
-                    // place when the client accepts it, skipping per-request compression; files
-                    // without one still go through the Compression plugin.
+                    // place when the client accepts it (the smaller one when both do), skipping
+                    // per-request compression; files without one still go through Compression.
                     preCompressed(CompressedFileType.BROTLI, CompressedFileType.GZIP)
                     cacheControl { resource ->
                         val path = resource.toString().replace(File.separatorChar, '/')

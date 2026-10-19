@@ -252,7 +252,8 @@ class ViteFrontendPluginTest :
             val staticDir = createTempDirectory("ktp-static")
             val assets = staticDir.resolve("assets").createDirectories()
             assets.resolve("app-abc123.wasm").writeText("plain")
-            assets.resolve("app-abc123.wasm.br").writeText("brotli")
+            // Ktor serves the smaller accepted sibling, which for a real build is brotli.
+            assets.resolve("app-abc123.wasm.br").writeText("br")
             assets.resolve("app-abc123.wasm.gz").writeText("gzip")
             try {
                 testApplication {
@@ -272,7 +273,7 @@ class ViteFrontendPluginTest :
                         contentType() shouldBe ContentType.Application.Wasm
                         headers[HttpHeaders.CacheControl] shouldBe
                             "max-age=31536000, public, immutable"
-                        bodyAsText() shouldBe "brotli"
+                        bodyAsText() shouldBe "br"
                     }
                     get("gzip").apply {
                         headers[HttpHeaders.ContentEncoding] shouldBe "gzip"
