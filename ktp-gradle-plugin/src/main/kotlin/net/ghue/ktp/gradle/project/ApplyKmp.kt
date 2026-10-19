@@ -9,6 +9,8 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.js.KotlinWasmTargetType
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 /**
@@ -30,6 +32,13 @@ internal fun Project.applyKmp(composeRules: Boolean = false) {
             compilerOptions {
                 jvmTarget.set(JvmTarget.fromTarget(LIBRARY_JDK.toString()))
                 freeCompilerArgs.add("-Xjdk-release=$LIBRARY_JDK")
+            }
+        }
+        // Kotlin 2.4 marks Wasm/JS interop experimental, and a web module cannot avoid it
+        // (DOM, storage, fetch), so the opt-in is a module convention, not a per-file annotation.
+        targets.withType<KotlinJsIrTarget>().configureEach {
+            if (wasmTargetType == KotlinWasmTargetType.JS) {
+                compilerOptions { freeCompilerArgs.add("-opt-in=kotlin.js.ExperimentalWasmJsInterop") }
             }
         }
     }

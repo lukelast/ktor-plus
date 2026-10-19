@@ -8,6 +8,7 @@ import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class CompilerArgsTest {
@@ -40,6 +41,17 @@ class CompilerArgsTest {
         val args = compile.compilerOptions.freeCompilerArgs.get()
         assertContains(args, "-Xjdk-release=21")
         assertContains(args, "-Xjsr305=strict")
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+    @Test
+    fun `a multiplatform wasm target opts into JS interop`() {
+        val project = ProjectBuilder.builder().build()
+        project.applyKmp()
+        project.extensions.getByType(KotlinMultiplatformExtension::class.java).wasmJs()
+        val compile = project.tasks.getByName("compileKotlinWasmJs") as Kotlin2JsCompile
+        val args = compile.compilerOptions.freeCompilerArgs.get()
+        assertContains(args, "-opt-in=kotlin.js.ExperimentalWasmJsInterop")
     }
 
     @Test
